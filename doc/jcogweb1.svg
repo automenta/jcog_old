@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="1052.3622"
+   height="744.09448"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.0 r9654"
+   sodipodi:docname="jcogweb1.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.7"
+     inkscape:cx="837.15973"
+     inkscape:cy="443.99193"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="true"
+     inkscape:window-width="1680"
+     inkscape:window-height="973"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid3004"
+       empspacing="5"
+       visible="true"
+       enabled="true"
+       snapvisiblegridlinesonly="true" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-308.2677)">
+    <rect
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:1.04464006px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3006"
+       width="830"
+       height="690"
+       x="50"
+       y="332.36218" />
+    <rect
+       style="fill:#5a555f;fill-opacity:1"
+       id="rect3776-1"
+       width="790"
+       height="35"
+       x="70"
+       y="357.36218" />
+    <rect
+       style="fill:#5a555f;fill-opacity:1"
+       id="rect3776"
+       width="180"
+       height="600"
+       x="70"
+       y="402.36218" />
+    <rect
+       style="fill:#8091ce;fill-opacity:0.97881356"
+       id="rect3778"
+       width="160"
+       height="40"
+       x="80"
+       y="458.36218" />
+    <rect
+       style="fill:#5a555f;fill-opacity:1"
+       id="rect3776-3"
+       width="590"
+       height="600"
+       x="270"
+       y="402.36218" />
+    <text
+       xml:space="preserve"
+       style="font-size:21.12663841px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="20.661146"
+       y="31.326609"
+       id="text3798"
+       sodipodi:linespacing="125%"
+       transform="scale(0.96800052,1.0330573)"><tspan
+         sodipodi:role="line"
+         id="tspan3800"
+         x="20.661146"
+         y="31.326609"> * </tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="57.734909"
+         id="tspan3802"> *      Stats: </tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="84.143204"
+         id="tspan3804"> *          Graph and read-out for memory consumption,</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="110.55151"
+         id="tspan3806"> *          cpu consumption, atomspace size,</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="136.95981"
+         id="tspan3808"> *          agent queue length/time,</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="163.3681"
+         id="tspan3810"> *          active/inactive agents</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="189.7764"
+         id="tspan3812"> *      Goals: current goals and their states: running, searchng for program, pending</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="216.18471"
+         id="tspan3814"> *      Attention: Shows what is being paid attention to, animates at an interval</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="242.593"
+         id="tspan3816"> *      Logic: Shows PLN stats and inference trails</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="269.00128"
+         id="tspan3818"> *      NLP: Shows NLP conversation window, with input and bubbling-up output</tspan><tspan
+         sodipodi:role="line"
+         x="20.661146"
+         y="295.40958"
+         id="tspan3820"> *      Mutant Console: acccess the system with any available scripting language</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:26.23861885px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Sans"
+       x="79.748482"
+       y="357.8389"
+       id="text3822"
+       sodipodi:linespacing="125%"
+       transform="scale(0.9287049,1.0767683)"><tspan
+         sodipodi:role="line"
+         id="tspan3824"
+         x="79.748482"
+         y="357.8389">Attention</tspan></text>
+    <path
+       style="fill:#fffcfc;fill-opacity:1"
+       d="m 410.2721,510.94802 c 68.44795,17.48086 137.12649,34.03796 205.74169,50.84499 9.68872,9.45565 -12.41212,16.1458 -16.36283,6.74234 -65.57424,-16.01379 -130.8895,-33.10687 -196.72692,-48.0287 -6.2382,-4.7852 5.61579,-6.54042 7.34806,-9.55863 z"
+       id="path3866"
+       inkscape:connector-curvature="0" />
+    <path
+       style="fill:#fffcfc;fill-opacity:1"
+       d="m 437.20766,693.98324 c 50.82411,-33.31493 104.48458,-63.16001 162.28055,-82.53594 3.5668,-7.20724 8.07939,6.93252 0.39194,3.34663 -39.093,17.17045 -81.07379,28.85587 -116.43889,53.57147 -15.08419,9.10361 -30.14425,18.36252 -46.2336,25.61784 z"
+       id="path3868"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#000000;fill-rule:evenodd;stroke:#000000;stroke-width:1.04464006px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       id="rect3006-6"
+       width="830"
+       height="690"
+       x="990"
+       y="337.36218" />
+    <rect
+       style="fill:#5a555f;fill-opacity:1"
+       id="rect3776-1-0"
+       width="790"
+       height="35"
+       x="1010"
+       y="362.36218" />
+    <rect
+       style="fill:#5a555f;fill-opacity:1"
+       id="rect3776-3-6"
+       width="780"
+       height="95"
+       x="1020"
+       y="912.36218" />
+    <text
+       xml:space="preserve"
+       style="font-size:26.23861885px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Sans"
+       x="1091.9106"
+       y="362.48245"
+       id="text3822-0"
+       sodipodi:linespacing="125%"
+       transform="scale(0.9287049,1.0767683)"><tspan
+         sodipodi:role="line"
+         id="tspan3824-6"
+         x="1091.9106"
+         y="362.48245">Console</tspan></text>
+    <rect
+       style="fill:#e5b93b;fill-opacity:1"
+       id="rect3965"
+       width="20"
+       height="60"
+       x="1650"
+       y="942.36218" />
+    <rect
+       style="fill:#e53b59;fill-opacity:1"
+       id="rect3965-3"
+       width="20"
+       height="80"
+       x="1680"
+       y="922.36218" />
+    <rect
+       style="fill:#3be53c;fill-opacity:1"
+       id="rect3965-3-6"
+       width="20"
+       height="20"
+       x="1710"
+       y="982.36218" />
+    <rect
+       style="fill:#3be53c;fill-opacity:1"
+       id="rect3965-3-6-5"
+       width="20"
+       height="10"
+       x="1740"
+       y="992.36218" />
+    <rect
+       style="fill:#bce53b;fill-opacity:1"
+       id="rect3965-3-6-9"
+       width="20"
+       height="40"
+       x="1770"
+       y="962.36218" />
+    <text
+       xml:space="preserve"
+       style="font-size:46.94706726px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Sans"
+       x="1185.4133"
+       y="383.71912"
+       id="text4039"
+       sodipodi:linespacing="125%"
+       transform="scale(0.85202346,1.1736766)"><tspan
+         sodipodi:role="line"
+         id="tspan4041"
+         x="1185.4133"
+         y="383.71912">&gt;</tspan></text>
+    <rect
+       style="fill:#bcb22e;fill-opacity:1"
+       id="rect3864"
+       width="90"
+       height="70"
+       x="580"
+       y="234.09448"
+       transform="translate(0,308.2677)" />
+    <path
+       transform="translate(-50,138.2677)"
+       sodipodi:type="arc"
+       style="fill:#bc2e2e;fill-opacity:1"
+       id="path3844-8"
+       sodipodi:cx="425"
+       sodipodi:cy="379.09448"
+       sodipodi:rx="35"
+       sodipodi:ry="35"
+       d="m 460,379.09448 c 0,19.32997 -15.67003,35 -35,35 -19.32997,0 -35,-15.67003 -35,-35 0,-19.32996 15.67003,-35 35,-35 19.32997,0 35,15.67004 35,35 z" />
+    <path
+       sodipodi:type="arc"
+       style="fill:#4d2ebc;fill-opacity:1"
+       id="path3844"
+       sodipodi:cx="425"
+       sodipodi:cy="379.09448"
+       sodipodi:rx="35"
+       sodipodi:ry="35"
+       d="m 460,379.09448 c 0,19.32997 -15.67003,35 -35,35 -19.32997,0 -35,-15.67003 -35,-35 0,-19.32996 15.67003,-35 35,-35 19.32997,0 35,15.67004 35,35 z"
+       transform="translate(0,308.2677)" />
+  </g>
+</svg>
