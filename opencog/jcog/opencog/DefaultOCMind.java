@@ -10,7 +10,7 @@ import jcog.opencog.AtomTypes;
 import jcog.opencog.OCMind;
 
 /**
- *
+ * A default, in-memory atomspace
  * @author seh
  */
 public class DefaultOCMind extends OCMind {

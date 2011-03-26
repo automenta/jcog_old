@@ -15,9 +15,10 @@ import java.util.Collection;
  */
 public class AtomSpacePrinter {
 
+    /** TODO generalize this to ReadableAtomSpace */
     public void print(MemoryAtomSpace a, PrintStream o) {
-        o.println("Vertices: " + a.getVertices());
-        o.println("Edges: " + a.getEdges());
+        o.println("Vertices: (" + a.getVertices().size() + ") " + a.getVertices());
+        o.println("Edges: ("  + a.getEdges().size() + ") " + a.getEdges());
 
         o.println("Types:");
         Multimap<OCType, Atom> typeIndex = a.getTypeIndex();

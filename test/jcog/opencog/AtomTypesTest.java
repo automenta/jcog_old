@@ -18,22 +18,10 @@ import static org.junit.Assert.*;
  */
 public class AtomTypesTest {
 
-
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
-    }
-
-    /**
-     * Test of addType method, of class AtomTypes.
-     */
     @Test
     public void test() {
-        new OCMind(new MemoryAtomSpace());
+        new DefaultOCMind();
+        //TODO test for existence of types
     }
 
 }

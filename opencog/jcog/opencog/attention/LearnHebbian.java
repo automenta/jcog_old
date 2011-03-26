@@ -1,5 +1,8 @@
 package jcog.opencog.attention;
 
+import jcog.opencog.MindAgent;
+import jcog.opencog.OCMind;
+
 /** Agent that carries out simple Hebbian learning.
 *
 * @see http://en.wikipedia.org/wiki/Hebbian_learning
@@ -7,8 +10,15 @@ package jcog.opencog.attention;
 * @todo Support SymmetricInverseHebbianLinks and AsymmetricHebbianLinks
 * @todo Support Hebbian links with arity > 2
 */
-public class HebbianUpdatingAgent {
+public class LearnHebbian extends MindAgent {
 
+    public LearnHebbian() {
+        super();
+    }
+    
+    
+
+    
 //	private:
 //	    AtomSpace* a;
 //
@@ -84,6 +94,11 @@ public class HebbianUpdatingAgent {
 //	    void hebbianUpdatingUpdate();
 //
 //	}; // class
+
+    @Override
+    public void run(OCMind mind) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
 
 }

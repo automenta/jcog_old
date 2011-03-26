@@ -1,6 +1,6 @@
 package jcog.opencog.attention;
 
-public class ImportanceDiffusionAgent {
+public class DiffuseImportance {
 
 //	class CogServer;
 //

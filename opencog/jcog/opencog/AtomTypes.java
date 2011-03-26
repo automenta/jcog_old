@@ -8,27 +8,29 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * Default built-in Atom types
+ * 
  * @see http://opencog.org/wiki/Category:Atom_Types
  * @see http://opencog.org/wiki/Node_types
  * @see http://opencog.org/wiki/Link_types
- * 
+ * @see http://wiki.opencog.org/w/MindOntology:Self-Modifying_Evolving_Probabilistic_Hypergraph
+ * TODO add text descriptions for each type as metadata in the atomspace
  */
 public class AtomTypes {
     private static final Logger logger = Logger.getLogger(AtomTypes.class);
     
-    public final OCType NoType = new OCType("NoType");
+    public static final OCType NoType = new OCType("NoType");
     
-    public final OCType AtomType = new OCType("AtomType");
+    public static final OCType AtomType = new OCType("AtomType");
     
     //Vertex Only
-    public final OCType NodeType = new OCType("NodeType");
+    public static final OCType NodeType = new OCType("NodeType");
     
     //Edge Only
-    public final OCType LinkType = new OCType("LinkType");        
+    public static final OCType LinkType = new OCType("LinkType");        
     
-    public final OCType ConceptNode = new OCType("ConceptNode");
-    public final OCType NumberNode = new OCType("NumberNode");
+    public static final OCType ConceptNode = new OCType("ConceptNode");
+    public static final OCType NumberNode = new OCType("NumberNode");
     
     
 //    public static final String NOTYPE = "NoType";
@@ -38,8 +40,8 @@ public class AtomTypes {
 //    public static final String CONCEPT_NODE = "ConceptNode";
 //    public static final String NUMBER_NODE = "NumberNode";
     
-    public final OCType OrderedLink = new OCType("OrderedLink");
-    public final OCType UnorderedLink = new OCType("UnorderedLink");
+    public static final OCType OrderedLink = new OCType("OrderedLink");
+    public static final OCType UnorderedLink = new OCType("UnorderedLink");
     
 //    public static final String ORDERED_LINK = "OrderedLink";
 //    public static final String UNORDERED_LINK = "UnorderedLink";
@@ -47,7 +49,7 @@ public class AtomTypes {
     public static final String GROUNDED_PROCEDURE_NODE = "GroundedProcedureNode";
     public static final String SCHEMA_NODE = "SchemaNode";
     public static final String GROUNDED_SCHEMA_NODE = "GroundedSchemaNode";
-    public static final String SYMMETRIC_HEBBIAN_LINK = "SymmetricHebbianLink";
+    public static final OCType SymmetricHebbianLink = new OCType("SymmetricHebbianLink");
     
     public final OCType InheritsLink = new OCType("InheritsLink");
     
@@ -109,7 +111,6 @@ public class AtomTypes {
             
         }
         
-        new AtomSpacePrinter().print(c, System.out);
     }
     
     public AtomTypes(MemoryAtomSpace c) {

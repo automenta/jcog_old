@@ -14,7 +14,7 @@ import jcog.opencog.OCMind;
  * @todo Spread along symmetric inverse hebbian links too.
  * @todo Optionally spread long term importance.
  */
-public class ImportanceSpreadingAgent extends MindAgent {
+public class SpreadImportance extends MindAgent {
 
 
 	short spreadThreshold;
@@ -22,8 +22,8 @@ public class ImportanceSpreadingAgent extends MindAgent {
 	float importanceSpreadingMultiplier;
 	//RecentLong amountSpread;
 
-	public ImportanceSpreadingAgent() {
-		super(ImportanceSpreadingAgent.class.getSimpleName());
+	public SpreadImportance() {
+		super();
 	}
 
 	/** Spread importance for an atom.

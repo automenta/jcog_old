@@ -1,6 +1,6 @@
 package jcog.opencog.attention;
 
-public class STIDecayingAgent {
+public class DecaySTI {
 
 //    virtual const ClassInfo& classinfo() const { return info(); }
 //    static const ClassInfo& info() {

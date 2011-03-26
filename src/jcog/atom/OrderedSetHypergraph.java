@@ -66,7 +66,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
             List<V> attached = edges.get(hyperedge);
             if (!attached.equals(vList)) {
                 throw new IllegalArgumentException("Edge " + hyperedge
-                        + " exists in this graph with endpoints " + attached);
+                        + " already exists in this graph with endpoints " + attached);
             } else {
                 return false;
             }

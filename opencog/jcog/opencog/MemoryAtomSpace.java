@@ -22,7 +22,7 @@ import org.apache.log4j.Logger;
  *
  * @author seh
  */
-public class MemoryAtomSpace implements ReadableAtomSpace {
+public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 
     final static Logger logger = Logger.getLogger(MemoryAtomSpace.class);
     
@@ -66,10 +66,12 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         return true;
     }
     
+    @Override
     public boolean addVertex(OCType type, Atom a)  {
         return addVertex(type, a, null);
     }
     
+    @Override
     public boolean addVertex(OCType type, Atom a, String name)  {
         if (indexAtom(a, type, name)) {
             graph.addVertex(a);
@@ -77,10 +79,17 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         }
         return false;
     }
-                
-    public boolean addVertex(OCType type, String name) {        
+    
+    
+    @Override
+    public Atom addVertex(OCType type, String name) {        
         Atom a = new Atom();
-        return addVertex(type, a, name);
+        if (addVertex(type, a, name)) {
+            return a;
+        }
+        else {
+            return null;
+        }
     }
     
     protected void unindexAtom(Atom a) {
@@ -90,6 +99,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         names.remove(a);                
     }
     
+    @Override
     public boolean removeVertex(Atom a) {
         if (!graph.containsVertex(a)) {
             logger.error(this + " can not remove non-existent atom: " + a.toString());
@@ -101,6 +111,44 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         graph.removeVertex(a);
         return true;
     }
+
+    public Collection<Atom> getIncidentEdges(Atom vertex) {
+        return graph.getIncidentEdges(vertex);
+    }
+    
+    public Collection<Atom> getIncidentVertices(Atom edge) {
+        return graph.getIncidentVertices(edge);
+    }
+    
+    public static boolean isEqual(Collection<Atom> a, Atom[] b) {
+        if (a.size()!=b.length)
+            return false;
+        
+        int i = 0;
+        for (Atom x : a) {
+            if (x != b[i++])
+                return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public Atom getEdge(OCType type, Atom... members) {
+        if (members.length == 0)
+            return null;
+        
+        Collection<Atom> incidentEdges = getIncidentEdges(members[0]);
+        for (Atom e : incidentEdges) {
+            if (getType(e).equals(type)) {
+                Collection<Atom> iv = getIncidentVertices(e);
+                if (isEqual(iv, members))
+                    return e;
+            }
+        }
+        
+        return null;
+    }
+        
     
     public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes) {
         if (!includeSubtypes) {
@@ -121,6 +169,10 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         return names.get(a);
     }
     
+    /**
+     * TODO If a Link with the same type and outgoing set of a previously inserted Link is inserted in the AtomSpace, they are merged.
+     */
+    @Override
     public Atom addEdge(OCType t, Atom... members) {        
         Atom e = new Atom();
         indexAtom(e, t, null);
@@ -130,9 +182,10 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         return e;
     }
     
-    public void removeEdge(Atom e) {
+    @Override
+    public boolean removeEdge(Atom e) {
         unindexAtom(e);
-        graph.removeEdge(e);
+        return graph.removeEdge(e);
     }
     
     public int getArity(Atom e) {
@@ -151,6 +204,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace {
         return getArity(a) == 0;
     }
     
+    @Override
     public void clear() { 
         logger.error("clear() not implemented yet");
     }

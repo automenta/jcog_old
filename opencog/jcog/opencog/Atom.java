@@ -37,6 +37,9 @@ public class Atom implements Serializable, Comparable<Atom> {
 
     @Override
     public boolean equals(Object o) {
+        if (this == o)
+            return true;
+        
         if (o instanceof Atom) {
             Atom a = (Atom)o;
             return a.equals(uuid);

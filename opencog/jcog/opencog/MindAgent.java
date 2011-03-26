@@ -1,9 +1,10 @@
 package jcog.opencog;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 
 /**
  * Typically, an opencog agent is coded similarly to a Java thread (except that
@@ -23,89 +24,140 @@ import java.util.Map;
  * a call to an 'info' class method that provides the actual class info -- the
  * 'info' class method is required by the Registry+Factory anyway.
  */
-public abstract class MindAgent  {
+public abstract class MindAgent {
 
-	private int period;
-	private short totalStimulus;
-	private Map<String, Short> atomStimulus;
-	private List<String> utilizedAtoms = new LinkedList();
-	private String id;
+    private String id;
+    private int period;
+    private Map<Atom, Short> atomStimulus = new HashMap();
+    //private List<Atom> utilizedAtoms = new LinkedList();
+    
+    /**
+     * Initializes a MindAgent with name set by the simple name of the class.
+     * Only use this constructor if you want to create a default or singleton MindAgent for the class
+     * being implemented, since all MindAgents need to have unique names.
+     */
+    public MindAgent() {
+        super();
+        this.id = getClass().getSimpleName();
+    }
 
-	public MindAgent(String id) {
-		super();
-		
-		this.id = id;
+    public MindAgent(String id) {
+        super();
+        this.id = id;
+    }
 
-//		this.attention = new OCPAttention();
-//		set(OCPAttention.class, attention);
-	}
+    /** determines how often this agent is scheduled to run().  1 means will be executed each cycle, 2 means every other cycle, etc. (was 'frequency' parameter) */
+    public int getPeriod() {
+        return period;
+    }
 
-	/** determines how often this agent is scheduled to run().  1 means will be executed each cycle, 2 means every other cycle, etc. (was 'frequency' parameter) */ 
-	public int getPeriod() {
-		return period;
-	}
+    /** the activity that will be invoked when the mind schedules it to run */
+    abstract public void run(OCMind mind);
 
-	/** the activity that will be invoked when the mind schedules it to run */
-	abstract public void run(OCMind mind);
-
-	/** The atoms utilized by the Agent in a single cycle, to be used by the
-	 *  System Activity Table to assign credit to this agent. */
-	public List<String> getUtilizedAtoms() {
-		return utilizedAtoms;
-	}
-
-	protected void resetUtilizedAtoms() { 
-		utilizedAtoms.clear();
-	}
+//	/** The atoms utilized by the Agent in a single cycle, to be used by the
+//	 *  System Activity Table to assign credit to this agent. */
+//	public List<String> getUtilizedAtoms() {
+//		return utilizedAtoms;
+//	}
+//
+//	protected void resetUtilizedAtoms() { 
+//		utilizedAtoms.clear();
+//	}
 
     /**
      * Get total stimulus.
      *
      * @return total stimulus since last reset.
      */
-	public short getTotalStimulus() {
-		return totalStimulus;
-	}
+    public short getTotalStimulus() {
+        short sum = 0;
+        for (Short s : atomStimulus.values())
+            sum += s.shortValue();
+        return sum;
+    }
 
+    /**
+     * Stimulate a Handle's atom.
+     *
+     * @param amount of stimulus to give.
+     * @return total stimulus given since last reset.
+     */
+    protected short addStimulus(Atom a, short deltaAmount) {
+        short newStimulus = (short)(getStimulus(a) + deltaAmount);
+        setStimulus(a, newStimulus);
+        return newStimulus; 
+    }
 
-	/**
-	 * Stimulate a Handle's atom.
-	 *
-	 * @param amount of stimulus to give.
-	 * @return total stimulus given since last reset.
-	 */
-	protected short stimulateAtom(String a, short amount) {
-		return 0;
-	}
+    protected void setStimulus(Atom a, short amount) {
+        atomStimulus.put(a, amount);
+    }
 
-	/**
-	 * @return true if removed
-	 */
-	protected boolean removeAtomStimulus(String a) {
-		return false;
-	}
-	
-	//    /**
-	//     * Stimulate all atoms in HandleEntry list.
-	//     *
-	//     * @param linked list of atoms to spread stimulus across.
-	//     * @param amount of stimulus to share.
-	//     * @return remainder stimulus after equal spread between atoms.
-	//     */
-	//    stim_t stimulateAtom(HandleEntry* h, stim_t amount);
+    /**
+     * @return true if removed
+     */
+    protected boolean removeAtomStimulus(String a) {
+        return false;
+    }
 
-	/**
-	 * Reset stimulus.
-	 *
-	 * @return new stimulus since reset, usually zero unless another
-	 * thread adds more.
-	 */
-	public void resetStimulus() {
-		
-	}
+    //    /**
+    //     * Stimulate all atoms in HandleEntry list.
+    //     *
+    //     * @param linked list of atoms to spread stimulus across.
+    //     * @param amount of stimulus to share.
+    //     * @return remainder stimulus after equal spread between atoms.
+    //     */
+    //    stim_t stimulateAtom(HandleEntry* h, stim_t amount);
 
-	protected short getAtomStimulus(String a) {
-		return 0;
-	}
+    public void clearStimulus() {
+        atomStimulus.clear();
+    }
 
+    /**
+     * Reset stimulus.  Sets stimulus to zero but doesn't remove entries from the stimulus Map
+     *
+     * ?? @return new stimulus since reset, usually zero unless another
+     * thread adds more.
+     */
+    public void resetStimulus() {
+        List<Atom> atoms = new LinkedList(atomStimulus.keySet());
+        for (Atom a : atoms) {
+            atomStimulus.put(a, (short)0);
+        }        
+    }
+    
+    
+
+    public short getStimulus(Atom a) {
+        Short s = atomStimulus.get(a);
+        if (s == null)
+            return 0;
+        return s.shortValue();
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+    
+    @Override
+    public String toString() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o.getClass().equals(getClass())) {
+           MindAgent m = (MindAgent)o;
+           return m.id.contains(id);
+        }
+        return false;
+    }
+
+    public Collection<Atom> getStimulated() {
+        return atomStimulus.keySet();
+    }
+    
+    
+
+    
 }

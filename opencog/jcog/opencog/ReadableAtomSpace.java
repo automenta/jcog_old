@@ -15,6 +15,8 @@ import java.util.Iterator;
 interface ReadableAtomSpace {
     
     public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes);
+    public Atom getEdge(OCType type, Atom... members);
+
     public OCType getType(Atom a);
     public String getName(Atom a);
     public int getArity(Atom e);

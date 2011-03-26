@@ -24,12 +24,12 @@ public class AttentionValue {
     private short lti;
     private int vlti; //is unsigned short in C++, increased to int to cover the range
 
-    static final int Disposable = 0;
-    static final int Nondisposable = 1;
+    public static final int Disposable = 0;
+    public static final int NonDisposable = 1;
     
-    static final short DefaultSTI = 0;
-    static final short DefaultLTI = 0;
-    static final int DefaultVLTI = Disposable;
+    public static final short DefaultSTI = 0;
+    public static final short DefaultLTI = 0;
+    public static final int DefaultVLTI = Disposable;
     
     public static final short MinSTI = Short.MIN_VALUE;
     public static final short MinLTI = Short.MIN_VALUE;
@@ -40,7 +40,7 @@ public class AttentionValue {
         super();
         sti = DefaultSTI;
         lti = DefaultLTI;
-        vlti = disposable ? Disposable : Nondisposable;
+        vlti = disposable ? Disposable : NonDisposable;
     }
     
     public AttentionValue() {
@@ -70,6 +70,15 @@ public class AttentionValue {
 
     public int getVLTI() {
         return vlti;
+    }
+
+    public void setVLTI(int newVLTI) {
+        this.vlti = newVLTI;
+    }
+
+    public short addSTI(short deltaSTI) {
+        this.sti += deltaSTI;
+        return sti;
     }
     
 
