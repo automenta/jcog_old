@@ -27,4 +27,19 @@ public class SimpleTruthValue implements TruthValue {
     public double getConfidence() {
         return confidence;
     }
+
+    public void setConfidence(double confidence) {
+        this.confidence = confidence;
+    }
+
+    public void setMean(double mean) {
+        this.mean = mean;
+    }
+
+    public void setCount(long count) {
+        this.count = count;
+    }
+    
+    
+     
 }

@@ -31,6 +31,7 @@ public class HopfieldExample extends DefaultOCMind {
         Map<Atom, Double> pattern = new HashMap();
         private final short maxPixelStimulus;
         private final double imprintProbability;
+        private boolean imprinting;
         
         public ImprintBitmap(AtomArray2D array, short maxPixelStimulus, double imprintProbabaility) {
             super("HopfieldExampleImprintBitmap");
@@ -52,8 +53,19 @@ public class HopfieldExample extends DefaultOCMind {
         }
         
         public short getStimulus(Atom a) {
-            double v = getPixel(a);
-            return (short)(v * maxPixelStimulus);
+            if (imprinting) {
+                double v = getPixel(a);
+                return (short)(v * maxPixelStimulus);
+            }
+            else {
+                return 0;
+            }
+        }
+        
+        public void setZero() {
+            for (Atom a : array.atoms) {
+                setPixel(a, 0);
+            }            
         }
         
         public void setRandom(double min, double max) {
@@ -62,17 +74,23 @@ public class HopfieldExample extends DefaultOCMind {
             }
         }
         
-        void imprint() {
-            System.out.println("Imprinting.. ");
+        void imprint() {            
+            imprinting = true;
             for (Atom a : array.atoms) {
                 setStimulus(a, getStimulus(a));
             }            
+        }
+        
+        void blink() {
+            imprinting = false;
         }
         
         @Override
         public void run(OCMind mind) {
             if (Math.random() < imprintProbability)
                 imprint();
+            else
+                blink();
         }
         
     }
@@ -83,7 +101,6 @@ public class HopfieldExample extends DefaultOCMind {
         final int numNodes = width * height;
 
         AtomArray2D bitmap = new AtomArray2D(HopfieldExample.this, getClass().getSimpleName(), width, height);
-
 
         /* A number of HebbianLinks are also randomly distributed
          * to connect these nodes, (the number is specified either
@@ -109,7 +126,7 @@ public class HopfieldExample extends DefaultOCMind {
             
         }
 
-        ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)10, 0.1);
+        ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)32, 0.25);
         imprint.setRandom(0, 1.0);       
         addAgent(imprint);       
         
@@ -128,6 +145,6 @@ public class HopfieldExample extends DefaultOCMind {
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(16, 16, 8.0);
+        new HopfieldExample(32, 32, 20.0);
     }
 }

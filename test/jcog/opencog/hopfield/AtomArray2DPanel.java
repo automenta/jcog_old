@@ -44,6 +44,7 @@ public class AtomArray2DPanel extends JPanel {
     public Color getColor(Atom a, short minSTI, short maxSTI) {
         short sti = mind.getSTI(a);
         float x = ((float)(sti - minSTI)) / ((float)(maxSTI-minSTI));
+        x = Math.min(x, 1.0f);
         return new Color(x, x, x);
     }
 

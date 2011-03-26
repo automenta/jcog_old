@@ -25,7 +25,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     
     private Map<Atom, TruthValue> truth;
     private Map<Atom, AttentionValue> attention;
-    private List<MindAgent> agents = new LinkedList();  
+    private List<MindAgent> agents = new LinkedList();
+    private short minSTISeen = 0, maxSTISeen = 0;
 	
 //	private FloatMap activation; //???
 //	private FloatMap importance;//???
@@ -114,7 +115,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 //	}
 //	
 
+    /** called by UpdateImportance -- indicates the min and max STI seen by update importance as it iterates across all atoms utilized by Agents */
     public void setSTIRange(short minSTISeen, short maxSTISeen) {
+        this.minSTISeen = minSTISeen;
+        this.maxSTISeen = maxSTISeen;
     }
 
     public void addAgent(MindAgent m) {
@@ -182,6 +186,16 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return getAttention(a).getLTI();
     }
 
+    /** returns an atom's STI normalized to -1..+1 range */
+    public double getNormalizedSTI(Atom a) {
+        double sti = getSTI(a);
+        
+        if (maxSTISeen!=minSTISeen)
+            return (sti - ((double)minSTISeen)) / (double)(maxSTISeen - minSTISeen);
+        else
+            return 0;
+    }
+    
     public Pair<Short> getSTIRange(Collection<Atom> atoms) {
         boolean first = true;
                 
@@ -214,4 +228,23 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.getIncidentVertices(edge);    
     }
 
+    public short getMaxSeenSTI() {
+        return maxSTISeen;
+    }
+    public short getMinSeenSTI() {
+        return minSTISeen;
+    }
+
+    @Override
+    public Collection<Atom> getVertices() {
+        return atomspace.getVertices();
+    }
+
+    @Override
+    public Collection<Atom> getEdges() {
+        return atomspace.getEdges();
+    }
+
+    
+    
 }

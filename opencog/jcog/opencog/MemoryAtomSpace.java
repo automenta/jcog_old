@@ -223,10 +223,12 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return graph.getEdges().iterator();
     }
     
+    @Override
     public Collection<Atom> getVertices() {
         return graph.getVertices();
     }
     
+    @Override
     public Collection<Atom> getEdges() {
         return graph.getEdges();
     }

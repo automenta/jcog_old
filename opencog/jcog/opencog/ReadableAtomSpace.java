@@ -16,7 +16,10 @@ interface ReadableAtomSpace {
     
     public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes);
     public Atom getEdge(OCType type, Atom... members);
-    
+
+    public Collection<Atom> getVertices();    
+    public Collection<Atom> getEdges();
+        
     public Collection<Atom> getIncidentEdges(Atom vertex);
     public Collection<Atom> getIncidentVertices(Atom edge);
 

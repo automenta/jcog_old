@@ -76,7 +76,7 @@ public class UpdateImportance extends MindAgent {
     private OCMind mind;
     private Logger logger;
     private boolean initialEstimateMade = false;
-    private boolean noiseEnabled;
+    private boolean noiseEnabled = false;
     private boolean lobeSTIOutOfBounds;
     int totalStimulus = 0;
 

@@ -13,5 +13,12 @@ public interface TruthValue {
     public long getCount();
 
     public double getConfidence();
+
+    public void setConfidence(double confidence);
+
+    public void setMean(double mean);
+
+    public void setCount(long count);
     
+
 }

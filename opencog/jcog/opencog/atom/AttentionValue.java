@@ -80,6 +80,10 @@ public class AttentionValue {
         this.sti += deltaSTI;
         return sti;
     }
+
+    public void setSTI(short newSti) {
+        this.sti = newSti;
+    }
     
 
 }

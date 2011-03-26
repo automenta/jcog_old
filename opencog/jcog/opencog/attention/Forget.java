@@ -1,5 +1,6 @@
 package jcog.opencog.attention;
 
+import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -37,6 +38,20 @@ public class Forget extends MindAgent {
     
     @Override
     public void run(OCMind mind) {
+        //TODO this is a hack that simply decays all atoms STIs toward 0
+        short stiDecayRate = 2;
+        for (MindAgent agent : mind.getAgents()) {            
+            for (Atom at : agent.getStimulated()) {
+                short sti = mind.getSTI(at);
+                if (sti > 0) {
+                    sti -= stiDecayRate;
+                    sti = (short)Math.max(0, sti);
+                    mind.getAttention(at).setSTI(sti);
+                }
+            }
+            
+        }
+
     }
     
     
