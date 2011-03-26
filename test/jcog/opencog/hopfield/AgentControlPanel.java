@@ -5,11 +5,12 @@
 
 package jcog.opencog.hopfield;
 
-import edu.uci.ics.jung.graph.util.Pair;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import javax.swing.Box;
@@ -27,8 +28,8 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.statistics.SimpleHistogramBin;
-import org.jfree.data.statistics.SimpleHistogramDataset;
+import org.jfree.data.statistics.HistogramDataset;
+import org.jfree.data.statistics.HistogramType;
 
 /**
  * Panel for manually invoking mindagents
@@ -38,9 +39,9 @@ public class AgentControlPanel extends JPanel {
     private final OCMind mind;
     private final JButton cycle;
     
-    private final SimpleHistogramDataset stiDataset;
-    private final JFreeChart stiHistogram;
-    private final ChartPanel stiChart;
+    private HistogramDataset stiDataset;
+    private JFreeChart stiHistogram;
+    private ChartPanel stiChart;
     
     Map<MindAgent, MindAgentPanel> mindAgentPanels = new WeakHashMap();
     
@@ -88,15 +89,11 @@ public class AgentControlPanel extends JPanel {
                     @Override
                     public void run() {
                         cycle();
-                        refresh();
                     }            
                 });
             }            
         });
 
-        stiDataset = new SimpleHistogramDataset("STI");
-        stiHistogram = ChartFactory.createHistogram("STI Distribution of Agent-Stimulated Atoms", "STI", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);
-        stiChart = new ChartPanel(stiHistogram, true, true, true, true, true);
         
         refresh();
     }
@@ -132,25 +129,36 @@ public class AgentControlPanel extends JPanel {
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
         {
-            stiDataset.clearObservations();
-            stiDataset.removeAllBins();
             
-            int numBins = 10;
-            Pair<Short> stiRange = mind.getSTIRange(mind.getVertices());
-            short minSTI = stiRange.getFirst();
-            short maxSTI = stiRange.getSecond();
-            int interval = Math.max(1, 1 + (maxSTI - minSTI) / numBins);
-
-            int x = minSTI;
-            for (int i = 0; i < numBins; i++) {
-                stiDataset.addBin(new SimpleHistogramBin(x, x + interval));
-                x += interval+1;
+            List<Atom> stimulatedAtoms = new LinkedList();
+            for (MindAgent m : mind.getAgents()) {
+                stimulatedAtoms.addAll(m.getStimulated());
             }
-            for (MindAgent m : mind.getAgents())
-                for (Atom a : m.getStimulated())
-                    stiDataset.addObservation(mind.getSTI(a));
-            stiHistogram.fireChartChanged();
-            statsPanel.add(stiChart);
+            if (stimulatedAtoms.size() > 0) {
+                double[] stis = new double[stimulatedAtoms.size()];
+                double[] ltis = new double[stimulatedAtoms.size()];
+                int i = 0;
+                for (Atom a : stimulatedAtoms) {
+                    stis[i] = mind.getSTI(a);
+                    ltis[i] = mind.getLTI(a);
+                    i++;
+                }
+                stiDataset = new HistogramDataset();
+
+                stiDataset.setType(HistogramType.RELATIVE_FREQUENCY);
+                stiDataset.addSeries("STI", stis, 20);
+                stiDataset.addSeries("LTI", ltis, 20);
+
+                stiHistogram = ChartFactory.createHistogram("STI Distribution of Agent-Stimulated Atoms", "STI", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);                
+                stiHistogram.getXYPlot().setForegroundAlpha(0.75f);
+
+                stiChart = new ChartPanel(stiHistogram, true, true, true, true, true);
+                
+                statsPanel.add(stiChart);
+            }
+            else {
+                
+            }
         }
         
         add(agentPanel, BorderLayout.WEST);
@@ -170,6 +178,8 @@ public class AgentControlPanel extends JPanel {
             if (map.cycleEnabled.isSelected())
                 runAgent(map);
         }
+        
+        refresh();
     }
 
     public JFrame newWindow() {

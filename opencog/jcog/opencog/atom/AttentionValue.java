@@ -84,6 +84,11 @@ public class AttentionValue {
     public void setSTI(short newSti) {
         this.sti = newSti;
     }
+
+    public short addLTI(short deltaLTI) {
+        this.lti += deltaLTI;
+        return lti;
+    }
     
 
 }

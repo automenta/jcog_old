@@ -37,6 +37,8 @@ public class SpreadImportance extends MindAgent {
                 short bSTI = mind.getSTI(b);
                 short absDifference = (short) Math.abs(aSTI - bSTI);
 
+                if (absDifference == 0) continue;
+                
                 //TODO this rate calculation may not be correct
 
                 short rate = (short) (mind.getTruth(e).getMean() * stiTransferRate);
@@ -47,11 +49,11 @@ public class SpreadImportance extends MindAgent {
                     }
 
                     if (aSTI > bSTI) {
-                        mind.getAttention(a).addSTI((short) (-rate/2));
-                        mind.getAttention(b).addSTI((short)(rate/2));
+                        mind.getAttention(a).addSTI((short) (-rate));
+                        mind.getAttention(b).addSTI((short)(rate));
                     } else if (bSTI > aSTI) {
-                        mind.getAttention(b).addSTI((short) (-rate/2));
-                        mind.getAttention(a).addSTI((short)(rate/2));
+                        mind.getAttention(b).addSTI((short) (-rate));
+                        mind.getAttention(a).addSTI((short)(rate));
                     }
                 }
             }

@@ -202,14 +202,27 @@ public class UpdateImportance extends MindAgent {
     private void enforceSTICap(Atom at) {
     }
 
-    private void updateAtomLTI(List<MindAgent> agents, Atom at) {
+    public short getSTIRewardRate(MindAgent m) {
+        return 3;
+    }
+    public short getLTIRewardRate(MindAgent m) {
+        return 1;
+    }
+    
+    private void updateAtomLTI(List<MindAgent> agents, Atom a) {
+        //This is a hack which converts stimulus to attention directly
+        short ts = 0;
+        for (MindAgent m : agents) {
+            ts += m.getStimulus(a) * getLTIRewardRate(m);
+        }
+        mind.getAttention(a).addLTI(ts); 
     }
 
     private void updateAtomSTI(List<MindAgent> agents, Atom a) {
         //This is a hack which converts stimulus to attention directly
         short ts = 0;
         for (MindAgent m : agents) {
-            ts += m.getStimulus(a);
+            ts += m.getStimulus(a) * getSTIRewardRate(m);
         }
         mind.getAttention(a).addSTI(ts); 
         

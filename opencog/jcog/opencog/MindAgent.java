@@ -23,6 +23,9 @@ import java.util.Map;
  * identifies its class. Typicall the 'classinfo' method will simply forward to
  * a call to an 'info' class method that provides the actual class info -- the
  * 'info' class method is required by the Registry+Factory anyway.
+ * 
+ * This may be a good idea, re: UpdateImportance:
+        In the MindAgent base class, provide a method rewardAtoms() which calls the WageAgent. This method would also signal to the WageAgent who the caller was so that the correct stimulus map and amount of STI for reward could be worked out.
  */
 public abstract class MindAgent {
 
