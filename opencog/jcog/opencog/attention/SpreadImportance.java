@@ -1,7 +1,9 @@
 package jcog.opencog.attention;
 
+import java.util.ArrayList;
 import java.util.List;
 import jcog.opencog.Atom;
+import jcog.opencog.AtomTypes;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -21,6 +23,34 @@ public class SpreadImportance extends MindAgent {
 	short stealingLimit;
 	float importanceSpreadingMultiplier;
 	//RecentLong amountSpread;
+
+        @Override public void run(OCMind mind) {
+	
+            //TODO this is a hack to just get some spreading activity
+            for (Atom e : mind.getAtoms(AtomTypes.SymmetricHebbianLink, false)) {
+                List<Atom> linked = new ArrayList(mind.getIncidentVertices(e));
+                if (linked.size() == 2) {
+                    Atom a = linked.get(0);
+                    Atom b = linked.get(1);
+                    
+                    short aSTI = mind.getSTI(a);
+                    short bSTI = mind.getSTI(b);
+                    short absDifference = (short)Math.abs(aSTI - bSTI);
+                    if (absDifference >= 2) {
+                        short rate = 1;
+                        if (aSTI > bSTI) {
+                            mind.getAttention(a).addSTI((short)-rate);
+                            mind.getAttention(b).addSTI(rate);
+                        }
+                        else if (bSTI > aSTI) {
+                            mind.getAttention(b).addSTI((short)-rate);
+                            mind.getAttention(a).addSTI(rate);
+                        }
+                    }
+                }
+            }
+                    
+	}
 
 	public SpreadImportance() {
 		super();
@@ -63,9 +93,6 @@ public class SpreadImportance extends MindAgent {
     	return 0;
     }
 
-	@Override public void run(OCMind mind) {
-		//TODO
-	}
 
 	/** Set minimal amount of STI necessary for an atom to have before it
 	 * spreads STI.

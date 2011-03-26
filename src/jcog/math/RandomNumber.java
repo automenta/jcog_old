@@ -14,4 +14,8 @@ public class RandomNumber {
     public static int getInt(int min, int max) {
         return min + ((int)Math.round(Math.random() * (max-min)));
     }
+
+    public static double getDouble(double min, double max) {
+        return min + (Math.random() * (max-min));
+    }
 }

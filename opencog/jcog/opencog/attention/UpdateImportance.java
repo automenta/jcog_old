@@ -207,11 +207,11 @@ public class UpdateImportance extends MindAgent {
 
     private void updateAtomSTI(List<MindAgent> agents, Atom a) {
         //This is a hack which converts stimulus to attention directly
-        short totalStimulus = 0;
+        short ts = 0;
         for (MindAgent m : agents) {
-            totalStimulus += m.getStimulus(a);
+            ts += m.getStimulus(a);
         }
-        mind.getAttention(a).addSTI(totalStimulus); 
+        mind.getAttention(a).addSTI(ts); 
         
 //        AttentionValue::sti_t current, exchangeAmount;
 //        current = a->getAttentionBank().getSTI(agent);

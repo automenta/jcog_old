@@ -112,10 +112,12 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return true;
     }
 
+    @Override
     public Collection<Atom> getIncidentEdges(Atom vertex) {
         return graph.getIncidentEdges(vertex);
     }
     
+    @Override
     public Collection<Atom> getIncidentVertices(Atom edge) {
         return graph.getIncidentVertices(edge);
     }

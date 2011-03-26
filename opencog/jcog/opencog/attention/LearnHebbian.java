@@ -17,6 +17,9 @@ public class LearnHebbian extends MindAgent {
     }
     
     
+    @Override
+    public void run(OCMind mind) {
+    }
 
     
 //	private:
@@ -95,10 +98,6 @@ public class LearnHebbian extends MindAgent {
 //
 //	}; // class
 
-    @Override
-    public void run(OCMind mind) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
 
 }

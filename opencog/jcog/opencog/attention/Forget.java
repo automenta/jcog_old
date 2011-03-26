@@ -35,6 +35,9 @@ public class Forget extends MindAgent {
         super();
     }
     
+    @Override
+    public void run(OCMind mind) {
+    }
     
     
     
@@ -111,9 +114,5 @@ public class Forget extends MindAgent {
 //
 //	};
 
-    @Override
-    public void run(OCMind mind) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
 
 }

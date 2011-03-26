@@ -4,6 +4,8 @@
  */
 package jcog.opencog.hopfield;
 
+import java.util.HashMap;
+import java.util.Map;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomSpacePrinter;
@@ -26,20 +28,51 @@ public class HopfieldExample extends DefaultOCMind {
     public static class ImprintBitmap extends MindAgent {
         private final AtomArray2D array;
 
-        public ImprintBitmap(AtomArray2D array) {
+        Map<Atom, Double> pattern = new HashMap();
+        private final short maxPixelStimulus;
+        private final double imprintProbability;
+        
+        public ImprintBitmap(AtomArray2D array, short maxPixelStimulus, double imprintProbabaility) {
             super("HopfieldExampleImprintBitmap");
             
             this.array = array;
+            this.maxPixelStimulus = maxPixelStimulus;
+            this.imprintProbability = imprintProbabaility;
         }
         
-        public void setRandom(short min, short max) {
+        public void setPixel(Atom a, double value) {
+            pattern.put(a, value);
+        }
+        
+        public double getPixel(Atom a) {
+            Double d = pattern.get(a);
+            if (d == null)
+                return 0;
+            return d.doubleValue();
+        }
+        
+        public short getStimulus(Atom a) {
+            double v = getPixel(a);
+            return (short)(v * maxPixelStimulus);
+        }
+        
+        public void setRandom(double min, double max) {
             for (Atom a : array.atoms) {
-                setStimulus(a, (short)RandomNumber.getInt(min, max));                
+                setPixel(a, RandomNumber.getDouble(min, max));
             }
+        }
+        
+        void imprint() {
+            System.out.println("Imprinting.. ");
+            for (Atom a : array.atoms) {
+                setStimulus(a, getStimulus(a));
+            }            
         }
         
         @Override
         public void run(OCMind mind) {
+            if (Math.random() < imprintProbability)
+                imprint();
         }
         
     }
@@ -76,26 +109,25 @@ public class HopfieldExample extends DefaultOCMind {
             
         }
 
-        ImprintBitmap imprint = new ImprintBitmap(bitmap);
-        imprint.setRandom((short)0, (short)100);       
+        ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)10, 0.1);
+        imprint.setRandom(0, 1.0);       
         addAgent(imprint);       
         
-        UpdateImportance updateImportance = new UpdateImportance();
-        updateImportance.run(this); //TODO remove this hack when OCMind runs its own agents
-        addAgent(updateImportance);
-        
+        addAgent(new UpdateImportance());        
         addAgent(new LearnHebbian());
         addAgent(new SpreadImportance());
         addAgent(new Forget());
         
-        new AtomSpacePrinter().print(atomspace, System.out);
+        //new AtomSpacePrinter().print(atomspace, System.out);
         
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
+        
+        new AgentControlPanel(this).newWindow();
 
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(4, 4, 2.0);
+        new HopfieldExample(16, 16, 8.0);
     }
 }

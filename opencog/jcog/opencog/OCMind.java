@@ -204,4 +204,14 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return new Pair<Short>(minSTI, maxSTI);
     }
 
+    @Override
+    public Collection<Atom> getIncidentEdges(Atom vertex) {
+        return atomspace.getIncidentEdges(vertex);
+    }
+
+    @Override
+    public Collection<Atom> getIncidentVertices(Atom edge) {
+        return atomspace.getIncidentVertices(edge);    
+    }
+
 }
