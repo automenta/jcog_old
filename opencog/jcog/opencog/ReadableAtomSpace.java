@@ -30,4 +30,21 @@ interface ReadableAtomSpace {
     public Iterator<Atom> iterateVertices();
     public Iterator<Atom> iterateEdges();
 
+
+    /**
+     *
+     * @param predicate
+     * @param op
+     * @return true continue visiting (in a compound AtomSpace), false to prematurely terminate the visit
+     */
+    public boolean visitVertices(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op);
+
+    /**
+     *
+     * @param predicate
+     * @param op
+     * @return true continue visiting (in a compound AtomSpace), false to prematurely terminate the visit
+     */
+    public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op);
+    
 }

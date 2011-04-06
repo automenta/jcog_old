@@ -26,7 +26,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 
     final static Logger logger = Logger.getLogger(MemoryAtomSpace.class);
     
-    OrderedSetHypergraph<Atom, Atom> graph;
+    public final OrderedSetHypergraph<Atom, Atom> graph;
     Map<Atom, OCType> atomToType;
     Multimap<OCType, Atom> typesToAtom;
     BiMap<Atom, String> names;
@@ -214,6 +214,30 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     
     public void addType(OCType type, OCType... supertypes) {
         addVertex(Atom.Type, type);
+    }
+
+    @Override
+    public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
+        for (Atom e : getEdges()) {
+            if (predicate.isTrue(e)) {
+                boolean result = op.operate(this, e);
+                if (!result)
+                    return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean visitVertices(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
+        for (Atom e : getVertices()) {
+            if (predicate.isTrue(e)) {
+                boolean result = op.operate(this, e);
+                if (!result)
+                    return false;
+            }
+        }
+        return true;
     }
 
     public Iterator<Atom> iterateVertices() {

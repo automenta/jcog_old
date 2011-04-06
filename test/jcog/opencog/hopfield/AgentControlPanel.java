@@ -2,22 +2,29 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package jcog.opencog.hopfield;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
@@ -36,68 +43,104 @@ import org.jfree.data.statistics.HistogramType;
  * @author seh
  */
 public class AgentControlPanel extends JPanel {
+
     private final OCMind mind;
     private final JButton cycle;
-    
     private HistogramDataset stiDataset;
     private JFreeChart stiHistogram;
     private ChartPanel stiChart;
-    
     Map<MindAgent, MindAgentPanel> mindAgentPanels = new WeakHashMap();
-    
+
     /** panel representing a mind agent:
      *   --checkbox indicating whether it will be included in a cycle
      *   --button for immediate invocation
      *   --indicator for last execution time (changes color of background)
      */
     public class MindAgentPanel extends JPanel {
+
         public final JCheckBox cycleEnabled;
-        private final JButton nameButton;
         public final MindAgent agent;
-        
+
         public MindAgentPanel(final MindAgent m) {
             super(new FlowLayout());
-            
+
             this.agent = m;
-            
+
             cycleEnabled = new JCheckBox();
             cycleEnabled.setSelected(true);
             add(cycleEnabled);
+
+            JMenu nameMenu = new JMenu(m.toString());
+            {
+                JMenuItem runNowItem = new JMenuItem("Run Now");
+                runNowItem.addActionListener(new ActionListener() {
+
+                    @Override
+                    public void actionPerformed(ActionEvent ae) {
+                        runAgent(MindAgentPanel.this);
+                    }
+                });
+                
+                nameMenu.add(runNowItem);
+                
+                nameMenu.addSeparator();
+                
+                for (final Method a : m.getClass().getMethods()) {
+                    if (Modifier.isPublic(a.getModifiers())) {
+                        if (a.getParameterTypes().length == 0) {
+                            JMenuItem j = new JMenuItem(a.getName());
+                            j.addActionListener(new ActionListener() {
+                                @Override
+                                public void actionPerformed(ActionEvent e) {
+                                    try {
+                                        a.invoke(m);
+                                    } catch (IllegalAccessException ex) {
+                                        Logger.getLogger(AgentControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    } catch (IllegalArgumentException ex) {
+                                        Logger.getLogger(AgentControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    } catch (InvocationTargetException ex) {
+                                        Logger.getLogger(AgentControlPanel.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }                                
+                            });
+                            nameMenu.add(j);
+                        }
+                    }
+                }
+            }
             
-            nameButton = new JButton(m.toString());
-            nameButton.addActionListener(new ActionListener() {
-                @Override public void actionPerformed(ActionEvent ae) {
-                    runAgent(MindAgentPanel.this);
-                }                
-            });
-            add(nameButton);
-            
+            JMenuBar jb = new JMenuBar();
+            jb.add(nameMenu);
+            add(jb);
+
         }
     }
-    
+
     public AgentControlPanel(OCMind mind) {
         super(new BorderLayout());
-        
+
         this.mind = mind;
-        
+
         cycle = new JButton("Cycle");
-        cycle.setMnemonic('c');        
+        cycle.setMnemonic('c');
         cycle.addActionListener(new ActionListener() {
+
             @Override
             public void actionPerformed(ActionEvent ae) {
                 SwingUtilities.invokeLater(new Runnable() {
+
                     @Override
                     public void run() {
                         cycle();
-                    }            
+                    }
                 });
-            }            
+            }
         });
 
-        
+
         refresh();
     }
-    
+
     protected MindAgentPanel getMindAgentPanel(MindAgent m) {
         MindAgentPanel map = mindAgentPanels.get(m);
         if (map == null) {
@@ -106,10 +149,10 @@ public class AgentControlPanel extends JPanel {
         }
         return map;
     }
-    
+
     protected void refresh() {
         removeAll();
-        
+
         JPanel agentPanel = new JPanel(new BorderLayout());
         {
             JPanel agentList = new JPanel();
@@ -117,7 +160,7 @@ public class AgentControlPanel extends JPanel {
             {
                 for (MindAgent m : mind.getAgents()) {
                     agentList.add(getMindAgentPanel(m));
-                } 
+                }
                 agentList.add(Box.createVerticalBox());
 
             }
@@ -125,11 +168,11 @@ public class AgentControlPanel extends JPanel {
 
             agentPanel.add(cycle, BorderLayout.SOUTH);
         }
-        
+
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.PAGE_AXIS));
         {
-            
+
             List<Atom> stimulatedAtoms = new LinkedList();
             for (MindAgent m : mind.getAgents()) {
                 stimulatedAtoms.addAll(m.getStimulated());
@@ -145,40 +188,39 @@ public class AgentControlPanel extends JPanel {
                 }
                 stiDataset = new HistogramDataset();
 
-                stiDataset.setType(HistogramType.RELATIVE_FREQUENCY);
+                stiDataset.setType(HistogramType.FREQUENCY);
                 stiDataset.addSeries("STI", stis, 20);
                 stiDataset.addSeries("LTI", ltis, 20);
 
-                stiHistogram = ChartFactory.createHistogram("STI Distribution of Agent-Stimulated Atoms", "STI", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);                
+                stiHistogram = ChartFactory.createHistogram("Attention Distribution of Agent-Stimulated Atoms", "Importance", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);
                 stiHistogram.getXYPlot().setForegroundAlpha(0.75f);
 
                 stiChart = new ChartPanel(stiHistogram, true, true, true, true, true);
-                
+
                 statsPanel.add(stiChart);
-            }
-            else {
-                
+            } else {
             }
         }
-        
+
         add(agentPanel, BorderLayout.WEST);
         add(new JScrollPane(statsPanel), BorderLayout.CENTER);
-        
+
         updateUI();
     }
-    
+
     protected void runAgent(MindAgentPanel m) {
         //TODO calculate runtime of each agent to display
         m.agent.run(mind);
     }
-    
+
     protected void cycle() {
         for (MindAgent m : mind.getAgents()) {
             MindAgentPanel map = getMindAgentPanel(m);
-            if (map.cycleEnabled.isSelected())
+            if (map.cycleEnabled.isSelected()) {
                 runAgent(map);
+            }
         }
-        
+
         refresh();
     }
 
@@ -190,5 +232,4 @@ public class AgentControlPanel extends JPanel {
 
         return jf;
     }
-    
 }

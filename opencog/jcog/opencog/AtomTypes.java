@@ -33,33 +33,23 @@ public class AtomTypes {
     public static final OCType NumberNode = new OCType("NumberNode");
     
     
-//    public static final String NOTYPE = "NoType";
-//    public static final String ATOM = "Atom";
-//    public static final String NODE = "Node";
-//    public static final String LINK = "Link";
-//    public static final String CONCEPT_NODE = "ConceptNode";
-//    public static final String NUMBER_NODE = "NumberNode";
-    
     public static final OCType OrderedLink = new OCType("OrderedLink");
     public static final OCType UnorderedLink = new OCType("UnorderedLink");
     
-//    public static final String ORDERED_LINK = "OrderedLink";
-//    public static final String UNORDERED_LINK = "UnorderedLink";
-    public static final String PROCEDURE_NODE = "ProcedureNode";
-    public static final String GROUNDED_PROCEDURE_NODE = "GroundedProcedureNode";
-    public static final String SCHEMA_NODE = "SchemaNode";
-    public static final String GROUNDED_SCHEMA_NODE = "GroundedSchemaNode";
+    public static final OCType PROCEDURE_NODE = new OCType("ProcedureNode");
+    public static final OCType GROUNDED_PROCEDURE_NODE = new OCType("GroundedProcedureNode");
+    public static final OCType SCHEMA_NODE = new OCType("SchemaNode");
+    public static final OCType GROUNDED_SCHEMA_NODE = new OCType("GroundedSchemaNode");
     public static final OCType SymmetricHebbianLink = new OCType("SymmetricHebbianLink");
     
-    public final OCType InheritsLink = new OCType("InheritsLink");
+    public static final OCType InheritsLink = new OCType("InheritsLink");
     
     
-    public static final String SIMILARITY_LINK = "SimilarityLink";
-    public static final String INTENSIONAL_INHERITANCE_LINK = "IntensionInheritLink";
-    public static final String EXTENSIONAL_INHERITANCE_LINK = "ExtensionInheritLink";
+    public static final OCType SIMILARITY_LINK = new OCType("SimilarityLink");
+    public static final OCType INTENSIONAL_INHERITANCE_LINK = new OCType("IntensionInheritLink");
+    public static final OCType EXTENSIONAL_INHERITANCE_LINK = new OCType("ExtensionInheritLink");
+    public static final OCType EXTENSIONAL_SIMILARITY_LINK = new OCType("ExtensionSimilarityLink");
 
-    //final MutableDirectedAdjacencyGraph<OCType, DirectedEdge<OCType>> inheritance = new MutableRootedTreeAdjacencyGraph();
-    
     MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>> inheritance = new MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>>();
     
     protected void addType(OCType type, OCType... supertypes) {
@@ -181,33 +171,34 @@ public class AtomTypes {
 //
 //		// Inheritence and association links
 //		INHERITANCE_LINK <- ORDERED_LINK
-        //c.addType(INHERITANCE_LINK, ORDERED_LINK);
+        addType(InheritsLink, OrderedLink);
 
 //		SIMILARITY_LINK <- UNORDERED_LINK
-        //c.addType(SIMILARITY_LINK, UNORDERED_LINK);
-//
-//
+        addType(SIMILARITY_LINK, UnorderedLink);
+
 //		EXTENSIONAL_INHERITANCE_LINK <- ORDERED_LINK
-        //c.addType(EXTENSIONAL_INHERITANCE_LINK, ORDERED_LINK);
+        addType(EXTENSIONAL_INHERITANCE_LINK, OrderedLink);
 
 //		EXTENSIONAL_SIMILARITY_LINK <- ORDERED_LINK
+        addType(EXTENSIONAL_SIMILARITY_LINK, OrderedLink);
+        
 //		INTENSIONAL_INHERITANCE_LINK <- ORDERED_LINK
-        //c.addType(INTENSIONAL_INHERITANCE_LINK, ORDERED_LINK);
+        addType(INTENSIONAL_INHERITANCE_LINK, OrderedLink);
 
 //		INTENSIONAL_SIMILARITY_LINK <- ORDERED_LINK
 //
 //		// Procedure, schema and predicate nodes.
 //		PROCEDURE_NODE <- NODE
-        //c.addType(PROCEDURE_NODE, NODE);
+        addType(PROCEDURE_NODE, NodeType);
 
 //		GROUNDED_PROCEDURE_NODE <- PROCEDURE_NODE
-        //c.addType(GROUNDED_PROCEDURE_NODE, PROCEDURE_NODE);
+        addType(GROUNDED_PROCEDURE_NODE, PROCEDURE_NODE);
 
 //		SCHEMA_NODE <- PROCEDURE_NODE
-        //c.addType(SCHEMA_NODE, PROCEDURE_NODE);
+        addType(SCHEMA_NODE, PROCEDURE_NODE);
 
 //		GROUNDED_SCHEMA_NODE <- SCHEMA_NODE,GROUNDED_PROCEDURE_NODE		
-        //c.addType(GROUNDED_SCHEMA_NODE, SCHEMA_NODE, GROUNDED_PROCEDURE_NODE);
+        addType(GROUNDED_SCHEMA_NODE, SCHEMA_NODE, GROUNDED_PROCEDURE_NODE);
 
 //
 //		PREDICATE_NODE <- SCHEMA_NODE

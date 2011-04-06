@@ -3,9 +3,10 @@ package jcog.atom;
 /*
  * Adapted from Jung's "SetHypergraph.java"
  */
+import edu.uci.ics.jung.graph.Graph;
+import edu.uci.ics.jung.graph.util.Pair;
 import java.io.Serializable;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,20 +18,32 @@ import java.util.Set;
 import edu.uci.ics.jung.graph.Hypergraph;
 import edu.uci.ics.jung.graph.MultiGraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** implementation of JUNG's hypergraph that maintains ordering of the vertices pointed to by an edge(=link) */
-public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<V, H>, Serializable {
+public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<V, H>, /*Graph<V,H>*/ Serializable {
 
-    protected Map<V, Set<H>> vertices; // Map of vertices to incident hyperedge sets
-    protected Map<H, List<V>> edges;    // Map of hyperedges to incident vertex sets
+    protected final Map<V, Set<H>> vertices; // Map of vertices to incident hyperedge sets
+    protected final Map<H, List<V>> edges;    // Map of hyperedges to incident vertex sets
+
+    public OrderedSetHypergraph() {
+        this(false);
+    }
 
     /**
      * Creates a <code>SetHypergraph</code> and initializes the internal data structures.
      */
-    public OrderedSetHypergraph() {
+    public OrderedSetHypergraph(boolean concurrent /*, boolean weak*/) {
         super();
-        vertices = new HashMap();
-        edges = new HashMap();
+        if (concurrent) {
+            vertices = new ConcurrentHashMap();
+            edges = new ConcurrentHashMap();
+        }
+        else {
+            vertices = new HashMap();
+            edges = new HashMap();
+        }
     }
 
     public void clear() {
@@ -38,11 +51,15 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         edges.clear();
     }
 
+
+    @Deprecated
     public boolean addEdge(H h, java.util.Collection<? extends V> v) {
+        assert false;
         //TODO add as a List<V>...
         return false;
     }
 
+    @Deprecated
     public boolean addEdge(H h, java.util.Collection<? extends V> v, EdgeType arg2) {
         return addEdge(h, v);
     }
@@ -157,7 +174,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
             return null;
         }
 
-        Collection<H> edges = new ArrayList<H>();
+        Collection<H> edges = new LinkedList<H>();
         for (H h : getIncidentEdges(v1)) {
             if (isIncident(v2, h)) {
                 edges.add(h);
@@ -296,4 +313,55 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
     public Collection<V> getSuccessors(V vertex) {
         return getNeighbors(vertex);
     }
+
+//    @Override
+//    public boolean isPredecessor(V v, V v1) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    @Override
+//    public boolean isSuccessor(V v, V v1) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    @Override
+//    public int getPredecessorCount(V v) {
+//        return getIncidentEdges(v).size();
+//    }
+//
+//    @Override
+//    public int getSuccessorCount(V v) {
+//        return getIncidentVertices((H)v).size();
+//    }
+//
+//    @Override
+//    public boolean isSource(V v, H e) {
+//        return getIncidentVertices(e).contains(v);
+//    }
+//
+//    @Override
+//    public boolean isDest(V v, H e) {
+//        return getIncidentVertices(e).contains(v);
+//    }
+//
+//    @Override
+//    public boolean addEdge(H e, V v, V v1) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    @Override
+//    public boolean addEdge(H e, V v, V v1, EdgeType et) {
+//        throw new UnsupportedOperationException("Not supported yet.");
+//    }
+//
+//    @Override
+//    public Pair<V> getEndpoints(H e) {
+//        return new Pair<V>((V)e, getIncidentVertices(e).get(0));
+//    }
+//
+//    @Override
+//    public V getOpposite(V v, H e) {
+//        List<V> ll = getIncidentVertices(e);
+//        return ll.get(ll.size() - 1);
+//    }
 }

@@ -1,5 +1,7 @@
 package jcog.opencog;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.util.Collection;
 import java.util.HashMap;
@@ -21,7 +23,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     /** the default in-memory store */
     public final MemoryAtomSpace atomspace;
 
-    //public final List<ReadableAtomSpace> layers;
+    public final List<ReadableAtomSpace> subspaces;
     
     private Map<Atom, TruthValue> truth;
     private Map<Atom, AttentionValue> attention;
@@ -35,6 +37,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         super();
         this.atomspace = a;
         
+        subspaces = new LinkedList();
+        
         truth = new HashMap();
         attention = new HashMap();
     }
@@ -42,7 +46,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public TruthValue getTruth(Atom a) {
         TruthValue t = truth.get(a);
         if (t == null) {
-            t = getDefaultTruth(a);
+            t = newDefaultTruthValue(a);
             truth.put(a, t);
         }
         return t;
@@ -51,17 +55,17 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public AttentionValue getAttention(Atom a) {
         AttentionValue t = attention.get(a);
         if (t == null) {
-            t = getDefaultAttention(a);
+            t = newDefaultAttentionValue(a);
             attention.put(a, t);
         }
         return t;
     }
                    
-    public TruthValue getDefaultTruth(Atom a) {
+    public TruthValue newDefaultTruthValue(Atom a) {
         return new SimpleTruthValue();
     }
     
-    public AttentionValue getDefaultAttention(Atom a) {
+    public AttentionValue newDefaultAttentionValue(Atom a) {
         boolean disposable = true;
         OCType type = atomspace.getType(a);
         if (type.equals(Atom.Type)) {
@@ -69,7 +73,17 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
         return new AttentionValue(disposable);
     }
-    
+
+    @Override
+    public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
+        return atomspace.visitEdges(predicate, op);
+    }
+
+    @Override
+    public boolean visitVertices(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
+        return atomspace.visitVertices(predicate, op);
+    }
+
 
     @Override
     public Atom addEdge(OCType t, Atom... members) {
@@ -105,7 +119,9 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public boolean removeVertex(Atom a) {
         return atomspace.removeVertex(a);
     }
-    
+
+
+
 //	public FloatMap getActivation() {
 //		return activation;
 //	}
@@ -135,42 +151,91 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 
     @Override
     public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes) {
-        return atomspace.getAtoms(type, includeSubtypes);
+        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
+        ib.addAll(atomspace.getAtoms(type, includeSubtypes));
+        for (ReadableAtomSpace ra : subspaces) {
+            //TODO add parameter so that ra.getAtoms can use this (parent)'s type hierarchy
+            ib.addAll(ra.getAtoms(type, includeSubtypes));
+        }
+        return ib.build();
+    }
+    
+    @Override
+    public Collection<Atom> getVertices() {
+        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
+        ib.addAll(atomspace.getVertices());
+        for (ReadableAtomSpace ra : subspaces) {
+            ib.addAll(ra.getVertices());
+        }        
+        return ib.build();
     }
 
     @Override
+    public Collection<Atom> getEdges() {
+        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
+        ib.addAll(atomspace.getEdges());
+        for (ReadableAtomSpace ra : subspaces) {
+            ib.addAll(ra.getEdges());
+        }        
+        return ib.build();
+    }
+
+
+    @Override
     public Atom getEdge(OCType type, Atom... members) {        
-        return atomspace.getEdge(type, members);
+        Atom a = atomspace.getEdge(type, members);
+        if (a != null) {
+            return a;
+        }
+        
+        for (ReadableAtomSpace ra : subspaces) {
+            Atom sa = ra.getEdge(type, members);
+            if (sa!=null)
+                return sa;
+        }
+        return null;
     }
     
     @Override
     public OCType getType(Atom a) {
-        return atomspace.getType(a);
+        OCType t = atomspace.getType(a);
+        if (t!=null)
+            return t;
+        //TODO look in subgraphs
+        return null;
     }
 
     @Override
     public String getName(Atom a) {
-        return atomspace.getName(a);
+        String n = atomspace.getName(a);
+        if (n!=null)
+            return n;
+        return a.uuid.toString();
+        //TODO look in subgraphs
     }
 
     @Override
     public int getArity(Atom e) {
         return atomspace.getArity(e);
+        //TODO look in subgraphs
     }
 
     @Override
     public boolean hasAtom(Atom a) {
         return atomspace.hasAtom(a);
+        //TODO look in subgraphs
     }
 
     @Override
     public Iterator<Atom> iterateVertices() {
         return atomspace.iterateVertices();
+        //TODO look in subgraphs
     }
 
     @Override
     public Iterator<Atom> iterateEdges() {
         return atomspace.iterateEdges();
+        //TODO look in subgraphs
     }
 
 
@@ -221,11 +286,13 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     @Override
     public Collection<Atom> getIncidentEdges(Atom vertex) {
         return atomspace.getIncidentEdges(vertex);
+        //TODO look in subgraphs
     }
 
     @Override
     public Collection<Atom> getIncidentVertices(Atom edge) {
         return atomspace.getIncidentVertices(edge);    
+        //TODO look in subgraphs
     }
 
     public short getMaxSeenSTI() {
@@ -233,16 +300,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     public short getMinSeenSTI() {
         return minSTISeen;
-    }
-
-    @Override
-    public Collection<Atom> getVertices() {
-        return atomspace.getVertices();
-    }
-
-    @Override
-    public Collection<Atom> getEdges() {
-        return atomspace.getEdges();
     }
 
     

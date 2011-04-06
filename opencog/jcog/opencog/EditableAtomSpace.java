@@ -9,7 +9,7 @@ package jcog.opencog;
  *
  * @author seh
  */
-interface EditableAtomSpace {
+interface EditableAtomSpace extends ReadableAtomSpace {
     
     Atom addEdge(OCType t, Atom... members);
 

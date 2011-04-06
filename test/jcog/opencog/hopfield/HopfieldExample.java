@@ -68,6 +68,10 @@ public class HopfieldExample extends DefaultOCMind {
             }            
         }
         
+        public void setRandom() {
+            setRandom(0, 1.0);
+        }
+        
         public void setRandom(double min, double max) {
             for (Atom a : array.atoms) {
                 setPixel(a, RandomNumber.getDouble(min, max));
@@ -126,7 +130,7 @@ public class HopfieldExample extends DefaultOCMind {
             
         }
 
-        ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)32, 0.25);
+        ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)32, 1.0);
         imprint.setRandom(0, 1.0);       
         addAgent(imprint);       
         
@@ -141,10 +145,12 @@ public class HopfieldExample extends DefaultOCMind {
         bitmapPanel.newWindow();
         
         new AgentControlPanel(this).newWindow();
+        
+        GraphView1.newGraphView(this);        
 
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(32, 32, 20.0);
+        new HopfieldExample(8, 8, 4.0);
     }
 }

@@ -18,4 +18,8 @@ public class RandomNumber {
     public static double getDouble(double min, double max) {
         return min + (Math.random() * (max-min));
     }
+
+    public static float getFloat(float min, float max) {
+        return (float)(min + (Math.random() * (max-min)));
+    }
 }
