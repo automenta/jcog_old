@@ -210,7 +210,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         String n = atomspace.getName(a);
         if (n!=null)
             return n;
-        return a.uuid.toString();
+        return null;
         //TODO look in subgraphs
     }
 

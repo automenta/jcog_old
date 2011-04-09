@@ -16,7 +16,7 @@ public class TypeExample {
     public static void main(String[] args) {
         OCMind mind = new DefaultOCMind();
         
-        GraphView1.newGraphView(mind);        
+        GraphView1.newGraphWindow(mind);        
 
 
     }

@@ -146,7 +146,7 @@ public class HopfieldExample extends DefaultOCMind {
         
         new AgentControlPanel(this).newWindow();
         
-        GraphView1.newGraphView(this);        
+        GraphView1.newGraphWindow(this);        
 
     }
 

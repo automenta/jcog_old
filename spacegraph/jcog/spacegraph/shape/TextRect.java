@@ -44,7 +44,8 @@ public class TextRect extends Rect {
 
     @Override
     public void draw(GL2 gl) {
-        //super.draw(gl);
+        if (isFilled())
+            super.draw(gl);
 
         if (textRenderer == null) {
             textRenderer = new TextRenderer(new Font("Arial", Font.PLAIN, 72));
