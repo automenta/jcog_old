@@ -31,6 +31,7 @@ abstract public class AbstractSurfaceDemo extends Surface implements Demo {
     }
 
     
+    
     public static JPanel newPanel(Surface space) {
         JPanel j = new JPanel(new BorderLayout());
         {
@@ -38,11 +39,11 @@ abstract public class AbstractSurfaceDemo extends Surface implements Demo {
 
             new FractalControl(sdc);
 
-            final ControlRigPanel crp = new ControlRigPanel(space, 0.25f);
-            new Thread(crp).start();
+            //final ControlRigPanel crp = new ControlRigPanel(space, 0.25f);
+            //new Thread(crp).start();
 
             j.add(sdc, BorderLayout.CENTER);
-            j.add(crp, BorderLayout.SOUTH);
+            //j.add(crp, BorderLayout.SOUTH);
         }
         return j;
     }

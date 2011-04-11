@@ -24,6 +24,8 @@ import jcog.opencog.attention.UpdateImportance;
  * @author seh
  */
 public class HopfieldExample extends DefaultOCMind {
+    private final int width, height, numNodes;
+    private final AtomArray2D bitmap;
 
     public static class ImprintBitmap extends MindAgent {
         private final AtomArray2D array;
@@ -99,12 +101,53 @@ public class HopfieldExample extends DefaultOCMind {
         
     }
 
+    protected void wireRandomly(double density) {
+            int numLinks = (int) Math.floor(numNodes * density);
+
+            while (numLinks > 0) {
+
+                Atom sourceNode = bitmap.getRandomNode();
+                Atom targetNode = bitmap.getRandomNode();
+
+                if (sourceNode == targetNode) {
+                    continue;
+                }
+
+                if (getEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode) == null) {
+                    addEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode);
+                    numLinks--;
+                }
+            }            
+    }
+    
+    protected void wireMesh() {
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                Atom center = bitmap.getAtom(x, y);
+                if (x != width-1)
+                    addEdge(AtomTypes.SymmetricHebbianLink, center, bitmap.getAtom(x+1, y));
+                if (y != height-1)
+                    addEdge(AtomTypes.SymmetricHebbianLink, center, bitmap.getAtom(x, y+1));
+            }
+            
+        }
+    }
+    
+    
+    /**
+     * 
+     * @param width
+     * @param height
+     * @param density  if density==0, create mesh
+     */
     public HopfieldExample(int width, int height, double density) {
         super();
 
-        final int numNodes = width * height;
+        this.width = width;
+        this.height = height;
+        numNodes = width * height;
 
-        AtomArray2D bitmap = new AtomArray2D(HopfieldExample.this, getClass().getSimpleName(), width, height);
+        bitmap = new AtomArray2D(HopfieldExample.this, getClass().getSimpleName(), width, height);
 
         /* A number of HebbianLinks are also randomly distributed
          * to connect these nodes, (the number is specified either
@@ -112,22 +155,11 @@ public class HopfieldExample extends DefaultOCMind {
          */
         //TODO detect if density is too high, making it impossible to wire
 
-        int numLinks = (int) Math.floor(numNodes * density);
-
-        while (numLinks > 0) {
-
-            Atom sourceNode = bitmap.getRandomNode();
-            Atom targetNode = bitmap.getRandomNode();
-            
-            if (sourceNode == targetNode) {
-                continue;
-            }
-
-            if (getEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode) == null) {
-                addEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode);
-                numLinks--;
-            }
-            
+        if (density > 0) {
+            wireRandomly(density);
+        }
+        else {
+            wireMesh();
         }
 
         ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)32, 1.0);
@@ -146,11 +178,11 @@ public class HopfieldExample extends DefaultOCMind {
         
         new AgentControlPanel(this).newWindow();
         
-        GraphView1.newGraphWindow(this);        
+        GraphView2.newGraphWindow(this);        
 
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(8, 8, 4.0);
+        new HopfieldExample(7, 7, 0);
     }
 }

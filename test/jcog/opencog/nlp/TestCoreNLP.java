@@ -25,7 +25,6 @@ import edu.stanford.nlp.util.Pair;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ import jcog.opencog.Atom;
 import jcog.opencog.AtomTypes;
 import jcog.opencog.DefaultOCMind;
 import jcog.opencog.OCMind;
-import jcog.opencog.hopfield.GraphView1;
+import jcog.opencog.hopfield.GraphView2;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -139,8 +138,8 @@ public class TestCoreNLP extends JPanel {
         
         
         JPanel w = new JPanel(new BorderLayout());
-        w.add(GraphView1.newGraphPanel(mind), BorderLayout.CENTER);
-        w.add(new JScrollPane(new JTextArea(outputText)), BorderLayout.SOUTH);        
+        w.add(GraphView2.newGraphPanel(mind), BorderLayout.CENTER);
+        //w.add(new JScrollPane(new JTextArea(outputText)), BorderLayout.SOUTH);        
         new SwingWindow(w, 800, 600, false);
     }
     
@@ -193,13 +192,13 @@ public class TestCoreNLP extends JPanel {
         
             String rs = e.getRelation().getShortName();
             
-            if (!gramRels.keySet().contains(rs)) {
-                Atom a = mind.addVertex(AtomTypes.ConceptNode, rs);
+            Atom a = gramRels.get(rs);
+            if (a==null) {
+                a = mind.addVertex(AtomTypes.ConceptNode, rs);
                 gramRels.put(rs, a);
             }
-            Atom ra = gramRels.get(rs);
             
-            Atom er = mind.addEdge(AtomTypes.INTENSIONAL_INHERITANCE_LINK, ra, ee);
+            Atom er = mind.addEdge(AtomTypes.INTENSIONAL_INHERITANCE_LINK, a, ee);
         }
     }
 }

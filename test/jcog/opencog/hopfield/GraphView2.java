@@ -5,22 +5,18 @@
 package jcog.opencog.hopfield;
 
 import com.sun.opengl.util.awt.TextRenderer;
-import edu.uci.ics.jung.algorithms.layout.Layout;
-import edu.uci.ics.jung.algorithms.layout.SpringLayout;
-import edu.uci.ics.jung.algorithms.transformation.FoldingTransformer;
-import edu.uci.ics.jung.algorithms.util.IterativeContext;
-import edu.uci.ics.jung.graph.DirectedSparseMultigraph;
-import edu.uci.ics.jung.graph.Graph;
+import com.syncleus.dann.graph.AbstractDirectedEdge;
+import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
+import com.syncleus.dann.graph.drawing.hyperassociativemap.HyperassociativeMap;
+import com.syncleus.dann.math.Vector;
 import edu.uci.ics.jung.graph.Hypergraph;
-import edu.uci.ics.jung.graph.util.Pair;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.media.opengl.GL2;
 import javax.swing.JPanel;
 import jcog.math.RandomNumber;
@@ -35,23 +31,26 @@ import jcog.spacegraph.shape.TextRect;
 import jcog.spacegraph.shape.TrapezoidLine;
 import jcog.spacegraph.swing.SwingWindow;
 import jcog.spacegraph.ui.PointerLayer;
-import org.apache.commons.collections15.Factory;
 
 /**
  *
  * @author seh
  */
-public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
+public class GraphView2 extends AbstractSurfaceDemo implements Drawable {
     private final MemoryAtomSpace graph;
 
     private HashMap<Atom, TextRect> atomRect = new HashMap();
-    private HashMap<Atom, TrapezoidLine> edgeCurve = new HashMap();
+    private HashMap<FoldedEdge, TrapezoidLine> edgeCurve = new HashMap();
+    final int alignCycles = 1;
     
     private final OCMind mind;
-    private Layout<Atom,Atom> layout;
+    private HyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
     
     final static TextRenderer textRenderer = TextRect.newTextRenderer(new Font("Arial", Font.PLAIN, 32));
-    private Graph<Atom, Atom> digraph;
+
+    
+    
+    private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
 
     @Override
     public String getName() {
@@ -63,12 +62,11 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         return "Graph View";
     }
 
-    public GraphView1(OCMind mind) {
+    public GraphView2(OCMind mind) {
         super();
         
         this.mind = mind;
         this.graph = mind.atomspace;
-        
         
         //add(new GridRect(6, 6));
 
@@ -109,8 +107,9 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         return new Vec3f(0.1f, 0.1f, 1.0f);
     }
     
-    private void addEdge(Atom e, Atom s, Atom t) {
-        //Pair<Atom> p = new Pair(s, t);
+    private void addEdge(final FoldedEdge e) {
+        final Atom s = e.getSourceNode();
+        final Atom t = e.getDestinationNode();
         TrapezoidLine c = edgeCurve.get(e);
         if (c==null) {
             c = new TrapezoidLine(atomRect.get(s), atomRect.get(t), 0.1f, 0.05f);
@@ -118,12 +117,12 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         }
     }
 
-    protected static class LabeledAtom extends Atom {
+    protected static class FoldedEdge extends AbstractDirectedEdge<Atom> {
         private final String label;
         private final Atom parentEdge;
 
-        public LabeledAtom(Atom parentEdge, String label) {
-            super();
+        public FoldedEdge(Atom src, Atom dest, Atom parentEdge, String label) {
+            super(src, dest);
             this.label = label;
             this.parentEdge = parentEdge;
         }
@@ -135,14 +134,10 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         
     }
 
-    private void updateCurve(Atom e) {
+    private void updateCurve(FoldedEdge e) {
         final TrapezoidLine c = edgeCurve.get(e);
         
-        final Atom truthSource;
-        if (e instanceof LabeledAtom)
-            truthSource = ((LabeledAtom)e).parentEdge;
-        else 
-            truthSource = e;
+        final Atom truthSource = ((FoldedEdge)e).parentEdge;
         
         TruthValue tv = mind.getTruth(truthSource);
         final float w = 1f + (float)tv.getMean() * 4f;
@@ -153,7 +148,7 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         
         final float hue = ((float)(Math.abs(mind.getType(truthSource).getName().hashCode()))%100)/100.0f;
                 
-        final Color h = Color.getHSBColor(hue, 0.7f, 0.8f);
+        final Color h = Color.getHSBColor(hue, 0.8f, 1.0f);
         float[] hRGB = h.getColorComponents(null);
         c.setColor(v*hRGB[0], v*hRGB[1], v*hRGB[2]);
     }
@@ -194,32 +189,35 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
      * @param edge_factory factory used to create the new edges 
      * @return a copy of the input graph where hyperedges are replaced by cliques
      */
-    public Graph<Atom,Atom> foldHypergraphEdges(final Graph<Atom,Atom> target, final Hypergraph<Atom,Atom> h, boolean linkEdgeToMembers)
+    public MutableDirectedAdjacencyGraph<Atom, FoldedEdge> foldHypergraphEdges(final MutableDirectedAdjacencyGraph<Atom, FoldedEdge> target, final Hypergraph<Atom,Atom> h, boolean linkEdgeToMembers)
     {
         for (Atom v : h.getVertices()) {
-            target.addVertex(v);            
+            target.add(v);            
         }
         
         for (Atom e : h.getEdges())
         {
-            target.addVertex(e);            
+            target.add(e);            
             
             ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
             
             if (linkEdgeToMembers) {
                 for (int i = 0; i < incident.size(); i++) {                
-                   target.addEdge(new LabeledAtom(e, "("), e, incident.get(i));
+                   target.add(new FoldedEdge(e, incident.get(i), e, "(") );
                    if (i > 0)
-                        target.addEdge(new LabeledAtom(e, Integer.toString(i)), incident.get(i-1), incident.get(i));
+                        target.add(new FoldedEdge(incident.get(i-1), incident.get(i), e, Integer.toString(i)) );
                 }
             }
             else {
+                final String typeString = mind.getType(e).toString();
+                
                 //Just link the edge to the first element
                 for (int i = 0; i < incident.size(); i++) {                
+
                    if (i > 0)
-                        target.addEdge(new LabeledAtom(e, Integer.toString(i)), incident.get(i-1), incident.get(i));
+                        target.add(new FoldedEdge(incident.get(i-1), incident.get(i), e, Integer.toString(i)));
                    else 
-                        target.addEdge(new LabeledAtom(e, "(" + mind.getType(e)), e, incident.get(i));
+                        target.add(new FoldedEdge(e, incident.get(i), e, "(" + typeString));
                 }
                 
             }
@@ -236,33 +234,19 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
             addVertex(v);
         }
         
-        digraph = foldHypergraphEdges(new DirectedSparseMultigraph(), mind.atomspace.graph, false);
+        digraph = foldHypergraphEdges(new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(),
+                mind.atomspace.graph, false);
 
-//             Graph<Atom, Atom> digraph = FoldingTransformer.foldHypergraphVertices(mind.atomspace.graph, new Factory<Graph<Atom, Atom>>() {
-//
-//                              @Override
-//                              public Graph<Atom, Atom> create() {
-//                                  return new DirectedSparseMultigraph();
-//                              }
-//                              
-//                          }, new Factory<Atom>() {
-//
-//                              @Override
-//                              public Atom create() {
-//                                  return new Atom();
-//                              }
-//                                      
-//                          });
         
-        for (Atom e : digraph.getEdges()) {
-            addEdge(e, digraph.getSource(e), digraph.getDest(e));
+        for (FoldedEdge e : digraph.getEdges()) {
+            addEdge(e);
         }
-
-        layout = new SpringLayout(digraph);
-        //layout = new ISOMLayout(digraph);
-        //layout = new KKLayout(digraph);
-        layout.setSize(new Dimension(1000, 1000));
-        layout.initialize();
+        
+        int numDimensions = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        ham = new HyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, executor);
+        //ham.setEquilibriumDistance(1.0);
+  
         
         
     }
@@ -271,18 +255,29 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
         for (Atom v : atomRect.keySet()) {
             updateRect(atomRect.get(v), mind.getNormalizedSTI(v));
         }
-        for (Atom e : digraph.getEdges()) {
+        for (FoldedEdge e : digraph.getEdges()) {
             updateCurve(e);            
         }
         
-
-        ((IterativeContext)layout).step();
         
+        for (int i = 0; i < alignCycles; i++)
+            ham.align();
+        
+        
+        final float s = 0.2f;
         for (Entry<Atom,TextRect> i : atomRect.entrySet()) {
-            Point2D p = layout.transform(i.getKey());            
-            float x = -5.0f + (float)p.getX() / 100.0f;
-            float y = -5.0f + (float)p.getY() / 100.0f;
-            i.getValue().setCenter(x, y);
+            final Vector v = ham.getCoordinates().get(i.getKey());
+            if (v.getDimensions() == 2) {
+                float x = (float)v.getCoordinate(1)*s;
+                float y = (float)v.getCoordinate(2)*s;
+                i.getValue().setCenter(x, y);
+            }
+            else if (v.getDimensions() == 3) {
+                float x = (float)v.getCoordinate(1)*s;
+                float y = (float)v.getCoordinate(2)*s;
+                float z = (float)v.getCoordinate(3)*s;
+                i.getValue().setCenter(x, y, z);
+            }
         }
     }
     
@@ -305,11 +300,11 @@ public class GraphView1 extends AbstractSurfaceDemo implements Drawable {
     }
         
     public static JPanel newGraphPanel(OCMind mind) {
-        return AbstractSurfaceDemo.newPanel(new GraphView1(mind));
+        return AbstractSurfaceDemo.newPanel(new GraphView2(mind));
     }
 
     public static void newGraphWindow(OCMind mind) {
-        new SwingWindow(AbstractSurfaceDemo.newPanel(new GraphView1(mind)), 800, 800, true);
+        new SwingWindow(AbstractSurfaceDemo.newPanel(new GraphView2(mind)), 800, 800, true);
     }
 
 
