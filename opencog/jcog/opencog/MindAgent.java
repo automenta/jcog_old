@@ -30,7 +30,9 @@ import java.util.Map;
 public abstract class MindAgent {
 
     private String id;
-    private int period;
+    private double period = 0.0;
+    double accumulatedDT = 0.0;
+    
     private Map<Atom, Short> atomStimulus = new HashMap();
     //private List<Atom> utilizedAtoms = new LinkedList();
     
@@ -50,12 +52,24 @@ public abstract class MindAgent {
     }
 
     /** determines how often this agent is scheduled to run().  1 means will be executed each cycle, 2 means every other cycle, etc. (was 'frequency' parameter) */
-    public int getPeriod() {
+    public double getPeriod() {
         return period;
     }
 
+    public void setPeriod(double period) {
+        this.period = period;
+    }
+    
+    public void _run(OCMind mind, double dt) {
+        accumulatedDT += dt;
+        if (accumulatedDT >= getPeriod()) {
+            run(mind);
+            accumulatedDT = 0;
+        }
+    }
+    
     /** the activity that will be invoked when the mind schedules it to run */
-    abstract public void run(OCMind mind);
+    abstract protected void run(OCMind mind);
 
 //	/** The atoms utilized by the Agent in a single cycle, to be used by the
 //	 *  System Activity Table to assign credit to this agent. */
@@ -159,8 +173,5 @@ public abstract class MindAgent {
     public Collection<Atom> getStimulated() {
         return atomStimulus.keySet();
     }
-    
-    
-
     
 }

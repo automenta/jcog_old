@@ -25,7 +25,6 @@ import jcog.opencog.attention.UpdateImportance;
  */
 public class HopfieldExample extends DefaultOCMind {
     private final int width, height, numNodes;
-    private final AtomArray2D bitmap;
 
     public static class ImprintBitmap extends MindAgent {
         private final AtomArray2D array;
@@ -41,6 +40,7 @@ public class HopfieldExample extends DefaultOCMind {
             this.array = array;
             this.maxPixelStimulus = maxPixelStimulus;
             this.imprintProbability = imprintProbabaility;
+            
         }
         
         public void setPixel(Atom a, double value) {
@@ -101,7 +101,7 @@ public class HopfieldExample extends DefaultOCMind {
         
     }
 
-    protected void wireRandomly(double density) {
+    protected void wireRandomly(AtomArray2D bitmap, double density) {
             int numLinks = (int) Math.floor(numNodes * density);
 
             while (numLinks > 0) {
@@ -120,7 +120,7 @@ public class HopfieldExample extends DefaultOCMind {
             }            
     }
     
-    protected void wireMesh() {
+    protected void wireMesh(AtomArray2D bitmap) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Atom center = bitmap.getAtom(x, y);
@@ -133,6 +133,13 @@ public class HopfieldExample extends DefaultOCMind {
         }
     }
     
+    public HopfieldExample(int width, int height) {
+        super();
+
+        this.width = width;
+        this.height = height;
+        numNodes = width * height;
+    }
     
     /**
      * 
@@ -141,11 +148,9 @@ public class HopfieldExample extends DefaultOCMind {
      * @param density  if density==0, create mesh
      */
     public HopfieldExample(int width, int height, double density) {
-        super();
+        this(width, height);
 
-        this.width = width;
-        this.height = height;
-        numNodes = width * height;
+        AtomArray2D bitmap;
 
         bitmap = new AtomArray2D(HopfieldExample.this, getClass().getSimpleName(), width, height);
 
@@ -156,10 +161,10 @@ public class HopfieldExample extends DefaultOCMind {
         //TODO detect if density is too high, making it impossible to wire
 
         if (density > 0) {
-            wireRandomly(density);
+            wireRandomly(bitmap, density);
         }
         else {
-            wireMesh();
+            wireMesh(bitmap);
         }
 
         ImprintBitmap imprint = new ImprintBitmap(bitmap, (short)32, 1.0);
@@ -178,11 +183,11 @@ public class HopfieldExample extends DefaultOCMind {
         
         new AgentControlPanel(this).newWindow();
         
-        GraphView2.newGraphWindow(this);        
+        GraphView.newGraphWindow(this);        
 
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(7, 7, 0);
+        new HopfieldExample(4, 4, 0);
     }
 }

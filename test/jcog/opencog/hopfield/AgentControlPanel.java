@@ -210,10 +210,10 @@ public class AgentControlPanel extends JPanel {
 
     protected void runAgent(MindAgentPanel m) {
         //TODO calculate runtime of each agent to display
-        m.agent.run(mind);
+        m.agent._run(mind, 1.0);
     }
 
-    protected void cycle() {
+    protected void cycle() {        
         for (MindAgent m : mind.getAgents()) {
             MindAgentPanel map = getMindAgentPanel(m);
             if (map.cycleEnabled.isSelected()) {

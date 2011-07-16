@@ -6,6 +6,7 @@ package jcog.spacegraph.shape;
 
 import javax.media.opengl.GL2;
 import jcog.spacegraph.math.linalg.Vec2f;
+import jcog.spacegraph.math.linalg.Vec3f;
 
 /**
  *
@@ -26,6 +27,20 @@ public class TrapezoidLine extends Spatial implements Drawable {
         setEndWidth(endWidth);
     }
 
+    public void setWidths(float[] envelope) {
+        if ((envelope.length > 2) || (envelope.length < 1)) {
+            System.out.println(this + " supports envelope of length 1 or 2 widths");
+            return;
+        }
+        if (envelope.length == 1) {
+            this.sourceWidth = envelope[0];
+            this.endWidth = envelope[0];
+        }
+        else if (envelope.length == 2) {
+            this.sourceWidth = envelope[0];
+            this.endWidth = envelope[1];            
+        }
+    }
     public void setSourceWidth(float sourceWidth) {
         this.sourceWidth = sourceWidth;
     }
@@ -76,6 +91,11 @@ public class TrapezoidLine extends Spatial implements Drawable {
 
     }
 
+    public void setColor(Vec3f color) {
+        this.cr = color.x();
+        this.cg = color.y();
+        this.cb = color.z();
+    }
     public void setColor(float cr, float cg, float cb) {
         this.cr = cr;
         this.cg = cg;

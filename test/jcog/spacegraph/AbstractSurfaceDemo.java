@@ -24,47 +24,30 @@ import javax.swing.JTextField;
  *
  * @author me
  */
-abstract public class AbstractSurfaceDemo extends Surface implements Demo {
+@Deprecated abstract public class AbstractSurfaceDemo extends Surface implements Demo {
 
     public AbstractSurfaceDemo() {
         super();
     }
-
     
-    
-    public static JPanel newPanel(Surface space) {
-        JPanel j = new JPanel(new BorderLayout());
-        {
-            SGPanel sdc = new SGPanel(space);
 
-            new FractalControl(sdc);
-
-            //final ControlRigPanel crp = new ControlRigPanel(space, 0.25f);
-            //new Thread(crp).start();
-
-            j.add(sdc, BorderLayout.CENTER);
-            //j.add(crp, BorderLayout.SOUTH);
-        }
-        return j;
-    }
-
-    @Override
-    public JPanel newPanel() {
-        JPanel j = new JPanel(new BorderLayout());
-        {
-            DemoRectTilt dc = new DemoRectTilt();
-            SGPanel sdc = new SGPanel(dc);
-
-            new FractalControl(sdc);
-
-            final ControlRigPanel crp = new ControlRigPanel(dc, 0.25f);
-            new Thread(crp).start();
-
-            j.add(sdc, BorderLayout.CENTER);
-            j.add(crp, BorderLayout.SOUTH);
-        }
-        return j;
-    }
+//    @Override
+//    public JPanel newPanel() {
+//        JPanel j = new JPanel(new BorderLayout());
+//        {
+//            DemoRectTilt dc = new DemoRectTilt();
+//            SGPanel sdc = new SGPanel(dc);
+//
+//            new FractalControl(sdc);
+//
+//            final ControlRigPanel crp = new ControlRigPanel(dc, 0.25f);
+//            new Thread(crp).start();
+//
+//            j.add(sdc, BorderLayout.CENTER);
+//            j.add(crp, BorderLayout.SOUTH);
+//        }
+//        return j;
+//    }
 
     @Override
     protected synchronized void handleTouch(Pointer p) {

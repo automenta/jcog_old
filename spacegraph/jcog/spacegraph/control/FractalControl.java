@@ -38,6 +38,7 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
     float tiltSpeed = 0.002f;
     private boolean panning = false;
     private boolean hasPanned = false;
+    private boolean rotating = false;
     float zoomDilation = 1.05f;
     float nearPadding = 1.05f;
     final float DRAG_THRESHOLD = 4.0f; //in pixel lengths
@@ -74,7 +75,8 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
     @Override
     public void mousePressed(MouseEvent e) {
         int button = e.getButton();
-        if ((button == 3) || (button == 1)) {
+        rotating = false;
+        if ((button == 3) || (button == 1) || (button == 2)) {
             downPixel.set((float) e.getX(), (float) e.getY());
             downPointPos.set(targetPos);
             downPointTarget.set(targetTarget);
@@ -90,8 +92,12 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
                     hasDragged = false;
                     dragged.onDragStart(surface.getPointer(), surface.getPointer().world);
                 }
+            } else if (button == 2) {
+                rotating = true;
+                hasPanned = false;
             }
         } else {
+            rotating = false;
             panning = false;
             dragging = false;
         }
@@ -155,7 +161,7 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (panning) {
+        if ((panning) || (rotating)) {
             if (!hasPanned) {
                 if (distSqr(e.getX(), e.getY(), downPixel.x(), downPixel.y()) > DRAG_THRESHOLD * DRAG_THRESHOLD) {
                     hasPanned = true;
@@ -170,9 +176,14 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
                 float dx = xAng - downWorld.x();
                 float dy = yAng - downWorld.y();
 
-                if (surface.keyStates.get(KeyStates.CONTROL)) {
+                if (rotating) {
                     tiltAngle += dy * tiltSpeed;
-                    targetUp.set((float) Math.cos(tiltAngle), (float) Math.sin(tiltAngle), 0);
+                    targetUp.set((float) Math.cos(tiltAngle), (float) Math.sin(tiltAngle), 0);                    
+                    System.out.println("TODO: implement rotation");
+//                }
+//                else if (surface.keyStates.get(KeyStates.CONTROL)) {
+//                    tiltAngle += dy * tiltSpeed;
+//                    targetUp.set((float) Math.cos(tiltAngle), (float) Math.sin(tiltAngle), 0);
                 } else {
 
                     //rotate by current tiltAngle
@@ -219,7 +230,6 @@ public class FractalControl implements MouseListener, MouseMotionListener, Mouse
                 }
             }
         }
-
     }
 
     public float getPanSpeed() {

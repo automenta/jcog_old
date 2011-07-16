@@ -267,7 +267,7 @@ public class UpdateImportance extends MindAgent {
         //totalStimulusSinceReset.update(total);
     }
 
-    private void randomStimulation(MindAgent ag) {
+    private void randomStimulation(MindAgent ag) {        
 //		int expectedNum, actualNum;
 //		HandleEntry *h, *q;
 //		opencog::RandGen *rng;

@@ -12,7 +12,7 @@ import javax.media.opengl.GL2;
  *
  * @author seh
  */
-class Spatial {
+public class Spatial {
     protected Vec3f center;
     protected Vec3f scale;
     protected Vec3f rotation;

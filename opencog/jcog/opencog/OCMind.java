@@ -29,6 +29,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     private Map<Atom, AttentionValue> attention;
     private List<MindAgent> agents = new LinkedList();
     private short minSTISeen = 0, maxSTISeen = 0;
+    private long lastCycle=0, currentCycle=0;
 	
 //	private FloatMap activation; //???
 //	private FloatMap importance;//???
@@ -143,6 +144,19 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             return;
         }
         agents.add(m);
+    }
+    
+    public double getCycleDT() {
+        return ((double)(currentCycle - lastCycle)) / 1.0e9;
+    }
+    
+    public void cycle() {
+        lastCycle = currentCycle;
+        currentCycle = System.nanoTime();
+                
+        for (MindAgent ma : agents) {
+            ma._run(this, getCycleDT());
+        }
     }
     
     public List<MindAgent> getAgents() {

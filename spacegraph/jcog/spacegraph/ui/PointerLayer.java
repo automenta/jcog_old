@@ -19,7 +19,7 @@ public class PointerLayer implements Drawable {
     private final Surface canvas;
     final Vec3f color = new Vec3f();
     
-    final Vec3f red = new Vec3f(1f, 0, 0);
+    final Vec3f gray = new Vec3f(0.95f, 0.95f, 0.95f);
     final Vec3f green  = new Vec3f(0, 1f, 0);
     
     float minPointerSize = 0.2f;
@@ -33,10 +33,15 @@ public class PointerLayer implements Drawable {
     float deltaPhase = 0.01f;
     int numSteps = 16;
     
-    public PointerLayer(Surface canvas) {
+    public PointerLayer(Surface canvas, int numSteps) {
         super();
         this.canvas = canvas;
+        this.numSteps = numSteps;
     }
+
+    public void setNumSteps(int numSteps) {
+        this.numSteps = numSteps;
+    }        
 
     public void draw(GL2 gl) {
         //gl.glMatrixMode(GL2ES1.GL_MODELVIEW);
@@ -71,10 +76,13 @@ public class PointerLayer implements Drawable {
             color.lerp(green, 0.9f);
         }
          else {
-            color.lerp(red, 0.9f);
+            color.lerp(gray, 0.9f);
          }
         
+        
+        
         gl.glBegin(GL2.GL_LINES);
+        
         for (int i = numSteps - 1; i >= 0; i--) {
             gl.glColor4f(color.x(), color.y(), color.z(), alpha);
             gl.glVertex3d(x + radius * Math.cos(phase + i * increment),
