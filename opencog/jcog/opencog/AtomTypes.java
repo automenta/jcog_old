@@ -41,6 +41,7 @@ public class AtomTypes {
     public static final OCType SCHEMA_NODE = new OCType("SchemaNode");
     public static final OCType GROUNDED_SCHEMA_NODE = new OCType("GroundedSchemaNode");
     public static final OCType SymmetricHebbianLink = new OCType("SymmetricHebbianLink");
+    public static final OCType AsymmetricHebbianLink = new OCType("AsymmetricHebbianLink");
     
     public static final OCType InheritsLink = new OCType("InheritsLink");
     
@@ -365,8 +366,15 @@ public class AtomTypes {
 //		// Attention allocation atoms:
 //
 //		HEBBIAN_LINK <- LINK
+        
+                //TODO ^^^
+        
 //		ASYMMETRIC_HEBBIAN_LINK <- ORDERED_LINK,HEBBIAN_LINK
+                addType(AtomTypes.AsymmetricHebbianLink, AtomTypes.OrderedLink); 
+
 //		SYMMETRIC_HEBBIAN_LINK <- UNORDERED_LINK,HEBBIAN_LINK
+                addType(AtomTypes.SymmetricHebbianLink, AtomTypes.UnorderedLink); 
+                
 //		INVERSE_HEBBIAN_LINK <- ORDERED_LINK,HEBBIAN_LINK
 //		SYMMETRIC_INVERSE_HEBBIAN_LINK <- UNORDERED_LINK,HEBBIAN_LINK
 

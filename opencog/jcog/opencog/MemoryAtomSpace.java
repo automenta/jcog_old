@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import jcog.atom.OrderedSetHypergraph;
 import jcog.opencog.Atom.HasName;
@@ -31,7 +32,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     Multimap<OCType, Atom> typesToAtom;
     BiMap<Atom, String> names;
 
-    MemoryAtomSpace() {
+    public MemoryAtomSpace() {
         super();
         graph = new OrderedSetHypergraph<Atom, Atom>();
         typesToAtom = HashMultimap.create();
@@ -171,17 +172,21 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return names.get(a);
     }
     
+    public Atom addEdge(OCType t, String name, Atom... members) {
+        Atom e = new Atom();
+        indexAtom(e, t, name);
+        
+        graph.addEdge(e, Arrays.asList(members));
+        
+        return e;        
+    }
+    
     /**
      * TODO If a Link with the same type and outgoing set of a previously inserted Link is inserted in the AtomSpace, they are merged.
      */
     @Override
     public Atom addEdge(OCType t, Atom... members) {        
-        Atom e = new Atom();
-        indexAtom(e, t, null);
-        
-        graph.addEdge(e, Arrays.asList(members));
-        
-        return e;
+        return addEdge(t, null, members);
     }
     
     @Override
@@ -393,6 +398,10 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 //HandleSeq 	filter_InAttentionalFocus (InputIterator begin, InputIterator end) const
 //AtomSpace & 	operator= (const AtomSpace &)
 // 	AtomSpace (const AtomSpace &)
+
+    public Collection<Atom> getAtoms() {
+        return atomToType.keySet();
+    }
 
 
 }

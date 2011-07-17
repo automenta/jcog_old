@@ -38,7 +38,7 @@ import jcog.opencog.Atom;
 import jcog.opencog.AtomTypes;
 import jcog.opencog.DefaultOCMind;
 import jcog.opencog.OCMind;
-import jcog.opencog.hopfield.GraphView;
+import jcog.opencog.swing.GraphView;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**

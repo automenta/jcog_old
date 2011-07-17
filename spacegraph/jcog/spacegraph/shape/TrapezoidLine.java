@@ -51,6 +51,9 @@ public class TrapezoidLine extends Spatial implements Drawable {
 
     @Override
     public void draw(GL2 gl) {
+        if ((aRect == null) || (bRect == null))
+            return;
+        
         gl.glEnable(GL2.GL_DEPTH_TEST);
 
         gl.glPushMatrix();

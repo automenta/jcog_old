@@ -99,13 +99,13 @@ public abstract class MindAgent {
      * @param amount of stimulus to give.
      * @return total stimulus given since last reset.
      */
-    protected short addStimulus(Atom a, short deltaAmount) {
+    public short addStimulus(Atom a, short deltaAmount) {
         short newStimulus = (short)(getStimulus(a) + deltaAmount);
         setStimulus(a, newStimulus);
         return newStimulus; 
     }
 
-    protected void setStimulus(Atom a, short amount) {
+    public void setStimulus(Atom a, short amount) {
         atomStimulus.put(a, amount);
     }
 

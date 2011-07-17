@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.spacegraph;
+package jcog.opencog.swing;
 
 import java.awt.BorderLayout;
 import javax.swing.JPanel;

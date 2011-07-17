@@ -3,12 +3,16 @@ package jcog.opencog;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import edu.uci.ics.jung.graph.util.Pair;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import jcog.opencog.atom.AttentionValue;
 import jcog.opencog.atom.SimpleTruthValue;
 import jcog.opencog.atom.TruthValue;
@@ -85,7 +89,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.visitVertices(predicate, op);
     }
 
-
+    public Atom addEdge(OCType t, String name, Atom... members) {
+        return atomspace.addEdge(t, name, members);
+    }
+    
     @Override
     public Atom addEdge(OCType t, Atom... members) {
         return atomspace.addEdge(t, members);
@@ -264,15 +271,19 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public short getLTI(Atom a) {
         return getAttention(a).getLTI();
     }
+    
+    public double getNormalizedSTI(Atom a, double maxSTI, double minSTI) {
+        double sti = getSTI(a);
+        
+        if (maxSTI!=minSTI)
+            return (sti - ((double)minSTI)) / (double)(maxSTI - minSTI);
+        else
+            return 0;
+    }
 
     /** returns an atom's STI normalized to -1..+1 range */
     public double getNormalizedSTI(Atom a) {
-        double sti = getSTI(a);
-        
-        if (maxSTISeen!=minSTISeen)
-            return (sti - ((double)minSTISeen)) / (double)(maxSTISeen - minSTISeen);
-        else
-            return 0;
+        return getNormalizedSTI(a, maxSTISeen, minSTISeen);
     }
     
     public Pair<Short> getSTIRange(Collection<Atom> atoms) {
@@ -314,6 +325,46 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     public short getMinSeenSTI() {
         return minSTISeen;
+    }
+
+    public double getSecondsSinceLastCycle() {
+        final long current = System.nanoTime();
+        return ((double)(current - currentCycle)) / 1.0e9;
+    }
+
+    
+    public List<Atom> getAtomsByName(String substring) {
+        List<Atom> a = new ArrayList();
+        
+        for (Entry<Atom, String> e : atomspace.getNameIndex().entrySet()) {
+            if (e.getValue().contains(substring))
+                a.add(e.getKey());
+        }
+     
+        return a;
+    }
+    
+    //Sorts
+    public List<Atom> getAtomsBySTI(final boolean b, List<Atom> a) {              
+        Collections.sort(a, new Comparator<Atom>() { 
+            @Override public int compare(Atom o1, Atom o2) {
+                final short a1 = getAttention(o1).getSTI();
+                final short a2 = getAttention(o2).getSTI();
+                if (a1 == a2) return 0;
+                if (b) {
+                    return (a1 > a2) ? -1 : 1;
+                }
+                else {
+                    return (a1 > a2) ? 1 : -1;  
+                }
+            }            
+        });
+        return a;        
+    }
+
+    //Sorts
+    public List<Atom> getAtomsBySTI(final boolean b) {
+        return getAtomsBySTI(b, new ArrayList(atomspace.getAtoms()));
     }
 
     

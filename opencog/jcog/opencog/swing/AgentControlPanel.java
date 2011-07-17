@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog.hopfield;
+package jcog.opencog.swing;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -50,7 +49,16 @@ public class AgentControlPanel extends JPanel {
     private JFreeChart stiHistogram;
     private ChartPanel stiChart;
     Map<MindAgent, MindAgentPanel> mindAgentPanels = new WeakHashMap();
+    private final ControlPanelAgent agent;
 
+    class ControlPanelAgent extends MindAgent {
+
+        @Override
+        protected void run(OCMind mind) {
+        }
+        
+    }
+    
     /** panel representing a mind agent:
      *   --checkbox indicating whether it will be included in a cycle
      *   --button for immediate invocation
@@ -121,8 +129,11 @@ public class AgentControlPanel extends JPanel {
 
         this.mind = mind;
 
-        cycle = new JButton("Cycle");
-        cycle.setMnemonic('c');
+        this.agent = new ControlPanelAgent();
+        mind.addAgent(agent);
+        
+        cycle = new JButton("Update");
+        cycle.setMnemonic('u');
         cycle.addActionListener(new ActionListener() {
 
             @Override
@@ -131,7 +142,7 @@ public class AgentControlPanel extends JPanel {
 
                     @Override
                     public void run() {
-                        cycle();
+                        refresh();
                     }
                 });
             }
@@ -153,20 +164,41 @@ public class AgentControlPanel extends JPanel {
     protected void refresh() {
         removeAll();
 
+        
+        JPanel atomPanel = new JPanel(); 
+        atomPanel.setLayout(new BoxLayout(atomPanel, BoxLayout.PAGE_AXIS));
+        {   
+            int maxAtoms = 256;
+            final short boostAmount = 50;
+            
+            List<Atom> atoms = mind.getAtomsBySTI(true);
+            for (final Atom a : atoms) {
+                JButton b = new JButton(mind.getName(a) + " " + mind.getSTI(a));
+                b.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        agent.addStimulus(a, boostAmount);
+                        refresh();
+                    }                    
+                });
+                atomPanel.add(b);
+            }
+        }
+        
         JPanel agentPanel = new JPanel(new BorderLayout());
         {
-            JPanel agentList = new JPanel();
-            agentList.setLayout(new BoxLayout(agentList, BoxLayout.PAGE_AXIS));
-            {
-                for (MindAgent m : mind.getAgents()) {
-                    agentList.add(getMindAgentPanel(m));
-                }
-                agentList.add(Box.createVerticalBox());
-
-            }
-            agentPanel.add(new JScrollPane(agentList), BorderLayout.CENTER);
-
-            agentPanel.add(cycle, BorderLayout.SOUTH);
+//            JPanel agentList = new JPanel();
+//            agentList.setLayout(new BoxLayout(agentList, BoxLayout.PAGE_AXIS));
+//            {
+//                for (MindAgent m : mind.getAgents()) {
+//                    agentList.add(new JLabel(m) /* getMindAgentPanel(m) */ );
+//                }
+//                agentList.add(Box.createVerticalBox());
+//
+//            }
+//            agentPanel.add(new JScrollPane(agentList), BorderLayout.CENTER);
+//
+//            agentPanel.add(cycle, BorderLayout.SOUTH);
         }
 
         JPanel statsPanel = new JPanel();
@@ -202,7 +234,9 @@ public class AgentControlPanel extends JPanel {
             }
         }
 
-        add(agentPanel, BorderLayout.WEST);
+        //add(agentPanel, BorderLayout.WEST);
+        add(cycle, BorderLayout.NORTH);
+        add(new JScrollPane(atomPanel), BorderLayout.WEST);
         add(new JScrollPane(statsPanel), BorderLayout.CENTER);
 
         updateUI();
@@ -213,21 +247,21 @@ public class AgentControlPanel extends JPanel {
         m.agent._run(mind, 1.0);
     }
 
-    protected void cycle() {        
-        for (MindAgent m : mind.getAgents()) {
-            MindAgentPanel map = getMindAgentPanel(m);
-            if (map.cycleEnabled.isSelected()) {
-                runAgent(map);
-            }
-        }
-
-        refresh();
-    }
+//    protected void cycle() {        
+////        for (MindAgent m : mind.getAgents()) {
+////            MindAgentPanel map = getMindAgentPanel(m);
+////            if (map.cycleEnabled.isSelected()) {
+////                runAgent(map);
+////            }
+////        }
+//
+//        refresh();
+//    }
 
     public JFrame newWindow() {
         final JFrame jf = new JFrame(getClass().getSimpleName());
         jf.getContentPane().add(this);
-        jf.setSize(800, 600);
+        jf.setSize(1200, 600);
         jf.setVisible(true);
 
         return jf;

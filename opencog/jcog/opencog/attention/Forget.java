@@ -35,11 +35,15 @@ public class Forget extends MindAgent {
     public Forget() {
         super();
     }
+    public Forget(double period) {
+        this();
+        setPeriod(period);
+    }
     
     @Override
     public void run(OCMind mind) {
         //TODO this is a hack that simply decays all atoms STIs toward 0
-        short stiDecayRate = 2;
+        short stiDecayRate = 1;
         for (MindAgent agent : mind.getAgents()) {            
             for (Atom at : agent.getStimulated()) {
                 short sti = mind.getSTI(at);

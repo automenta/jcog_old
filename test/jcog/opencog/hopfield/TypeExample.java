@@ -6,6 +6,7 @@ package jcog.opencog.hopfield;
 
 import jcog.opencog.DefaultOCMind;
 import jcog.opencog.OCMind;
+import jcog.opencog.swing.GraphView;
 
 /**
  *

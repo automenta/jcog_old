@@ -8,7 +8,8 @@ import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.attention.UpdateImportance;
-import jcog.opencog.hopfield.GraphView.GraphViewProcess;
+import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView.GraphViewProcess;
 
 /**
  *
@@ -16,7 +17,6 @@ import jcog.opencog.hopfield.GraphView.GraphViewProcess;
  * @author seh
  */
 public class HopfieldExample2 extends HopfieldExample {
-
     
     public HopfieldExample2(int width, int height, double density) {
         super(width, height);

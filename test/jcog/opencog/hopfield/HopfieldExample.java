@@ -4,11 +4,11 @@
  */
 package jcog.opencog.hopfield;
 
+import jcog.opencog.swing.AgentControlPanel;
 import java.util.HashMap;
 import java.util.Map;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomSpacePrinter;
 import jcog.opencog.AtomTypes;
 import jcog.opencog.OCMind;
 import jcog.opencog.DefaultOCMind;
@@ -17,6 +17,7 @@ import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.attention.UpdateImportance;
+import jcog.opencog.swing.GraphView;
 
 /**
  *

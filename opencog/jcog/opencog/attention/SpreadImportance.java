@@ -1,9 +1,8 @@
 package jcog.opencog.attention;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -22,42 +21,84 @@ public class SpreadImportance extends MindAgent {
     float importanceSpreadingMultiplier;
     //RecentLong amountSpread;
     double stiTransferRate = 10.0;
-
+    
     @Override
     public void run(OCMind mind) {
 
+        double totalDistributedPlus = 0, totalDistributedMinus = 0;
+        
         //TODO this is a hack to just get some spreading activity that only works for SymmetricHebbianLinks of arity=2
-        for (Atom e : mind.getAtoms(AtomTypes.SymmetricHebbianLink, false)) {
-            List<Atom> linked = new ArrayList(mind.getIncidentVertices(e));
-            if (linked.size() == 2) {
-                Atom a = linked.get(0);
-                Atom b = linked.get(1);
-
-                short aSTI = mind.getSTI(a);
-                short bSTI = mind.getSTI(b);
-                short absDifference = (short) Math.abs(aSTI - bSTI);
-
-                if (absDifference == 0) continue;
-                
-                //TODO this rate calculation may not be correct
-
-                short rate = (short) (mind.getTruth(e).getMean() * stiTransferRate);
-
-                if (rate > 0) {
-                    if (rate > absDifference) {
-                        rate = absDifference;
-                    }
-
-                    if (aSTI > bSTI) {
-                        mind.getAttention(a).addSTI((short) (-rate));
-                        mind.getAttention(b).addSTI((short)(rate));
-                    } else if (bSTI > aSTI) {
-                        mind.getAttention(b).addSTI((short) (-rate));
-                        mind.getAttention(a).addSTI((short)(rate));
-                    }
+        //for (Atom e : mind.getAtoms(AtomTypes.SymmetricHebbianLink, false)) {
+        for (Atom e : mind.getEdges()) {
+            Collection<Atom> linked = mind.getIncidentVertices(e);
+            if (linked.size() == 0)
+                continue;
+                        
+//            int parentSTI = mind.getSTI(e);
+//            for (Atom a : linked) {
+//                if (parentSTI > mind.getSTI(a)+linked.size()) {
+//                    addStimulus(a, (short)1);
+//                    totalDistributedPlus += 1.0;
+//                }
+//                else if (parentSTI < mind.getSTI(a)-linked.size()) {
+//                    addStimulus(a, (short)-1);
+//                    totalDistributedMinus += 1.0;
+//                }
+//            }
+            
+            
+            int averageSTI = mind.getSTI(e);
+            for (Atom a : linked) {
+                averageSTI += mind.getSTI(a);
+            }
+            averageSTI /= (1 + linked.size());
+            
+            for (Atom a : linked) {
+                if (averageSTI > mind.getSTI(a)) {
+                    addStimulus(a, (short)1);
+                    totalDistributedPlus += 1.0;
+                }
+                else if (averageSTI < mind.getSTI(a)) {
+                    addStimulus(a, (short)-1);
+                    totalDistributedMinus += 1.0;
                 }
             }
+            
+//            if (linked.size() == 2) {
+//                Atom a = linked.get(0);
+//                Atom b = linked.get(1);
+//
+//                short aSTI = mind.getSTI(a);
+//                short bSTI = mind.getSTI(b);
+//                short absDifference = (short) Math.abs(aSTI - bSTI);
+//
+//                if (absDifference == 0) continue;
+//                
+//                //TODO this rate calculation may not be correct
+//
+//                short rate = (short) (mind.getTruth(e).getMean() * stiTransferRate);
+//
+//                if (rate > 0) {
+//                    if (rate > absDifference) {
+//                        rate = absDifference;
+//                    }
+//
+//                    rate = (short)Math.min(Math.abs(aSTI-bSTI), rate);
+//                            
+//                    if (aSTI > bSTI) {
+//                        mind.getAttention(a).addSTI((short) (-rate));
+//                        mind.getAttention(b).addSTI((short)(rate));
+//                        totalDistributed += Math.abs(rate);
+//                    } else if (bSTI > aSTI) {
+//                        mind.getAttention(b).addSTI((short) (-rate));
+//                        mind.getAttention(a).addSTI((short)(rate));
+//                        totalDistributed += Math.abs(rate);
+//                    }
+//                }
+//            }
         }
+        
+        //System.out.println("totalDistributed=" + totalDistributedPlus + " -" + totalDistributedMinus);
 
     }
 
