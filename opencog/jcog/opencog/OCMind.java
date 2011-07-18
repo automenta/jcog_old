@@ -145,12 +145,13 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         this.maxSTISeen = maxSTISeen;
     }
 
-    public void addAgent(MindAgent m) {
+    public MindAgent addAgent(MindAgent m) {
         if (agents.contains(m)) {
             logger.error("Can not add duplicate MindAgent " + m + " to " + this);
-            return;
+            return m;
         }
         agents.add(m);
+        return m;
     }
     
     public double getCycleDT() {
@@ -171,12 +172,15 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     @Override
-    public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes) {
+    public List<Atom> getAtoms(OCType type, boolean includeSubtypes) {
         Builder<Atom> ib = new ImmutableList.Builder<Atom>();
-        ib.addAll(atomspace.getAtoms(type, includeSubtypes));
-        for (ReadableAtomSpace ra : subspaces) {
-            //TODO add parameter so that ra.getAtoms can use this (parent)'s type hierarchy
-            ib.addAll(ra.getAtoms(type, includeSubtypes));
+        Collection<Atom> v = atomspace.getAtoms(type, includeSubtypes);
+        if (v != null) {
+            ib.addAll(v);
+            for (ReadableAtomSpace ra : subspaces) {
+                //TODO add parameter so that ra.getAtoms can use this (parent)'s type hierarchy
+                ib.addAll(ra.getAtoms(type, includeSubtypes));
+            }
         }
         return ib.build();
     }
@@ -201,6 +205,9 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ib.build();
     }
 
+    public Collection<Atom> getAtoms() {
+        return atomspace.getAtoms();
+    }
 
     @Override
     public Atom getEdge(OCType type, Atom... members) {        
@@ -332,6 +339,33 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ((double)(current - currentCycle)) / 1.0e9;
     }
 
+    public void printAtomNeighborhood(Atom y) {
+//y = a.getWord('@')
+//
+//def p(x) {
+//    print "  " + x.toString() + ": " + a.getName(x) + " " + a.getType(x) + "\n"
+//}
+//
+//def getIncidentEdgePosition(x) {
+//    int i = 0;
+//    for (v in a.getIncidentVertices(x)) {
+//        if (v == y)
+//            return i;
+//        i++
+//    }
+//    return null;
+//}
+//
+//print '\n\n' + y + ' ' + a.getName(y) + '\n'
+//print 'Incident Edges:\n'
+//for (x in a.getIncidentEdges(y)) {
+//    print getIncidentEdgePosition(x) + ' '
+//    p(x)
+//}
+//print 'Incident Vertices:\n'
+//for (x in a.getIncidentVertices(y))
+//    p(x)            
+    }
     
     public List<Atom> getAtomsByName(String substring) {
         List<Atom> a = new ArrayList();
@@ -345,13 +379,13 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
     //Sorts
-    public List<Atom> getAtomsBySTI(final boolean b, List<Atom> a) {              
+    public List<Atom> getAtomsBySTI(final boolean ascending, List<Atom> a) {              
         Collections.sort(a, new Comparator<Atom>() { 
             @Override public int compare(Atom o1, Atom o2) {
-                final short a1 = getAttention(o1).getSTI();
-                final short a2 = getAttention(o2).getSTI();
+                final short a1 = getSTI(o1);
+                final short a2 = getSTI(o2);
                 if (a1 == a2) return 0;
-                if (b) {
+                if (ascending) {
                     return (a1 > a2) ? -1 : 1;
                 }
                 else {

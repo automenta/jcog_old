@@ -29,5 +29,11 @@ public class OCType extends Atom implements HasName {
     public String toString() {
         return name;
     }
+
+    @Override
+    public int hashCode() {
+        return name.hashCode();
+    }
+    
     
 }

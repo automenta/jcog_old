@@ -4,7 +4,7 @@
  */
 package jcog.opencog.hopfield;
 
-import jcog.opencog.swing.AgentControlPanel;
+import jcog.opencog.swing.AttentionControlPanel;
 import java.util.HashMap;
 import java.util.Map;
 import jcog.math.RandomNumber;
@@ -182,7 +182,7 @@ public class HopfieldExample extends DefaultOCMind {
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
         
-        new AgentControlPanel(this).newWindow();
+        new AttentionControlPanel(this).newWindow();
         
         GraphView.newGraphWindow(this);        
 

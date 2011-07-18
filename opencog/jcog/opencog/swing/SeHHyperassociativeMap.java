@@ -207,7 +207,7 @@ abstract public class SeHHyperassociativeMap<G extends Graph<N, ?>, N> implement
 	@Override
 	public Map<N, Vector> getCoordinates()
 	{
-		return Collections.unmodifiableMap(this.coordinates);
+		return this.coordinates;
 	}
 
 	private void recenterNodes(final Vector center)

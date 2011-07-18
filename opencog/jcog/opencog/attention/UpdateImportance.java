@@ -3,6 +3,7 @@ package jcog.opencog.attention;
 import java.util.List;
 import java.util.logging.Logger;
 import jcog.opencog.Atom;
+import jcog.opencog.AtomSpacePrinter;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.AttentionValue;
@@ -203,7 +204,7 @@ public class UpdateImportance extends MindAgent {
     }
 
     public short getSTIRewardRate(MindAgent m) {
-        return 3;
+        return 1;
     }
     public short getLTIRewardRate(MindAgent m) {
         return 1;
@@ -220,11 +221,17 @@ public class UpdateImportance extends MindAgent {
 
     private void updateAtomSTI(List<MindAgent> agents, Atom a) {
         //This is a hack which converts stimulus to attention directly
-        short ts = 0;
+        int ts = 0;
         for (MindAgent m : agents) {
             ts += m.getStimulus(a) * getSTIRewardRate(m);
         }
-        mind.getAttention(a).addSTI(ts); 
+        int result = ((int)mind.getSTI(a)) + ts; 
+        if ( result > ((int)Short.MAX_VALUE))
+            mind.getAttention(a).setSTI(Short.MAX_VALUE);
+        else if (result < ((int)Short.MIN_VALUE))
+            mind.getAttention(a).setSTI(Short.MIN_VALUE);
+        else
+            mind.getAttention(a).addSTI((short)ts); 
         
 //        AttentionValue::sti_t current, exchangeAmount;
 //        current = a->getAttentionBank().getSTI(agent);

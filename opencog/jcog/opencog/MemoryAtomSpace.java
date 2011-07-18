@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import javax.print.attribute.SetOfIntegerSyntax;
 import jcog.atom.OrderedSetHypergraph;
 import jcog.opencog.Atom.HasName;
 import org.apache.log4j.Logger;
@@ -62,6 +64,9 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
             }
             
             names.put(a, targetName);  
+        }
+        else {
+            names.remove(a);
         }
         
         return true;
@@ -173,10 +178,36 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     }
     
     public Atom addEdge(OCType t, String name, Atom... members) {
+        
+        final List<Atom> memberList = Arrays.asList(members);
+        
+        //preventing duplicate edges (type, members). allows updating the name if already exists
+        
+        for (final Atom eaa : typesToAtom.get(t)) {
+            if (graph.getIncidentVertices(eaa).equals(memberList)) {
+                logger.info("retrieving duplicate edge " + eaa + "(" + t + ")");                    
+
+                String oldName = getName(eaa);
+                if (name!=null) {
+                    if (oldName == null) oldName = "";
+                    if (!oldName.equals(name)) {
+                        logger.error("overwriting " + eaa + "{name=" + oldName + ", type=" + t + "} TO name=" + name);
+                    }
+                }
+                else {
+                    if (oldName != null) {
+                        logger.error("overwriting " + eaa + "{name=" + oldName +", type=" + t + "} TO name NULL");
+                    }
+
+                }
+                return eaa;
+            }
+        }
+
         Atom e = new Atom();
         indexAtom(e, t, name);
         
-        graph.addEdge(e, Arrays.asList(members));
+        graph.addEdge(e, memberList);
         
         return e;        
     }

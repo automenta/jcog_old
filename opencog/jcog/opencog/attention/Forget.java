@@ -46,12 +46,10 @@ public class Forget extends MindAgent {
         short stiDecayRate = 1;
         for (MindAgent agent : mind.getAgents()) {            
             for (Atom at : agent.getStimulated()) {
-                short sti = mind.getSTI(at);
-                if (sti > 0) {
-                    sti -= stiDecayRate;
-                    sti = (short)Math.max(0, sti);
-                    mind.getAttention(at).setSTI(sti);
-                }
+                int sti = mind.getSTI(at);
+                sti -= stiDecayRate;
+                sti = Math.max(Short.MIN_VALUE, sti);
+                mind.getAttention(at).setSTI((short)sti);                
             }
             
         }

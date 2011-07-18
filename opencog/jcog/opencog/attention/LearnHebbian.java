@@ -55,6 +55,21 @@ public class LearnHebbian extends MindAgent {
 
     }
 
+//    protected void spreadMemberSTI(Atom a, Atom b) {
+//        short stiA = mind.getSTI(a);
+//        short stiB = mind.getSTI(b);
+//        if (stiA-1 > stiB) {
+//            //A -> B
+//            addStimulus(a, (short)-1);
+//            addStimulus(b, (short)1);
+//        }
+//        else if (stiB-1 > stiA) {
+//            //B -> A
+//            addStimulus(b, (short)-1);
+//            addStimulus(a, (short)1);
+//        }
+//    }
+    
     public double getTargetConjunction(Atom a, Atom b) {
         double aNSTI = mind.getNormalizedSTI(a);
         double bNSTI = mind.getNormalizedSTI(a);
