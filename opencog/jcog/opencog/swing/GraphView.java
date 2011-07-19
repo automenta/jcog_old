@@ -40,7 +40,6 @@ import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.TruthValue;
 import jcog.spacegraph.gl.Surface;
-import jcog.spacegraph.math.linalg.Vec2f;
 import jcog.spacegraph.math.linalg.Vec3f;
 import jcog.spacegraph.math.linalg.Vec4f;
 import jcog.spacegraph.shape.Drawable;
@@ -70,13 +69,13 @@ public class GraphView extends Surface implements Drawable {
 
     public static interface GraphViewModel {
 
-        public Vec4f getVertexColor(Atom vertex);
+        public void updateVertexColor(Atom vertex, Vec4f vec);
 
-        public Vec2f getVertexScale(Atom vertex, short maxSTI, short minSTI);
+        public void updateVertexScale(Atom v, short maxSTI, short minSTI, Vec3f vec);
 
         public float[] getCurveProfile(Atom edge);
 
-        public Vec3f getCurveColor(Atom edge);
+        public void updateCurveColor(Atom edge, Vec3f vec);
 
         public float getVertexEquilibriumDistance(Atom n);
 
@@ -154,7 +153,7 @@ public class GraphView extends Surface implements Drawable {
         }
 
         @Override
-        public Vec4f getVertexColor(Atom v) {
+        public void updateVertexColor(Atom v, Vec4f vec) {
             final float sti = (float)mind.getNormalizedSTI(v);
             
             String n = mind.getName(v);
@@ -165,15 +164,15 @@ public class GraphView extends Surface implements Drawable {
 
             final Color h = Color.getHSBColor(hue, 0.85f, sti * 0.5f + 0.5f);
             float[] hRGB = h.getColorComponents(null);
-            return new Vec4f(hRGB[0], hRGB[1], hRGB[2], 1.0f);
+            vec.set(hRGB[0], hRGB[1], hRGB[2], 1.0f);
         }
 
         @Override
-        public Vec2f getVertexScale(Atom v, short maxSTI, short minSTI) {
+        public void updateVertexScale(Atom v, short maxSTI, short minSTI, Vec3f vec) {
             final float vertexScale = (float) getSliderValue("VertexScale");
             final double sti = mind.getNormalizedSTI(v, maxSTI, minSTI);
-            float sx = 0.1f + (float) (sti) * vertexScale;
-            return new Vec2f(sx, sx);
+            float sx = 0.1f + (float) (sti) * vertexScale;            
+            vec.set(sx, sx, 1.0f);
         }
 
         @Override
@@ -186,14 +185,14 @@ public class GraphView extends Surface implements Drawable {
         }
 
         @Override
-        public Vec3f getCurveColor(Atom edge) {
+        public void updateCurveColor(Atom edge, Vec3f vec) {
             final float v = 0.7f + 0.3f * (float) mind.getTruth(edge).getMean();
 
-            final float hue = ((Math.abs(mind.getType(edge).getName().hashCode() + 10005 + (int) v)) % 100) / 100.0f;
+            final float hue = ((Math.abs(mind.getType(edge).toString().hashCode() )) % 100) / 100.0f;
 
             final Color h = Color.getHSBColor(hue, 0.85f, v);
             float[] hRGB = h.getColorComponents(null);
-            return new Vec3f(v * hRGB[0], v * hRGB[1], v * hRGB[2]);
+            vec.set(v * hRGB[0], v * hRGB[1], v * hRGB[2]);
         }
 
         @Override
@@ -298,9 +297,8 @@ public class GraphView extends Surface implements Drawable {
     }
 
     private void updateRect(Atom vertex, TextRect r) {
-        final Vec2f s = param.getVertexScale(vertex, maxSTI, minSTI);
-        setTargetScale(r, s.x(), s.y(), 1.0f);
-        r.setBackgroundColor(param.getVertexColor(vertex));
+        param.updateVertexScale(vertex, maxSTI, minSTI, getTargetScale(r));        
+        param.updateVertexColor(vertex, r.getBackgroundColor());
         r.setFilled(true);
     }
 
@@ -338,14 +336,14 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public int hashCode() {
-            return parentEdge.hashCode();
+            return parentEdge.hashCode() + getSourceNode().hashCode() + getDestinationNode().hashCode();
         }
 
         @Override
         public boolean equals(Object obj) {
             if (obj instanceof FoldedEdge) {
                 FoldedEdge fe = (FoldedEdge)obj;
-                return fe.parentEdge == parentEdge;
+                return (fe.parentEdge == parentEdge) && (fe.getSourceNode() == getSourceNode()) && (fe.getDestinationNode() == getDestinationNode());
             }
             return false;
         }
@@ -364,7 +362,8 @@ public class GraphView extends Surface implements Drawable {
         final Atom a = e.parentEdge;
 
         c.setWidths(param.getCurveProfile(a));
-        c.setColor(param.getCurveColor(a));
+       
+        param.updateCurveColor(a, c.getColor());
     }
 
 //    protected void addEdge(Atom e) {
@@ -401,7 +400,7 @@ public class GraphView extends Surface implements Drawable {
      * @param edge_factory factory used to create the new edges 
      * @return a copy of the input graph where hyperedges are replaced by cliques
      */
-    public MutableDirectedAdjacencyGraph<Atom, FoldedEdge> foldHypergraphEdges(Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, FoldedEdge> target, final Hypergraph<Atom, Atom> h, boolean linkEdgeToMembers) {
+    public MutableDirectedAdjacencyGraph<Atom, FoldedEdge> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, FoldedEdge> target, final Hypergraph<Atom, Atom> h, boolean linkEdgeToMembers) {
         for (Atom v : vertices) {
             target.add(v);
         }
@@ -422,12 +421,17 @@ public class GraphView extends Surface implements Drawable {
             target.add(e);
 
             ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
+            if (incident.size() == 0)
+                continue;
 
             if (linkEdgeToMembers) {
                 for (int i = 0; i < incident.size(); i++) {
-                    target.add(new FoldedEdge(e, incident.get(i), e, "("));
-                    if (i > 0) {
-                        target.add(new FoldedEdge(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
+                    Atom i1 = incident.get(i);
+                    if (i == 0) {
+                        target.add(new FoldedEdge(e, i1, e, "("));
+                    }
+                    else {
+                        target.add(new FoldedEdge(incident.get(i - 1), i1, e, "" /*Integer.toString(i)*/));
                     }
                 }
             } else {
@@ -463,7 +467,6 @@ public class GraphView extends Surface implements Drawable {
         Set<Atom> hm = new HashSet(highest);
 
         List<Atom> rectsToRemove = new LinkedList();
-        List<FoldedEdge> edgesToRemove = new LinkedList();
 
         for (Atom v : atomRect.keySet()) {
             if (!hm.contains(v)) {
@@ -487,26 +490,29 @@ public class GraphView extends Surface implements Drawable {
         //System.out.println("Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
 
         digraph = foldHypergraphEdges(hm, new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(),
-                mind.atomspace.graph, false);
-
+                mind.atomspace.graph, true);
+        
         Collection<FoldedEdge> diEdges = digraph.getEdges();
-        for (FoldedEdge e : edgeCurve.keySet()) {
-            if (!diEdges.contains(e)) {
-                edgesToRemove.add(e);
-                removed++;
-            } else {
-                remained++;
-            }
-        }
-        for (FoldedEdge e : edgesToRemove) {
-            edgeCurve.remove(e);
-        }
+
+        edgeCurve.clear();
+        
+//        List<FoldedEdge> edgesToRemove = new LinkedList();
+//        for (FoldedEdge e : edgeCurve.keySet()) {
+//            if (!hm.contains(e.parentEdge)) {
+//                edgesToRemove.add(e);
+//                removed++;
+//            } else {
+//                remained++;
+//            }
+//        }
+//        for (FoldedEdge e : edgesToRemove) {
+//            edgeCurve.remove(e);
+//        }
 
         for (FoldedEdge fe : diEdges) {
-            if (!edgeCurve.containsKey(fe)) {
+            //if (!edgeCurve.containsKey(fe)) {
                 addEdge(fe);
-                added++;
-            }
+            //}
         }
 
         if ((added > 0) || (removed > 0)) {
@@ -556,6 +562,15 @@ public class GraphView extends Surface implements Drawable {
         }
     }
 
+    public Vec3f getTargetScale(Spatial s) {
+        Vec3f v = targetScale.get(s);
+        if (v == null) {
+            v = new Vec3f(0,0,0);
+            targetScale.put(s, v);
+        }
+        return v;        
+    }
+    
     public void setTargetScale(Spatial s, float x, float y, float z) {
         Vec3f v = targetScale.get(s);
         if (v == null) {
@@ -629,6 +644,9 @@ public class GraphView extends Surface implements Drawable {
             final float s = 0.2f;
             for (Entry<Atom, TextRect> i : g.atomRect.entrySet()) {
                 final Vector v = ham.getCoordinates().get(i.getKey());
+                if (v == null) {
+                    System.err.println(i + " not mapped by " + this);
+                }
 
                 TextRect tr = i.getValue();
                 if (v.getDimensions() == 2) {

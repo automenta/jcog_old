@@ -72,7 +72,7 @@ import jcog.opencog.atom.AttentionValue;
  * may choose not to (if they were completely unsuccessful and don't want to
  * give any funds to the atoms).
  */
-public class UpdateImportance extends MindAgent {
+public class UpdateImportance {
 
     private OCMind mind;
     private Logger logger;
@@ -106,8 +106,7 @@ public class UpdateImportance extends MindAgent {
         this.noiseEnabled = noiseEnabled;
     }
 
-    @Override
-    public synchronized void run(OCMind mind) {
+    public synchronized void update(OCMind mind) {
         this.mind = mind;
 
         List<MindAgent> agents = getMind().getAgents();

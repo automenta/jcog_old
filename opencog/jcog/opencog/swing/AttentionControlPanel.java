@@ -8,13 +8,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -38,7 +36,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
 
@@ -172,6 +169,20 @@ public class AttentionControlPanel extends JPanel {
         return map;
     }
 
+    public final Map<Atom, JButton> atomButtons = new WeakHashMap();
+            
+    public JButton getButton(Atom a) {
+        JButton j = atomButtons.get(a);
+        if (j == null) {
+            String name = mind.getName(a);
+            if (name == null)
+                name = a.uuid.toString();
+            j = new JButton(name + " " + (int)(mind.getSTI(a)) + " " + mind.getType(a));
+            atomButtons.put(a, j);
+        }
+        return j;
+    }
+    
     public void refresh() {
         int bins = 10;
         
@@ -214,13 +225,10 @@ public class AttentionControlPanel extends JPanel {
                     for (final Atom a : atoms) {
                         final OCType type= mind.getType(a);
                         final double normSTI = mind.getNormalizedSTI(a);
-                        String name = mind.getName(a);
-                        if (name == null)
-                            name = a.uuid.toString();
 
-                        JButton b = new JButton(name + " " + (int)(mind.getSTI(a)) + " " + type);
+                        JButton b = getButton(a);
 
-                        float hue = ((float)(type.getName().hashCode() % 19)) / 19.0f;
+                        float hue = ((float)(type.toString().hashCode() % 19)) / 19.0f;
                         float bri = (float)normSTI * 0.25f + 0.75f;
 
                         b.setBackground(new Color(Color.HSBtoRGB(hue, 0.8f, bri)));

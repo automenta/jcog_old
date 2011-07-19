@@ -13,9 +13,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import jcog.opencog.atom.AttentionValue;
 import jcog.opencog.atom.SimpleTruthValue;
 import jcog.opencog.atom.TruthValue;
+import jcog.opencog.attention.UpdateImportance;
 import org.apache.log4j.Logger;
 
 /** Analogous to CogServer.
@@ -31,10 +37,12 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     
     private Map<Atom, TruthValue> truth;
     private Map<Atom, AttentionValue> attention;
-    private List<MindAgent> agents = new LinkedList();
+    private List<MindAgent> agents = new CopyOnWriteArrayList();
     private short minSTISeen = 0, maxSTISeen = 0;
     private long lastCycle=0, currentCycle=0;
-	
+    
+    UpdateImportance updateImportance = new UpdateImportance();    
+         
 //	private FloatMap activation; //???
 //	private FloatMap importance;//???
 
@@ -46,6 +54,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         
         truth = new HashMap();
         attention = new HashMap();
+        
     }
     
     public TruthValue getTruth(Atom a) {
@@ -161,10 +170,41 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public void cycle() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
-                
-        for (MindAgent ma : agents) {
-            ma._run(this, getCycleDT());
+
+        final double dt = getCycleDT();
+        for (final MindAgent ma : agents) {
+            ma._run(OCMind.this, dt);
         }
+        
+        updateImportance.update(this);        
+    }
+    
+    public void cycleParallel() {
+        lastCycle = currentCycle;
+        currentCycle = System.nanoTime();
+
+        final ExecutorService threadPool = Executors.newCachedThreadPool();   
+        
+        final double dt = getCycleDT();
+        for (final MindAgent ma : agents) {
+            threadPool.submit(new Runnable() {
+
+                @Override
+                public void run() {
+                    ma._run(OCMind.this, dt);
+                }
+                
+            });
+        }
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException ex) {
+            java.util.logging.Logger.getLogger(OCMind.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        updateImportance.update(this);
+        
     }
     
     public List<MindAgent> getAgents() {
@@ -339,32 +379,38 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ((double)(current - currentCycle)) / 1.0e9;
     }
 
+    //TODO debug this
+    public int getOrderInIncidentEdge(Atom a, Atom edge) {
+        int i = 0;
+        if (getIncidentEdges(edge)==null)
+            return -1;
+        for (Atom p : getIncidentEdges(edge)) {
+            if (p.equals(a))                
+                return i;
+            i++;
+        }
+        return -1;
+    }
+    
+    public void printAtom(Atom a) {
+        System.out.println("  " + a.toString() + ": " + getName(a) + " " + getType(a) + "\n");
+    }
+    
     public void printAtomNeighborhood(Atom y) {
-//y = a.getWord('@')
-//
-//def p(x) {
-//    print "  " + x.toString() + ": " + a.getName(x) + " " + a.getType(x) + "\n"
-//}
-//
-//def getIncidentEdgePosition(x) {
-//    int i = 0;
-//    for (v in a.getIncidentVertices(x)) {
-//        if (v == y)
-//            return i;
-//        i++
-//    }
-//    return null;
-//}
-//
-//print '\n\n' + y + ' ' + a.getName(y) + '\n'
-//print 'Incident Edges:\n'
-//for (x in a.getIncidentEdges(y)) {
-//    print getIncidentEdgePosition(x) + ' '
-//    p(x)
-//}
-//print 'Incident Vertices:\n'
-//for (x in a.getIncidentVertices(y))
-//    p(x)            
+        System.out.println(y + " " + getName(y));
+        System.out.println(" Incident Edges:");
+        if (getIncidentEdges(y)!=null) {
+            for (Atom e : getIncidentEdges(y)) {
+                //System.out.print(getOrderInIncidentEdge(y, e) + " ");
+                printAtom(e);
+            }
+        }
+        if (getIncidentVertices(y)!=null) {
+            System.out.println(" Incident Vertices:");
+            for (Atom e : getIncidentVertices(y)) {
+                printAtom(e);
+            }
+        }
     }
     
     public List<Atom> getAtomsByName(String substring) {

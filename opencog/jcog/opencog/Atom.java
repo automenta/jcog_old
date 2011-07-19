@@ -19,10 +19,6 @@ public class Atom implements Serializable, Comparable<Atom> {
         return UUID.randomUUID().toString();
     }
 
-    /** useful if an atom has a constant name */
-    public static interface HasName {
-        public String getName();
-    }
     
     public final UUID uuid;
 
@@ -45,8 +41,7 @@ public class Atom implements Serializable, Comparable<Atom> {
             return true;
         
         if (o instanceof Atom) {
-            Atom a = (Atom)o;
-            return a.equals(uuid);
+            return uuid.equals(((Atom)o).uuid);
         }
         return false;
     }

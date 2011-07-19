@@ -15,10 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import javax.print.attribute.SetOfIntegerSyntax;
 import jcog.atom.OrderedSetHypergraph;
-import jcog.opencog.Atom.HasName;
 import org.apache.log4j.Logger;
 
 /**
@@ -49,12 +46,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         String targetName = null;
         if (name!=null) {
             targetName = name;
-        }
-        else {
-            if (a instanceof HasName) {
-                HasName hn = (HasName)a;
-                targetName = hn.getName();
-            }
         }
         
         if (targetName!=null) {

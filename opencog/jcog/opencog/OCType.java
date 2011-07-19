@@ -6,23 +6,17 @@
 package jcog.opencog;
 
 import java.util.UUID;
-import jcog.opencog.Atom.HasName;
 
 /**
  *
  * @author seh
  */
-public class OCType extends Atom implements HasName {
+public class OCType extends Atom {
     private final String name;
     
     public OCType(final String typeid) {
         super(new UUID((long)typeid.hashCode(), (long)typeid.hashCode()));
         this.name = typeid;
-    }
-
-    @Override
-    public String getName() {
-        return name;    
     }
 
     @Override
