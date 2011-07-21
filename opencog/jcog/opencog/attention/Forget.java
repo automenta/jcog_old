@@ -53,24 +53,26 @@ public class Forget extends MindAgent {
     
     @Override
     public void run(OCMind mind) {
-        Collection<Atom> vertices = mind.getVertices();
-        Collection<Atom> edges = mind.getEdges();
-
-        //TODO find a way to do this without copying list, use a streaming iterator that will sort a collection (mind.getVertices())
-        if (vertices.size() > maxVerticesBeforePrune) {
-            List<Atom> verticesSorted = mind.getAtomsBySTI(false, new ArrayList(vertices));
-            int difference = vertices.size() - maxVerticesBeforePrune;
-            for (int i = 0; i < difference; i++) {
-                removeVertex(verticesSorted.get(i));
-            }
-        }
-        if (edges.size() > maxEdgesBeforePrune) {
-            List<Atom> edgesSorted = mind.getAtomsBySTI(true, new ArrayList(edges));
-            int difference = edges.size() - maxEdgesBeforePrune;
-            for (int i = 0; i < difference; i++) {
-                removeEdge(edgesSorted.get(i));
-            }            
-        }
+        {
+//        Collection<Atom> vertices = mind.getVertices();
+//        Collection<Atom> edges = mind.getEdges();
+//
+//        //TODO find a way to do this without copying list, use a streaming iterator that will sort a collection (mind.getVertices())
+//        if (vertices.size() > maxVerticesBeforePrune) {
+//            List<Atom> verticesSorted = mind.getAtomsBySTI(false, new ArrayList(vertices));
+//            int difference = vertices.size() - maxVerticesBeforePrune;
+//            for (int i = 0; i < difference; i++) {
+//                removeVertex(verticesSorted.get(i));
+//            }
+//        }
+//        if (edges.size() > maxEdgesBeforePrune) {
+//            List<Atom> edgesSorted = mind.getAtomsBySTI(true, new ArrayList(edges));
+//            int difference = edges.size() - maxEdgesBeforePrune;
+//            for (int i = 0; i < difference; i++) {
+//                removeEdge(edgesSorted.get(i));
+//            }            
+//        }
+    }
         
 //
 //        //TODO this is a hack that simply decays all atoms STIs toward 0        

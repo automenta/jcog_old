@@ -30,7 +30,7 @@ public abstract class Ego extends MindAgent {
 
     @Override
     protected void run(final OCMind mind) {
-        Iterator<Atom> ci = mind.getAtomsBySTI(true, new Predicate<Atom>() {
+        Iterator<Atom> ci = mind.iterateAtomsByDecreasingSTI(new Predicate<Atom>() {
             @Override
             public boolean isTrue(Atom x) {
                 return (mind.getType(x).equals(AtomTypes.ConceptNode));

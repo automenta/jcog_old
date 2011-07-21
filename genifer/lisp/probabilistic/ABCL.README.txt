@@ -1,0 +1,14 @@
+
+Instructions for ABCL
+======================
+
+Start ABCL by:
+     java -jar abcl.jar
+
+CD to the directory containing Genifer, eg, on Windows:
+     :cd C:\genifer
+
+Load the main program:
+     (load "main")
+
+Enjoy!

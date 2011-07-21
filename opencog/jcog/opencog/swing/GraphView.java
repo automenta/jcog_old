@@ -129,13 +129,14 @@ public class GraphView extends Surface implements Drawable {
                 });
                 control.add(updateButton);
 
+                addSlider("MaxAtoms", 64, 1, 256);
                 addSlider("MeanEquilibriumDistance", 2.0, 0.1, 6.0);
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
                 addSlider("EdgeWidthScale", 0.05, 0.001, 0.2);
             }
             control.add(Box.createVerticalBox());
 
-            new SwingWindow(new JScrollPane(control), 200, 500);
+            new SwingWindow(new JScrollPane(control), 400, 500);
 
         }
         final int integerScale = 200;
@@ -244,7 +245,7 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public int getMaxAtoms() {
-            return 48;
+            return (int) getSliderValue("MaxAtoms");
         }
 
 
@@ -501,7 +502,7 @@ public class GraphView extends Surface implements Drawable {
 
         int remained = 0, removed = 0, added = 0;
 
-        List<Atom> arank = IteratorUtils.toList(mind.getAtomsBySTI(true, null));
+        List<Atom> arank = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI());
 
         int n = Math.min(arank.size(), param.getMaxAtoms());
 

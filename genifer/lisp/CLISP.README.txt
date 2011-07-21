@@ -1,0 +1,13 @@
+
+Instructions for CLISP
+======================
+
+Install CLISP.
+
+CD to the directory containing Genifer, eg:
+     (cd "C://genifer")
+
+Load the main program:
+     (load "main")
+
+This should work for both Windows and Linux, but I usually test it on Windows.

@@ -216,7 +216,7 @@ public class AttentionControlPanel extends JPanel {
         removeAll();
 
         //TODO optimize this by streaming
-        List<Atom> _atoms = IteratorUtils.toList(mind.getAtomsBySTI(true, null));
+        List<Atom> _atoms = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI());
         
         if (_atoms.size() > 0) {
             double[] stis = new double[_atoms.size()];

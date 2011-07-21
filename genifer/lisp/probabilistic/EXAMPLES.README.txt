@@ -1,0 +1,30 @@
+
+Example usage
+=============
+
+Type 'm' to dump the memory.
+
+To see some examples of (deductive) backward chaining:
+Type 'b' for backward-chaining and then enter:
+     (having-fun kellie)
+or:
+     (at-bar kellie)      ; **** this example requires using a rule in the abductive direction
+or:
+     (goal robot)
+or:
+     (chair c)
+or:
+     (chair2 c)
+or:
+     (happy john)
+or:
+     (grandparent john ?1)
+or:
+     (grandpa john paul)
+or:
+     (grandpa john sam)
+
+You can also try 'a' to abduce (ie, find explanations of) the above queries.
+**** as of July 2010:  abduction is under development  ****
+
+That's it for now!  Sorry it's rather unimpressive =)

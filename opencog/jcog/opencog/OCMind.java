@@ -473,7 +473,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
 //    //Sorts
-//    public List<Atom> getAtomsBySTI(final boolean descending, final List<Atom> a) {              
+//    public List<Atom> iterateAtomsByDecreasingSTI(final boolean descending, final List<Atom> a) {              
 //        Collections.sort(a, new Comparator<Atom>() { 
 //            @Override public int compare(Atom o1, Atom o2) {
 //                final short a1 = getSTI(o1);
@@ -490,8 +490,11 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 //        return a;        
 //    }
 
-    //Sorts
-    public Iterator<Atom> getAtomsBySTI(final boolean b, final Predicate<Atom> include) {
+    public Iterator<Atom> iterateAtomsByDecreasingSTI() {
+        return iterateAtomsByDecreasingSTI(null);        
+    }
+    
+    public Iterator<Atom> iterateAtomsByDecreasingSTI(final Predicate<Atom> include) {
         return new Iterator<Atom>() {
 
             Atom next = null;
@@ -539,7 +542,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             }
             
         };
-        //return getAtomsBySTI(b, new ArrayList(atomspace.getAtoms()));
+        //return iterateAtomsByDecreasingSTI(b, new ArrayList(atomspace.getAtoms()));
     }
 
     

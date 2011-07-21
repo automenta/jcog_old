@@ -1,0 +1,21 @@
+
+Instruction For Linux, running CMUCL
+====================================
+
+Install CMUCL, eg:
+    apt-get install cmucl
+
+CD to the directory containing Genifer, eg:
+    (setf default-directory "/Genifer/")
+
+Load the main program:
+    (load "main.lisp")
+
+Set garbage collection verbosity (otherwise there will be annoying messages):
+    (setf ext:*gc-verbose* nil)
+
+Run the program:
+    (main)
+
+Note:  I develop the code in CLISP, so testing in CMUCL is occasional.
+       Please tolerate if it doesn't work on CMUCL, or report to me.
