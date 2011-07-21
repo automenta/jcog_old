@@ -33,20 +33,25 @@ public abstract class MindAgent {
     private double period = 0.0;
     double accumulatedDT = 0.0;
     
-    private Map<Atom, Short> atomStimulus = new HashMap();
+    final private Map<Atom, Short> atomStimulus = new HashMap();
     //private List<Atom> utilizedAtoms = new LinkedList();
+    final private List<Atom> verticesToRemove = new LinkedList(), edgesToRemove = new LinkedList();
     
     /**
      * Initializes a MindAgent with name set by the simple name of the class.
      * Only use this constructor if you want to create a default or singleton MindAgent for the class
      * being implemented, since all MindAgents need to have unique names.
      */
-    public MindAgent() {
-        super();
+    public MindAgent(double period) {
+        this(period, null);
         this.id = getClass().getSimpleName();
     }
 
-    public MindAgent(String id) {
+    public MindAgent() {
+        this(0);        
+    }
+    
+    public MindAgent(double period, String id) {
         super();
         this.id = id;
     }
@@ -66,6 +71,13 @@ public abstract class MindAgent {
             run(mind);
             accumulatedDT = 0;
         }
+    }
+    
+    public void removeVertex(Atom a) {
+        verticesToRemove.add(a);
+    }
+    public void removeEdge(Atom a) {
+        edgesToRemove.add(a);
     }
     
     /** the activity that will be invoked when the mind schedules it to run */
@@ -107,13 +119,6 @@ public abstract class MindAgent {
 
     public void setStimulus(Atom a, short amount) {
         atomStimulus.put(a, amount);
-    }
-
-    /**
-     * @return true if removed
-     */
-    protected boolean removeAtomStimulus(String a) {
-        return false;
     }
 
     //    /**
@@ -173,5 +178,13 @@ public abstract class MindAgent {
     public Collection<Atom> getStimulated() {
         return atomStimulus.keySet();
     }
+
+    public List<Atom> getVerticesToRemove() {
+        return verticesToRemove;
+    }
+    
+    public List<Atom> getEdgesToRemove() {
+        return edgesToRemove;
+    }        
     
 }

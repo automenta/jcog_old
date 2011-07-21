@@ -77,8 +77,8 @@ public class AtomTypes {
 //            return;
 //        }
         
-        for (OCType t : inheritance.getNodes()) {
-            c.addVertex(Atom.Type, t);
+        for (OCType t : inheritance.getNodes()) {            
+            c.addVertex(Atom.Type, t, t.toString());
         }
         
         for (OCType t : inheritance.getNodes()) {

@@ -16,7 +16,7 @@ public class Spatial {
     protected Vec3f center;
     protected Vec3f scale;
     protected Vec3f rotation;
-
+    
     public Spatial() {
         this(new Vec3f(0,0,0), new Vec3f(1,1,1), new Vec3f(0,0,0));
     }

@@ -13,11 +13,11 @@ interface EditableAtomSpace extends ReadableAtomSpace {
     
     Atom addEdge(OCType t, Atom... members);
 
-    boolean addVertex(OCType type, Atom a);
+    //boolean addVertex(OCType type, Atom a);
 
     boolean addVertex(OCType type, Atom a, String name);
 
-    Atom addVertex(OCType type, String name);
+    //Atom addVertex(OCType type, String name);
 
     void clear();
 

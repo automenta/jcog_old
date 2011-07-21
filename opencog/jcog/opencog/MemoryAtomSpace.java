@@ -9,7 +9,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -63,10 +63,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return true;
     }
     
-    @Override
-    public boolean addVertex(OCType type, Atom a)  {
-        return addVertex(type, a, null);
-    }
     
     @Override
     public boolean addVertex(OCType type, Atom a, String name)  {
@@ -78,16 +74,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     }
     
     
-    @Override
-    public Atom addVertex(OCType type, String name) {        
-        Atom a = new Atom();
-        if (addVertex(type, a, name)) {
-            return a;
-        }
-        else {
-            return null;
-        }
-    }
     
     protected void unindexAtom(Atom a) {
         OCType t = getType(a);
@@ -168,9 +154,14 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return names.get(a);
     }
     
-    public Atom addEdge(OCType t, String name, Atom... members) {
+    public Atom addEdge(OCType t, String name, Atom... members) {        
         
-        final List<Atom> memberList = Arrays.asList(members);
+        //Unmodifiable list
+        //final List<Atom> memberList = Arrays.asList(members); 
+        
+        final List<Atom> memberList = new ArrayList(members.length);
+        for (int i = 0; i < members.length; i++)
+            memberList.add(members[i]); 
         
         //preventing duplicate edges (type, members). allows updating the name if already exists
         
@@ -240,7 +231,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     
     
     public void addType(OCType type, OCType... supertypes) {
-        addVertex(Atom.Type, type);
+        addVertex(Atom.Type, type, type.toString());
     }
 
     @Override

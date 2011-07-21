@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList.Builder;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,7 +36,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public final List<ReadableAtomSpace> subspaces;
     
     private Map<Atom, TruthValue> truth;
+    
     private Map<Atom, AttentionValue> attention;
+    private TreeMap<Atom, AttentionValue> attentionSorted;
+    
     private List<MindAgent> agents = new CopyOnWriteArrayList();
     private short minSTISeen = 0, maxSTISeen = 0;
     private long lastCycle=0, currentCycle=0;
@@ -57,6 +60,9 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         
     }
     
+    public void setRunning(boolean running) {
+        
+    }
     public TruthValue getTruth(Atom a) {
         TruthValue t = truth.get(a);
         if (t == null) {
@@ -65,7 +71,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
         return t;
     }
-        
+       
     public AttentionValue getAttention(Atom a) {
         AttentionValue t = attention.get(a);
         if (t == null) {
@@ -107,9 +113,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.addEdge(t, members);
     }
 
-    @Override
     public boolean addVertex(OCType type, Atom a) {
-        return atomspace.addVertex(type, a);
+        return addVertex(type, a, null);
     }
 
     @Override
@@ -117,9 +122,12 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.addVertex(type, a, name);
     }
 
-    @Override
     public Atom addVertex(OCType type, String name) {
-        return atomspace.addVertex(type, name);
+        final Atom a = new Atom();
+        if (addVertex(type, a, name)) {
+            return a;
+        }
+        return null;
     }
 
     @Override
@@ -127,11 +135,22 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         atomspace.clear();
     }
 
+    /**
+     * Don't use directly.  Use MindAgents to remove edges and vertices
+     * @param e
+     * @return 
+     */
     @Override
     public boolean removeEdge(Atom e) {
         return atomspace.removeEdge(e);
     }
 
+
+    /**
+     * Don't use directly.  Use MindAgents to remove edges and vertices
+     * @param a
+     * @return 
+     */
     @Override
     public boolean removeVertex(Atom a) {
         return atomspace.removeVertex(a);
@@ -167,9 +186,26 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ((double)(currentCycle - lastCycle)) / 1.0e9;
     }
     
+    public void updateAttentionSort() {
+        attentionSorted = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
+            @Override
+            public int compare(Atom a, Atom b) {
+                short sa = getSTI(a);
+                short sb = getSTI(b);
+                        
+                if (sa == sb) return 0;
+                return (sa > sb) ? -1 : 1;                
+            }            
+        });        
+        attentionSorted.putAll(attention);
+                
+    }
+    
     public void cycle() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
+
+        updateAttentionSort();
 
         final double dt = getCycleDT();
         for (final MindAgent ma : agents) {
@@ -177,6 +213,18 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
         
         updateImportance.update(this);        
+        
+        
+        //remove all pending removals
+        for (final MindAgent ma : agents) {
+            for (Atom v : ma.getVerticesToRemove())
+                removeVertex(v);
+            for (Atom e : ma.getEdgesToRemove())
+                removeEdge(e);
+            ma.getVerticesToRemove().clear();
+            ma.getEdgesToRemove().clear();
+        }
+
     }
     
     public void cycleParallel() {
@@ -424,27 +472,74 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return a;
     }
     
-    //Sorts
-    public List<Atom> getAtomsBySTI(final boolean ascending, List<Atom> a) {              
-        Collections.sort(a, new Comparator<Atom>() { 
-            @Override public int compare(Atom o1, Atom o2) {
-                final short a1 = getSTI(o1);
-                final short a2 = getSTI(o2);
-                if (a1 == a2) return 0;
-                if (ascending) {
-                    return (a1 > a2) ? -1 : 1;
-                }
-                else {
-                    return (a1 > a2) ? 1 : -1;  
-                }
-            }            
-        });
-        return a;        
-    }
+//    //Sorts
+//    public List<Atom> getAtomsBySTI(final boolean descending, final List<Atom> a) {              
+//        Collections.sort(a, new Comparator<Atom>() { 
+//            @Override public int compare(Atom o1, Atom o2) {
+//                final short a1 = getSTI(o1);
+//                final short a2 = getSTI(o2);
+//                if (a1 == a2) return 0;
+//                if (descending) {
+//                    return (a1 > a2) ? -1 : 1;
+//                }
+//                else {
+//                    return (a1 > a2) ? 1 : -1;  
+//                }
+//            }            
+//        });
+//        return a;        
+//    }
 
     //Sorts
-    public List<Atom> getAtomsBySTI(final boolean b) {
-        return getAtomsBySTI(b, new ArrayList(atomspace.getAtoms()));
+    public Iterator<Atom> getAtomsBySTI(final boolean b, final Predicate<Atom> include) {
+        return new Iterator<Atom>() {
+
+            Atom next = null;
+            
+            @Override
+            public boolean hasNext() {
+                
+                if (attentionSorted.size() == 0)
+                    return false;
+                
+                if (next == null) {
+                    next = attentionSorted.firstKey();
+                }
+                else {
+                    next = attentionSorted.higherKey(next);
+                }                                    
+                
+                if (next == null)
+                    return false;
+                                
+                if (include == null)
+                    return true;
+                else {
+                    if (include.isTrue(next))
+                        return true;
+                    else {
+                        while (!include.isTrue(next)) {
+                            next = attentionSorted.higherKey(next);
+                            if (next == null)
+                                return false;                        
+                        }
+                        return true;                        
+                    }
+                }
+            }
+
+            @Override
+            public Atom next() {
+                return next;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+            
+        };
+        //return getAtomsBySTI(b, new ArrayList(atomspace.getAtoms()));
     }
 
     

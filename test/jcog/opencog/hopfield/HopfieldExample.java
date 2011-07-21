@@ -36,7 +36,7 @@ public class HopfieldExample extends DefaultOCMind {
         private boolean imprinting;
         
         public ImprintBitmap(AtomArray2D array, short maxPixelStimulus, double imprintProbabaility) {
-            super("HopfieldExampleImprintBitmap");
+            super();
             
             this.array = array;
             this.maxPixelStimulus = maxPixelStimulus;

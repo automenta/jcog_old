@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,8 +35,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
+import jcog.opencog.AtomTypes;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
+import jcog.opencog.OCType;
 import jcog.opencog.atom.TruthValue;
 import jcog.spacegraph.gl.Surface;
 import jcog.spacegraph.math.linalg.Vec3f;
@@ -49,6 +50,7 @@ import jcog.spacegraph.shape.TextRect;
 import jcog.spacegraph.shape.TrapezoidLine;
 import jcog.spacegraph.swing.SwingWindow;
 import jcog.spacegraph.ui.PointerLayer;
+import org.apache.commons.collections15.IteratorUtils;
 
 /**
  *
@@ -57,8 +59,20 @@ import jcog.spacegraph.ui.PointerLayer;
 public class GraphView extends Surface implements Drawable {
 
     final public static ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    
+    
     private ConcurrentHashMap<Atom, TextRect> atomRect = new ConcurrentHashMap();
     private ConcurrentHashMap<FoldedEdge, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
+    
+    //TODO
+    //TODO
+    // remove entries from these maps when an object disappears, or store them in the shape objects
+    //TODO
+    //TODO    
+    private Map<Spatial, Vec3f> targetCenter = new ConcurrentHashMap();
+    private Map<Spatial, Vec3f> targetScale = new ConcurrentHashMap();
+
+    
     private final OCMind mind;
     final static TextRenderer textRenderer = TextRect.newTextRenderer(new Font("Arial", Font.PLAIN, 32));
     private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
@@ -88,6 +102,8 @@ public class GraphView extends Surface implements Drawable {
         public int getMaxAtoms();
         
         public double getGraphUpdatePeriod();
+
+        public double getGraphProcessPeriod();
     }
 
     public static class SeHGraphViewModel1 implements GraphViewModel {
@@ -157,8 +173,13 @@ public class GraphView extends Surface implements Drawable {
             final float sti = (float)mind.getNormalizedSTI(v);
             
             String n = mind.getName(v);
-            if (n == null)
-                n = mind.getType(v).toString();
+            if (n == null) {
+                OCType type = mind.getType(v);
+                if (type!=null)
+                    n = type.toString();
+                else
+                    n = "UNKNOWN";
+            }
             
             final float hue = ((Math.abs( (n.toString().hashCode()))) % 100) / 100.0f;
 
@@ -188,7 +209,11 @@ public class GraphView extends Surface implements Drawable {
         public void updateCurveColor(Atom edge, Vec3f vec) {
             final float v = 0.7f + 0.3f * (float) mind.getTruth(edge).getMean();
 
-            final float hue = ((Math.abs(mind.getType(edge).toString().hashCode() )) % 100) / 100.0f;
+            OCType type = mind.getType(edge);
+            if (type == null)
+                type = AtomTypes.AtomType;
+                        
+            final float hue = ((Math.abs(type.toString().hashCode() )) % 100) / 100.0f;
 
             final Color h = Color.getHSBColor(hue, 0.85f, v);
             float[] hRGB = h.getColorComponents(null);
@@ -209,7 +234,7 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public double getLayoutUpdatePeriod() {
-            return 0.1;
+            return 0.07;
         }
 
         @Override
@@ -219,12 +244,17 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public int getMaxAtoms() {
-            return 64;
+            return 48;
         }
 
 
         public double getGraphUpdatePeriod() {
-            return 2.0;        
+            return 3.0;        
+        }
+
+        @Override
+        public double getGraphProcessPeriod() {
+            return 0.07;
         }
         
         
@@ -265,6 +295,20 @@ public class GraphView extends Surface implements Drawable {
 //            }
 //            
 //        });
+
+        mind.addAgent(new MindAgent() {
+
+            @Override
+            protected void run(OCMind mind) {                
+                for (GraphViewProcess p : processes) {
+                    if (p.isReady()) {
+                        p._update(GraphView.this);
+                    } else {
+                        p.accumulate(getDT());
+                    }
+                }
+            }
+        }).setPeriod(param.getGraphProcessPeriod());
 
         mind.addAgent(new MindAgent() {
 
@@ -457,7 +501,7 @@ public class GraphView extends Surface implements Drawable {
 
         int remained = 0, removed = 0, added = 0;
 
-        List<Atom> arank = mind.getAtomsBySTI(true);
+        List<Atom> arank = IteratorUtils.toList(mind.getAtomsBySTI(true, null));
 
         int n = Math.min(arank.size(), param.getMaxAtoms());
 
@@ -549,8 +593,7 @@ public class GraphView extends Surface implements Drawable {
             return accumulated;
         }
     }
-    public Map<Spatial, Vec3f> targetCenter = new WeakHashMap();
-    public Map<Spatial, Vec3f> targetScale = new WeakHashMap();
+    
 
     public void setTargetCenter(Spatial s, float x, float y, float z) {
         Vec3f v = targetCenter.get(s);
@@ -672,17 +715,13 @@ public class GraphView extends Surface implements Drawable {
     final List<GraphViewProcess> processes = new LinkedList();
 
     protected void layoutGraph() {
-        final double dt = getDT();
-        for (GraphViewProcess p : processes) {
-            if (p.isReady()) {
-                p._update(this);
-            } else {
-                p.accumulate(dt);
-            }
-        }
 
         for (Atom v : atomRect.keySet()) {
-            updateRect(v, atomRect.get(v));
+            TextRect r = atomRect.get(v);
+            if (r!=null)
+                updateRect(v, r);
+            else
+                System.out.println("failed to remove atom: " + v);
         }
         for (FoldedEdge e : digraph.getEdges()) {
             updateCurve(e);
@@ -747,13 +786,14 @@ public class GraphView extends Surface implements Drawable {
         layoutGraph();
         drawAtoms(gl);
         drawEdges(gl);
+        
     }
 
     public static GraphPanel newGraphPanel(OCMind mind, GraphViewProcess... p) {
         return new GraphPanel(new GraphView(mind, p));
     }
 
-    public static void newGraphWindow(OCMind mind, GraphViewProcess... p) {
+    @Deprecated public static void newGraphWindow(OCMind mind, GraphViewProcess... p) {
         new SwingWindow(newGraphPanel(mind, p), 800, 800, true);
     }
 }

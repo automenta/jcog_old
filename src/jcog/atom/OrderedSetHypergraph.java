@@ -3,8 +3,6 @@ package jcog.atom;
 /*
  * Adapted from Jung's "SetHypergraph.java"
  */
-import edu.uci.ics.jung.graph.Graph;
-import edu.uci.ics.jung.graph.util.Pair;
 import java.io.Serializable;
 
 import java.util.Collection;
@@ -20,6 +18,7 @@ import edu.uci.ics.jung.graph.MultiGraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.log4j.Logger;
 
 /** implementation of JUNG's hypergraph that maintains ordering of the vertices pointed to by an edge(=link) */
 public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<V, H>, /*Graph<V,H>*/ Serializable {
@@ -71,7 +70,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
      * 
      * @see Hypergraph#addEdge(Object, Collection)
      */
-    public boolean addEdge(H hyperedge, List<V> vList) {
+    public boolean addEdge(final H hyperedge, final List<V> vList) {
         if (hyperedge == null) {
             throw new IllegalArgumentException("input hyperedge may not be null");
         }
@@ -194,13 +193,36 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return true;
     }
 
-    public boolean removeVertex(V vertex) {
+    public boolean removeVertex(final V vertex) {
         if (!containsVertex(vertex)) {
             return false;
         }
-        for (H hyperedge : vertices.get(vertex)) {
-            edges.get(hyperedge).remove(vertex);
+        
+        List<Runnable> toRemove = new LinkedList();
+        
+        for (final H hyperedge : vertices.get(vertex)) {
+            toRemove.add(new Runnable() {
+                @Override
+                public void run() {
+                    List<V> l = edges.get(hyperedge);
+                    int failure = 0, success = 0;
+                    try {
+                        l.remove(vertex);
+                        success++;
+                    }
+                    catch (UnsupportedOperationException e) {
+                        failure++;
+                    }
+                    
+                    if (failure > 0)
+                        Logger.getLogger(OrderedSetHypergraph.class).error(success + " / " + failure + ": ");                
+                }                
+            });
         }
+        
+        for (Runnable r : toRemove)
+            r.run();
+        
         vertices.remove(vertex);
         return true;
     }
@@ -210,7 +232,9 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
             return false;
         }
         for (V vertex : edges.get(hyperedge)) {
-            vertices.get(vertex).remove(hyperedge);
+            Set<H> l = vertices.get(vertex);
+            if (l!=null)
+                l.remove(hyperedge);
         }
         edges.remove(hyperedge);
         return true;
