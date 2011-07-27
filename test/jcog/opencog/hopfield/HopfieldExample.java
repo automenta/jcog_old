@@ -173,7 +173,7 @@ public class HopfieldExample extends OCMind {
         
         addAgent(new LearnHebbian());
         addAgent(new SpreadImportance());
-        addAgent(new Forget());
+        //addAgent(new Forget());
         
         new AtomSpacePrinter().print(atomspace, System.out);
         

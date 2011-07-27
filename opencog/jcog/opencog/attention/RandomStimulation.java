@@ -4,10 +4,10 @@
  */
 package jcog.opencog.attention;
 
+import java.util.ArrayList;
 import java.util.List;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -18,10 +18,12 @@ import jcog.opencog.OCMind;
 public class RandomStimulation extends MindAgent {
 
     private short boost;
+    private int numAtoms;
 
-    public RandomStimulation(double period, short boost) {
+    public RandomStimulation(double period, short boost, int numAtoms) {
         super(period);
         this.boost = boost;
+        this.numAtoms = numAtoms;
     }
 
     public short getBoost() {
@@ -32,14 +34,26 @@ public class RandomStimulation extends MindAgent {
         this.boost = b;
     }
 
+    public int getNumAtoms() {
+        return numAtoms;
+    }
+
+    public void setNumAtoms(int numAtoms) {
+        this.numAtoms = numAtoms;
+    }
+
     @Override
     protected void run(OCMind mind) {
-        List<Atom> c = mind.getAtoms(AtomType.conceptNode, false);
+        //TODO avoid having to reinstantiate arraylist each time this is called
+        List<Atom> c = new ArrayList(mind.getAtoms());
+        
         if (c != null) {
             if (c.size() > 0) {
-                int i = RandomNumber.getInt(0, c.size() - 1);
-                Atom x = c.get(i);
-                addStimulus(x, boost);
+                for (int n = 0; n < numAtoms; n++) {
+                    int i = RandomNumber.getInt(0, c.size() - 1);
+                    Atom x = c.get(i);
+                    addStimulus(x, getBoost());
+                }
             }
         }
     }

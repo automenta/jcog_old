@@ -67,7 +67,7 @@ public class HopfieldExample2 extends HopfieldExample {
         si.setPeriod(0.05);
         addAgent(si);
         
-        addAgent(new Forget());
+        //addAgent(new Forget());
 
         GraphViewProcess p1 = new GraphViewProcess() {
 

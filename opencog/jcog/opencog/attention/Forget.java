@@ -1,11 +1,14 @@
 package jcog.opencog.attention;
 
+import com.google.common.base.Predicate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
+import org.apache.commons.collections15.IteratorUtils;
 
 /** The ForgettingAgent, carries out the forgetting process in OpenCog Prime. 
  * 
@@ -38,40 +41,59 @@ public class Forget extends MindAgent {
     int maxVerticesBeforePrune;
     int maxEdgesBeforePrune;
     
-    public Forget() {
-        super();
-    }
+    
+    /**
+     * @param period
+     * @param maxVerticesBeforePrune
+     * @param maxEdgesBeforePrune 
+     */
     public Forget(double period, int maxVerticesBeforePrune, int maxEdgesBeforePrune) {
-        this();
+        super();
         
         this.maxVerticesBeforePrune = maxVerticesBeforePrune;
         this.maxEdgesBeforePrune = maxEdgesBeforePrune;
         
         setPeriod(period);
-        
+                
     }
     
     @Override
     public void run(OCMind mind) {
-        {
-//        Collection<Atom> vertices = mind.getVertices();
-//        Collection<Atom> edges = mind.getEdges();
-//
-//        //TODO find a way to do this without copying list, use a streaming iterator that will sort a collection (mind.getVertices())
-//        if (vertices.size() > maxVerticesBeforePrune) {
-//            List<Atom> verticesSorted = mind.getAtomsBySTI(false, new ArrayList(vertices));
-//            int difference = vertices.size() - maxVerticesBeforePrune;
-//            for (int i = 0; i < difference; i++) {
-//                removeVertex(verticesSorted.get(i));
-//            }
-//        }
-//        if (edges.size() > maxEdgesBeforePrune) {
-//            List<Atom> edgesSorted = mind.getAtomsBySTI(true, new ArrayList(edges));
-//            int difference = edges.size() - maxEdgesBeforePrune;
-//            for (int i = 0; i < difference; i++) {
-//                removeEdge(edgesSorted.get(i));
-//            }            
-//        }
+
+        final Iterator<Atom> ia = mind.iterateAtomsByIncreasingSTI();
+        
+        int vertDifference = 0, edgeDifference = 0;
+
+        int vc = mind.getVertexCount();
+        int ec = mind.getEdgeCount();
+        
+        if (vc > maxVerticesBeforePrune) {
+            vertDifference = vc - maxVerticesBeforePrune;
+        }
+        if (ec > maxEdgesBeforePrune) {
+            edgeDifference = ec - maxEdgesBeforePrune;
+        }        
+        
+        //int tested = 0;
+        while (ia.hasNext() && ((vertDifference > 0) || (edgeDifference > 0)) ) {
+            Atom a = ia.next();
+            if (mind.isVertex(a)) {
+                if (vertDifference > 0) {
+                    removeVertex(a);                
+                    vertDifference--;                
+                }
+            }
+            else {
+                if (edgeDifference > 0) {
+                    removeEdge(a);
+                    edgeDifference--;
+                }
+            }
+            //tested++;
+        }
+        //System.out.println("forget iterated thru " + tested + " atoms; " + vertDifference + " " + edgeDifference);
+        
+        
     }
         
 //
@@ -91,16 +113,6 @@ public class Forget extends MindAgent {
     
     
     
-//	/** simple forget procedure: decrease all atoms by a fixed amount if above a minimum */
-//	public static void forget(FloatMap strength, float min, float decrease) {
-//		for (String a : strength.getAtoms()) {
-//			float s = strength.get(a);
-//			s = s - decrease;
-//			if (s < min)
-//				s = min;
-//			strength.set(a, s);
-//		}
-//	}
 
 //	private:
 //	    AtomSpace* a;
@@ -165,4 +177,3 @@ public class Forget extends MindAgent {
 //	};
 
 
-}

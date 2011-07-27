@@ -47,6 +47,13 @@ public class AttentionValue {
         this(true);        
     }
 
+    @Override
+    public String toString() {
+        return "<" + sti + "," + lti + ">";
+    }
+    
+    
+
     
 //virtual 	~AttentionValue ()
 // 	AttentionValue (sti_t STI=DEFAULTATOMSTI, lti_t LTI=DEFAULTATOMLTI, vlti_t VLTI=DEFAULTATOMVLTI)

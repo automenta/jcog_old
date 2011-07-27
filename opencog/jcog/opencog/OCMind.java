@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import jcog.opencog.atom.AttentionValue;
 import jcog.opencog.atom.SimpleTruthValue;
 import jcog.opencog.atom.TruthValue;
+import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.UpdateImportance;
 import org.apache.commons.collections15.iterators.FilterIterator;
 import org.apache.log4j.Logger;
@@ -41,7 +42,9 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     
     private Map<Atom, TruthValue> truth;
     
-    private Map<Atom, AttentionValue> attention;
+    //TODO return this to 'private'
+    public Map<Atom, AttentionValue> attention;
+        
     private TreeMap<Atom, AttentionValue> attentionSortedBySTI;
     
     private List<MindAgent> agents = new CopyOnWriteArrayList();
@@ -106,21 +109,24 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     public Atom addEdge(Class<? extends AtomType> t, String name, Atom... members) {
-        return atomspace.addEdge(t, name, members);
+        Atom e = atomspace.addEdge(t, name, members);
+        if (e!=null) {
+            //getAttention(e);
+        }
+        return e;
     }
     
-    @Override
     public Atom addEdge(Class<? extends AtomType> t, Atom... members) {
-        return atomspace.addEdge(t, members);
-    }
-
-    public boolean addVertex(Class<? extends AtomType> type, Atom a) {
-        return addVertex(type, a, null);
+        return addEdge(t, null, members);
     }
 
     @Override
     public boolean addVertex(Class<? extends AtomType> type, Atom a, String name) {
-        return atomspace.addVertex(type, a, name);
+        if (atomspace.addVertex(type, a, name)) {
+            //getAttention(a);
+            return true;
+        }
+        return false;
     }
 
     public Atom addVertex(Class<? extends AtomType> type, String name) {
@@ -134,27 +140,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     @Override
     public void clear() {
         atomspace.clear();
-    }
-
-    /**
-     * Don't use directly.  Use MindAgents to remove edges and vertices
-     * @param e
-     * @return 
-     */
-    @Override
-    public boolean removeEdge(Atom e) {
-        return atomspace.removeEdge(e);
-    }
-
-
-    /**
-     * Don't use directly.  Use MindAgents to remove edges and vertices
-     * @param a
-     * @return 
-     */
-    @Override
-    public boolean removeVertex(Atom a) {
-        return atomspace.removeVertex(a);
     }
 
 
@@ -174,13 +159,16 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         this.maxSTISeen = maxSTISeen;
     }
 
-    public MindAgent addAgent(MindAgent m) {
+    public synchronized MindAgent addAgent(MindAgent m) {
         if (agents.contains(m)) {
             logger.error("Can not add duplicate MindAgent " + m + " to " + this);
             return m;
         }
         agents.add(m);
         return m;
+    }
+    public synchronized boolean removeAgent(MindAgent m) {
+        return agents.remove(m);
     }
     
     public double getCycleDT() {
@@ -202,29 +190,32 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
                 
     }
     
-    public void cycle() {
+    public synchronized void cycle() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
 
         updateAttentionSort();
 
+
         final double dt = getCycleDT();
         for (final MindAgent ma : agents) {
             ma._run(OCMind.this, dt);
-        }
-        
+        }        
+
         updateImportance.update(this);        
         
+        //TODO remove removals before updateImportance to avoid updating importance on removed atoms
         
         //remove all pending removals
         for (final MindAgent ma : agents) {
             for (Atom v : ma.getVerticesToRemove())
-                removeVertex(v);
+                remove(v);
             for (Atom e : ma.getEdgesToRemove())
-                removeEdge(e);
+                remove(e);
             ma.getVerticesToRemove().clear();
             ma.getEdgesToRemove().clear();
         }
+
 
     }
     
@@ -259,6 +250,18 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public List<MindAgent> getAgents() {
         return agents;
     }
+
+    public boolean isVertex(Atom a) {
+        return atomspace.isVertex(a);
+    }
+
+    public int getVertexCount() {
+        return atomspace.getVertices().size();
+    }
+    public int getEdgeCount() {
+        return atomspace.getEdges().size();
+    }
+
 
     public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
         private final Class<? extends AtomType> type;
@@ -568,25 +571,50 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 //    }
 
     public Iterator<Atom> iterateAtomsByDecreasingSTI() {
-        return iterateAtomsByDecreasingSTI(null);        
+        return iterateAtomsBySTI(true, null);        
     }
     
     public Iterator<Atom> iterateAtomsByDecreasingSTI(final Predicate<Atom> include) {
+        return iterateAtomsBySTI(true, include);
+    }
+    public Iterator<Atom> iterateAtomsByIncreasingSTI() {
+        return iterateAtomsBySTI(false, null);        
+    }
+    
+    public Iterator<Atom> iterateAtomsByIncreasingSTI(final Predicate<Atom> include) {
+        return iterateAtomsBySTI(false, include);
+    }
+    
+    /**
+     * 
+     * @param increasingOrDecreasing decreasing=true, increasing=false
+     * @param include
+     * @return 
+     */
+    public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
         return new Iterator<Atom>() {
 
             Atom next = null;
             
             @Override
             public boolean hasNext() {
+                if (attentionSortedBySTI == null)
+                    return false;
                 
                 if (attentionSortedBySTI.size() == 0)
                     return false;
                 
                 if (next == null) {
-                    next = attentionSortedBySTI.firstKey();
+                    if (increasingOrDecreasing == true)
+                        next = attentionSortedBySTI.firstKey();
+                    else
+                        next = attentionSortedBySTI.lastKey();
                 }
                 else {
-                    next = attentionSortedBySTI.higherKey(next);
+                    if (increasingOrDecreasing == true)
+                        next = attentionSortedBySTI.higherKey(next);
+                    else
+                        next = attentionSortedBySTI.lowerKey(next);
                 }                                    
                 
                 if (next == null)
@@ -599,7 +627,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
                         return true;
                     else {
                         while (!include.isTrue(next)) {
-                            next = attentionSortedBySTI.higherKey(next);
+                            if (increasingOrDecreasing == true)
+                                next = attentionSortedBySTI.higherKey(next);
+                            else
+                                next = attentionSortedBySTI.lowerKey(next);
                             if (next == null)
                                 return false;                        
                         }
@@ -619,11 +650,15 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             }
             
         };
-        //return iterateAtomsByDecreasingSTI(b, new ArrayList(atomspace.getAtoms()));
     }
 
     public boolean remove(Atom a) {
-        return atomspace.remove(a);
+        if (atomspace.remove(a)) {
+            attention.remove(a);
+            truth.remove(a);
+            return true;
+        }
+        return false;
     }
 
     public String getTypeName(final Atom a) {

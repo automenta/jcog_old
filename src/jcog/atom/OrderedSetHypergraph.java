@@ -201,7 +201,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         }
 
         List<H> toRemove = new ArrayList(getIncidentEdges(vertex));
-        for (final H edge : getIncidentEdges(vertex)) {
+        for (final H edge : toRemove) {
             removeEdge(edge);
         }
      

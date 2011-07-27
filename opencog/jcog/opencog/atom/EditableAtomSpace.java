@@ -14,18 +14,12 @@ import jcog.opencog.AtomType;
  */
 public interface EditableAtomSpace extends ReadableAtomSpace {
     
-    Atom addEdge(Class<? extends AtomType> t, Atom... members);
-
-    //boolean addVertex(AtomType type, Atom a);
+    Atom addEdge(Class<? extends AtomType> t, String name, Atom... members);
 
     boolean addVertex(Class<? extends AtomType> type, Atom a, String name);
 
-    //Atom addVertex(AtomType type, String name);
-
     void clear();
 
-    boolean removeEdge(Atom e);
-
-    boolean removeVertex(Atom a);
+    boolean remove(Atom e);
 
 }

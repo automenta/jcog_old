@@ -2,9 +2,11 @@ package jcog.opencog;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Typically, an opencog agent is coded similarly to a Java thread (except that
@@ -35,7 +37,7 @@ public abstract class MindAgent {
     
     final private Map<Atom, Short> atomStimulus = new HashMap();
     //private List<Atom> utilizedAtoms = new LinkedList();
-    final private List<Atom> verticesToRemove = new LinkedList(), edgesToRemove = new LinkedList();
+    final private Set<Atom> verticesToRemove = new HashSet(), edgesToRemove = new HashSet();
     
     /**
      * Initializes a MindAgent with name set by the simple name of the class.
@@ -61,12 +63,20 @@ public abstract class MindAgent {
         return period;
     }
 
+    /**
+     * 
+     * @param period for calls to run().  if < 0, it disables the mindagent from running
+     */
     public void setPeriod(double period) {
         this.period = period;
     }
     
     public void _run(OCMind mind, double dt) {
         accumulatedDT += dt;
+        
+        if (getPeriod() < 0)
+            return;
+        
         if (accumulatedDT >= getPeriod()) {
             run(mind);
             accumulatedDT = 0;
@@ -179,11 +189,11 @@ public abstract class MindAgent {
         return atomStimulus.keySet();
     }
 
-    public List<Atom> getVerticesToRemove() {
+    public Collection<Atom> getVerticesToRemove() {
         return verticesToRemove;
     }
     
-    public List<Atom> getEdgesToRemove() {
+    public Collection<Atom> getEdgesToRemove() {
         return edgesToRemove;
     }        
     

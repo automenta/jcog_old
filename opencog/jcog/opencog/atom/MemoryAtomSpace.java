@@ -86,8 +86,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         names.remove(a);                
     }
     
-    @Override
-    public boolean removeVertex(Atom a) {
+    protected boolean removeVertex(Atom a) {
         if (!graph.containsVertex(a)) {
             return false;
         }
@@ -97,8 +96,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return graph.removeVertex(a);
     }
     
-    @Override
-    public boolean removeEdge(Atom e) {
+    protected boolean removeEdge(Atom e) {
         if (!graph.containsEdge(e)) {
             return false;
         }
@@ -167,6 +165,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return names.get(a);
     }
     
+    @Override
     public Atom addEdge(Class<? extends AtomType> t, String name, Atom... members) {        
         
         //Unmodifiable list
@@ -206,13 +205,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return e;        
     }
     
-    /**
-     * TODO If a Link with the same type and outgoing set of a previously inserted Link is inserted in the AtomSpace, they are merged.
-     */
-    @Override
-    public Atom addEdge(Class<? extends AtomType> t, Atom... members) {        
-        return addEdge(t, null, members);
-    }
     
     
     public int getArity(Atom e) {        
