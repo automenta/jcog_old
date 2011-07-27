@@ -69,9 +69,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         
     }
     
-    public void setRunning(boolean running) {
-        
-    }
     public TruthValue getTruth(Atom a) {
         TruthValue t = truth.get(a);
         if (t == null) {
@@ -234,8 +231,11 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         //Is this extra-sort necessary?
         //updateAttentionSort();
     }
-    
-    public void cycleParallel() {
+
+    /**
+     * executes mindagents in parallel across all system cores; not fully tested yet
+     */
+    private void cycleParallel() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
 
@@ -274,6 +274,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public int getVertexCount() {
         return atomspace.getVertices().size();
     }
+    
     public int getEdgeCount() {
         return atomspace.getEdges().size();
     }
@@ -564,24 +565,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return a;
     }
     
-//    //Sorts
-//    public List<Atom> iterateAtomsByDecreasingSTI(final boolean descending, final List<Atom> a) {              
-//        Collections.sort(a, new Comparator<Atom>() { 
-//            @Override public int compare(Atom o1, Atom o2) {
-//                final short a1 = getSTI(o1);
-//                final short a2 = getSTI(o2);
-//                if (a1 == a2) return 0;
-//                if (descending) {
-//                    return (a1 > a2) ? -1 : 1;
-//                }
-//                else {
-//                    return (a1 > a2) ? 1 : -1;  
-//                }
-//            }            
-//        });
-//        return a;        
-//    }
-
     public Iterator<Atom> iterateAtomsByDecreasingSTI() {
         return iterateAtomsBySTI(true, null);        
     }
@@ -597,9 +580,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return iterateAtomsBySTI(false, include);
     }
 
-//    public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
-//        
-//    }
     
     /**
      * 
@@ -617,66 +597,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         if (include!=null)
             return IteratorUtils.filteredIterator(i, include); 
         else
-            return i;
-        
-//        return new Iterator<Atom>() {
-//
-//            Atom next = null;
-//            
-//            @Override
-//            public boolean hasNext() {
-//                if (attentionSortedBySTI == null)
-//                    return false;
-//                
-//                if (attentionSortedBySTI.size() == 0)
-//                    return false;
-//                
-//                if (next == null) {
-//                    if (increasingOrDecreasing == true)
-//                        next = attentionSortedBySTI.firstKey();
-//                    else
-//                        next = attentionSortedBySTI.lastKey();
-//                }
-//                else {
-//                    if (increasingOrDecreasing == true)
-//                        next = attentionSortedBySTI.ceilingKey(next);
-//                    else
-//                        next = attentionSortedBySTI.floorKey(next);
-//                }                                    
-//                
-//                if (next == null)
-//                    return false;
-//                                
-//                if (include == null)
-//                    return true;
-//                else {
-//                    if (include.isTrue(next))
-//                        return true;
-//                    else {
-//                        while (!include.isTrue(next)) {
-//                            if (increasingOrDecreasing == true)
-//                                next = attentionSortedBySTI.ceilingKey(next);
-//                            else
-//                                next = attentionSortedBySTI.floorKey(next);
-//                            if (next == null)
-//                                return false;                        
-//                        }
-//                        return true;                        
-//                    }
-//                }
-//            }
-//
-//            @Override
-//            public Atom next() {
-//                return next;
-//            }
-//
-//            @Override
-//            public void remove() {
-//                throw new UnsupportedOperationException("Not supported yet.");
-//            }
-//            
-//        };
+            return i;        
     }
 
     public boolean remove(Atom a) {
@@ -690,6 +611,5 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return getType(a).getSimpleName();
     }
 
-    
-    
+       
 }
