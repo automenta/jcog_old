@@ -9,14 +9,13 @@ import java.util.HashMap;
 import java.util.Map;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
+import jcog.opencog.AtomType;
+import jcog.opencog.util.AtomSpacePrinter;
 import jcog.opencog.OCMind;
-import jcog.opencog.DefaultOCMind;
 import jcog.opencog.MindAgent;
 import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
-import jcog.opencog.attention.UpdateImportance;
 import jcog.opencog.swing.GraphView;
 
 /**
@@ -24,7 +23,7 @@ import jcog.opencog.swing.GraphView;
  * See: http://wiki.opencog.org/w/Hopfield_network_emulator
  * @author seh
  */
-public class HopfieldExample extends DefaultOCMind {
+public class HopfieldExample extends OCMind {
     private final int width, height, numNodes;
 
     public static class ImprintBitmap extends MindAgent {
@@ -114,8 +113,8 @@ public class HopfieldExample extends DefaultOCMind {
                     continue;
                 }
 
-                if (getEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode) == null) {
-                    addEdge(AtomTypes.SymmetricHebbianLink, sourceNode, targetNode);
+                if (getEdge(AtomType.symmetricHebbianLink, sourceNode, targetNode) == null) {
+                    addEdge(AtomType.symmetricHebbianLink, sourceNode, targetNode);
                     numLinks--;
                 }
             }            
@@ -126,9 +125,9 @@ public class HopfieldExample extends DefaultOCMind {
             for (int y = 0; y < height; y++) {
                 Atom center = bitmap.getAtom(x, y);
                 if (x != width-1)
-                    addEdge(AtomTypes.SymmetricHebbianLink, center, bitmap.getAtom(x+1, y));
+                    addEdge(AtomType.symmetricHebbianLink, center, bitmap.getAtom(x+1, y));
                 if (y != height-1)
-                    addEdge(AtomTypes.SymmetricHebbianLink, center, bitmap.getAtom(x, y+1));
+                    addEdge(AtomType.symmetricHebbianLink, center, bitmap.getAtom(x, y+1));
             }
             
         }
@@ -172,17 +171,16 @@ public class HopfieldExample extends DefaultOCMind {
         imprint.setRandom(0, 1.0);       
         addAgent(imprint);       
         
-        addAgent(new UpdateImportance());        
         addAgent(new LearnHebbian());
         addAgent(new SpreadImportance());
         addAgent(new Forget());
         
-        //new AtomSpacePrinter().print(atomspace, System.out);
+        new AtomSpacePrinter().print(atomspace, System.out);
         
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
         
-        new AttentionControlPanel(this).newWindow();
+        new AttentionControlPanel(this, 0.5).newWindow();
         
         GraphView.newGraphWindow(this);        
 

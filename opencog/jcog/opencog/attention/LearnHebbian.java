@@ -1,9 +1,10 @@
 package jcog.opencog.attention;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
+import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -29,8 +30,10 @@ public class LearnHebbian extends MindAgent {
         
         this.mind = mind;
         
-        for (Atom e : mind.getAtoms(AtomTypes.SymmetricHebbianLink, false)) {
-            //This is a HACK that only works on SymmetricHebbianLinks of arity=2
+        //For all SymmetricHebbianLinks of arity=2  
+        Iterator<Atom> i = mind.iterateAtoms(AtomType.symmetricHebbianLink, true, 2, 2);
+        while (i.hasNext()) {
+            Atom e = i.next();
 
             if (mind.getArity(e)!=2)
                 continue;

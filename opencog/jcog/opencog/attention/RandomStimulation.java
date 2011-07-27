@@ -7,7 +7,7 @@ package jcog.opencog.attention;
 import java.util.List;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
+import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 
@@ -34,7 +34,7 @@ public class RandomStimulation extends MindAgent {
 
     @Override
     protected void run(OCMind mind) {
-        List<Atom> c = mind.getAtoms(AtomTypes.ConceptNode, false);
+        List<Atom> c = mind.getAtoms(AtomType.conceptNode, false);
         if (c != null) {
             if (c.size() > 0) {
                 int i = RandomNumber.getInt(0, c.size() - 1);

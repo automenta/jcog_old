@@ -16,6 +16,7 @@ import java.util.Set;
 import edu.uci.ics.jung.graph.Hypergraph;
 import edu.uci.ics.jung.graph.MultiGraph;
 import edu.uci.ics.jung.graph.util.EdgeType;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.log4j.Logger;
@@ -192,8 +193,23 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         vertices.put(vertex, new HashSet<H>());
         return true;
     }
-
+    
+    
     public boolean removeVertex(final V vertex) {
+        if (!containsVertex(vertex)) {
+            return false;
+        }
+
+        List<H> toRemove = new ArrayList(getIncidentEdges(vertex));
+        for (final H edge : getIncidentEdges(vertex)) {
+            removeEdge(edge);
+        }
+     
+        vertices.remove(vertex);
+        return true;
+    }
+
+    @Deprecated private boolean removeVertexOLD(final V vertex) {
         if (!containsVertex(vertex)) {
             return false;
         }

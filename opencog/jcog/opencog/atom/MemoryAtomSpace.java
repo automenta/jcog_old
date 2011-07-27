@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package jcog.opencog;
+package jcog.opencog.atom;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -16,6 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import jcog.atom.OrderedSetHypergraph;
+import jcog.opencog.Atom;
+import jcog.opencog.AtomType;
+import jcog.opencog.Operation;
+import jcog.opencog.Predicate;
 import org.apache.log4j.Logger;
 
 /**
@@ -27,8 +31,8 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     final static Logger logger = Logger.getLogger(MemoryAtomSpace.class);
     
     public final OrderedSetHypergraph<Atom, Atom> graph;
-    Map<Atom, OCType> atomToType;
-    Multimap<OCType, Atom> typesToAtom;
+    Map<Atom, Class<? extends AtomType>> atomToType;
+    Multimap<Class<? extends AtomType>, Atom> typesToAtom;
     BiMap<Atom, String> names;
 
     public MemoryAtomSpace() {
@@ -39,7 +43,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         names = HashBiMap.create();
     }
     
-    protected boolean indexAtom(Atom a, OCType type, String name) {
+    protected boolean indexAtom(Atom a, Class<? extends AtomType> type, String name) {
         typesToAtom.put(type, a);        //TODO check if this preserves previously-added types
         atomToType.put(a, type);
         
@@ -65,7 +69,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     
     
     @Override
-    public boolean addVertex(OCType type, Atom a, String name)  {
+    public boolean addVertex(Class<? extends AtomType> type, Atom a, String name)  {
         if (indexAtom(a, type, name)) {
             graph.addVertex(a);
             return true;        
@@ -76,7 +80,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     
     
     protected void unindexAtom(Atom a) {
-        OCType t = getType(a);
+        Class<? extends AtomType> t = getType(a);
         typesToAtom.remove(t, a);      //TODO check if this preserves previously-added types
         atomToType.remove(a);        
         names.remove(a);                
@@ -85,14 +89,23 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     @Override
     public boolean removeVertex(Atom a) {
         if (!graph.containsVertex(a)) {
-            logger.error(this + " can not remove non-existent atom: " + a.toString());
             return false;
         }
      
         unindexAtom(a);
         
-        graph.removeVertex(a);
-        return true;
+        return graph.removeVertex(a);
+    }
+    
+    @Override
+    public boolean removeEdge(Atom e) {
+        if (!graph.containsEdge(e)) {
+            return false;
+        }
+        
+        unindexAtom(e);
+        
+        return graph.removeEdge(e);
     }
 
     @Override
@@ -118,7 +131,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     }
     
     @Override
-    public Atom getEdge(OCType type, Atom... members) {
+    public Atom getEdge(Class<? extends AtomType> type, Atom... members) {
         if (members.length == 0)
             return null;
         
@@ -135,7 +148,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     }
         
     
-    public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes) {
+    public Collection<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
         if (!includeSubtypes) {
             //TODO unmodifiable
             return typesToAtom.get(type);
@@ -146,7 +159,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         }
     }
     
-    public OCType getType(Atom a) {
+    public Class<? extends AtomType> getType(Atom a) {
         return atomToType.get(a);
     }
     
@@ -154,7 +167,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return names.get(a);
     }
     
-    public Atom addEdge(OCType t, String name, Atom... members) {        
+    public Atom addEdge(Class<? extends AtomType> t, String name, Atom... members) {        
         
         //Unmodifiable list
         //final List<Atom> memberList = Arrays.asList(members); 
@@ -167,18 +180,17 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         
         for (final Atom eaa : typesToAtom.get(t)) {
             if (graph.getIncidentVertices(eaa).equals(memberList)) {
-                logger.info("retrieving duplicate edge " + eaa + "(" + t + ")");                    
 
                 String oldName = getName(eaa);
                 if (name!=null) {
                     if (oldName == null) oldName = "";
                     if (!oldName.equals(name)) {
-                        logger.error("overwriting " + eaa + "{name=" + oldName + ", type=" + t + "} TO name=" + name);
+                        logger.info("Renaming " + eaa + "{name=" + oldName + ", type=" + t + "} to: " + name);
                     }
                 }
                 else {
                     if (oldName != null) {
-                        logger.error("overwriting " + eaa + "{name=" + oldName +", type=" + t + "} TO name NULL");
+                        logger.info("Renaming " + eaa + "{name=" + oldName +", type=" + t + "} to: NULL");
                     }
 
                 }
@@ -198,17 +210,12 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
      * TODO If a Link with the same type and outgoing set of a previously inserted Link is inserted in the AtomSpace, they are merged.
      */
     @Override
-    public Atom addEdge(OCType t, Atom... members) {        
+    public Atom addEdge(Class<? extends AtomType> t, Atom... members) {        
         return addEdge(t, null, members);
     }
     
-    @Override
-    public boolean removeEdge(Atom e) {
-        unindexAtom(e);
-        return graph.removeEdge(e);
-    }
     
-    public int getArity(Atom e) {
+    public int getArity(Atom e) {        
         return graph.getIncidentCount(e);
     }
     
@@ -229,10 +236,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         logger.error("clear() not implemented yet");
     }
     
-    
-    public void addType(OCType type, OCType... supertypes) {
-        addVertex(Atom.Type, type, type.toString());
-    }
 
     @Override
     public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
@@ -288,7 +291,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return sum / ((double)num);
     }
     
-    public Multimap<OCType, Atom> getTypeIndex() {
+    public Multimap<Class<? extends AtomType>, Atom> getTypeIndex() {
         //TODO return unmodifiable
         return typesToAtom;
     }
@@ -296,6 +299,19 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     public BiMap<Atom, String> getNameIndex() {
         //TODO return unmodifiable
         return names;
+    }
+    
+    public Collection<Atom> getAtoms() {
+        return atomToType.keySet();
+    }
+
+    /** removes either an edge or a vertex from the hypergraph.  if it is not a vertex, it tries to remove it as an edge. */
+    public boolean remove(Atom a) {
+        if (!removeVertex(a)) {
+            if (!removeEdge(a))
+                return false;            
+        }
+        return true;
     }
     
     //public Atom removeEdge(String t, Atom... members) { }
@@ -412,9 +428,10 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 //AtomSpace & 	operator= (const AtomSpace &)
 // 	AtomSpace (const AtomSpace &)
 
-    public Collection<Atom> getAtoms() {
-        return atomToType.keySet();
+    public Iterator<Atom> iterateAtoms() {
+        return atomToType.keySet().iterator();
     }
+
 
 
 }

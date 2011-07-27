@@ -3,19 +3,23 @@
  * and open the template in the editor.
  */
 
-package jcog.opencog;
+package jcog.opencog.atom;
 
 import java.util.Collection;
 import java.util.Iterator;
+import jcog.opencog.Atom;
+import jcog.opencog.AtomType;
+import jcog.opencog.Operation;
+import jcog.opencog.Predicate;
 
 /**
  *
  * @author seh
  */
-interface ReadableAtomSpace {
+public interface ReadableAtomSpace {
     
-    public Collection<Atom> getAtoms(OCType type, boolean includeSubtypes);
-    public Atom getEdge(OCType type, Atom... members);
+    public Collection<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes);
+    public Atom getEdge(Class<? extends AtomType> type, Atom... members);
 
     public Collection<Atom> getVertices();    
     public Collection<Atom> getEdges();
@@ -23,10 +27,12 @@ interface ReadableAtomSpace {
     public Collection<Atom> getIncidentEdges(Atom vertex);
     public Collection<Atom> getIncidentVertices(Atom edge);
 
-    public OCType getType(Atom a);
+    public Class<? extends AtomType> getType(Atom a);
     public String getName(Atom a);
     public int getArity(Atom e);
     public boolean hasAtom(Atom a);
+    
+    public Iterator<Atom> iterateAtoms();
     public Iterator<Atom> iterateVertices();
     public Iterator<Atom> iterateEdges();
 

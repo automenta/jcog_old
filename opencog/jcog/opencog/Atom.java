@@ -13,7 +13,6 @@ import java.util.UUID;
  * @author seh
  */
 public class Atom implements Serializable, Comparable<Atom> {
-    public static final OCType Type = new OCType("TypeType");
 
     public static String newIDString() {
         return UUID.randomUUID().toString();

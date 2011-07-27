@@ -1,5 +1,8 @@
 package jcog.opencog;
 
+import jcog.opencog.atom.ReadableAtomSpace;
+import jcog.opencog.atom.EditableAtomSpace;
+import jcog.opencog.atom.MemoryAtomSpace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import edu.uci.ics.jung.graph.util.Pair;
@@ -22,6 +25,7 @@ import jcog.opencog.atom.AttentionValue;
 import jcog.opencog.atom.SimpleTruthValue;
 import jcog.opencog.atom.TruthValue;
 import jcog.opencog.attention.UpdateImportance;
+import org.apache.commons.collections15.iterators.FilterIterator;
 import org.apache.log4j.Logger;
 
 /** Analogous to CogServer.
@@ -38,7 +42,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     private Map<Atom, TruthValue> truth;
     
     private Map<Atom, AttentionValue> attention;
-    private TreeMap<Atom, AttentionValue> attentionSorted;
+    private TreeMap<Atom, AttentionValue> attentionSortedBySTI;
     
     private List<MindAgent> agents = new CopyOnWriteArrayList();
     private short minSTISeen = 0, maxSTISeen = 0;
@@ -46,8 +50,9 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     
     UpdateImportance updateImportance = new UpdateImportance();    
          
-//	private FloatMap activation; //???
-//	private FloatMap importance;//???
+    public OCMind() {
+        this(new MemoryAtomSpace());
+    }
 
     public OCMind(MemoryAtomSpace a) {
         super();
@@ -86,12 +91,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
     public AttentionValue newDefaultAttentionValue(Atom a) {
-        boolean disposable = true;
-        OCType type = atomspace.getType(a);
-        if (type.equals(Atom.Type)) {
-            disposable = false;
-        }
-        return new AttentionValue(disposable);
+        Class<? extends AtomType> type = atomspace.getType(a);
+        return new AttentionValue(true);
     }
 
     @Override
@@ -104,25 +105,25 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.visitVertices(predicate, op);
     }
 
-    public Atom addEdge(OCType t, String name, Atom... members) {
+    public Atom addEdge(Class<? extends AtomType> t, String name, Atom... members) {
         return atomspace.addEdge(t, name, members);
     }
     
     @Override
-    public Atom addEdge(OCType t, Atom... members) {
+    public Atom addEdge(Class<? extends AtomType> t, Atom... members) {
         return atomspace.addEdge(t, members);
     }
 
-    public boolean addVertex(OCType type, Atom a) {
+    public boolean addVertex(Class<? extends AtomType> type, Atom a) {
         return addVertex(type, a, null);
     }
 
     @Override
-    public boolean addVertex(OCType type, Atom a, String name) {
+    public boolean addVertex(Class<? extends AtomType> type, Atom a, String name) {
         return atomspace.addVertex(type, a, name);
     }
 
-    public Atom addVertex(OCType type, String name) {
+    public Atom addVertex(Class<? extends AtomType> type, String name) {
         final Atom a = new Atom();
         if (addVertex(type, a, name)) {
             return a;
@@ -187,7 +188,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
     public void updateAttentionSort() {
-        attentionSorted = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
+        attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
             @Override
             public int compare(Atom a, Atom b) {
                 short sa = getSTI(a);
@@ -197,7 +198,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
                 return (sa > sb) ? -1 : 1;                
             }            
         });        
-        attentionSorted.putAll(attention);
+        attentionSortedBySTI.putAll(attention);
                 
     }
     
@@ -259,8 +260,78 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return agents;
     }
 
+    public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
+        private final Class<? extends AtomType> type;
+        private final boolean includeSubtypes;
+        private final int minArity;
+        private final int maxArity;
+        
+        public AtomTypeArityPredicate(Class<? extends AtomType> type, boolean includeSubtypes) {
+            this(type, includeSubtypes, -1, -1);
+        }
+
+        /**
+         * @param type if null, disables comparison
+         * @param includeSubtypes if false, only accepts exact type class; otherwise accepts subclasses
+         * @param minArity  inclusive minimum accepted arity, or -1 to disable comparison
+         * @param maxArity  inclusive maximum accepted arity, or -1 to disable comparison
+         */
+        public AtomTypeArityPredicate(Class<? extends AtomType> type, boolean includeSubtypes, int minArity, int maxArity) {
+            this.type = type;
+            this.includeSubtypes = includeSubtypes;
+            this.minArity = minArity;
+            this.maxArity = maxArity;
+        }
+        
+        @Override
+        public boolean evaluate(Atom x) {
+            if (type!=null) {
+                final Class<? extends AtomType> t = getType(x);
+                if (includeSubtypes) {
+                    if (!type.isAssignableFrom(t))
+                        return false;
+                }
+                else {
+                    if (!t.equals(type))
+                        return false;
+                }
+            }
+            
+            final int arity = getArity(x);
+            if (minArity!=-1) {
+                if (arity < minArity)
+                    return false;
+            }
+            if (maxArity!=-1) {
+                if (arity > maxArity)
+                    return false;                
+            }
+            return true;
+        }
+        
+    }
+    
+    public Iterator<Atom> iterateAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
+        return iterateAtoms(type, includeSubtypes, -1, -1);
+    }
+    
+    /**
+     * 
+     * @param type if null, disables comparison
+     * @param includeSubtypes if false, only accepts exact type class; otherwise accepts subclasses
+     * @param minArity  inclusive minimum accepted arity, or -1 to disable comparison
+     * @param maxArity  inclusive maximum accepted arity, or -1 to disable comparison
+     * @return 
+     */
+    public Iterator<Atom> iterateAtoms(Class<? extends AtomType> type, boolean includeSubtypes, int minArity, int maxArity) {
+        return new FilterIterator<Atom>(iterateAtoms(), new AtomTypeArityPredicate(type, includeSubtypes, minArity, maxArity));
+    }
+    public Iterator<Atom> iterateEdges(Class<? extends AtomType> type, boolean includeSubtypes, int minArity, int maxArity) {
+        return new FilterIterator<Atom>(iterateEdges(), new AtomTypeArityPredicate(type, includeSubtypes, minArity, maxArity));        
+    }
+    
     @Override
-    public List<Atom> getAtoms(OCType type, boolean includeSubtypes) {
+    public List<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
         Builder<Atom> ib = new ImmutableList.Builder<Atom>();
         Collection<Atom> v = atomspace.getAtoms(type, includeSubtypes);
         if (v != null) {
@@ -298,7 +369,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     @Override
-    public Atom getEdge(OCType type, Atom... members) {        
+    public Atom getEdge(Class<? extends AtomType> type, Atom... members) {        
         Atom a = atomspace.getEdge(type, members);
         if (a != null) {
             return a;
@@ -313,8 +384,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
     @Override
-    public OCType getType(Atom a) {
-        OCType t = atomspace.getType(a);
+    public Class<? extends AtomType> getType(final Atom a) {
+        Class<? extends AtomType> t = atomspace.getType(a);
         if (t!=null)
             return t;
         //TODO look in subgraphs
@@ -322,7 +393,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     @Override
-    public String getName(Atom a) {
+    public String getName(final Atom a) {
         String n = atomspace.getName(a);
         if (n!=null)
             return n;
@@ -331,7 +402,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     @Override
-    public int getArity(Atom e) {
+    public int getArity(final Atom e) {
         return atomspace.getArity(e);
         //TODO look in subgraphs
     }
@@ -342,6 +413,12 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         //TODO look in subgraphs
     }
 
+    @Override
+    public Iterator<Atom> iterateAtoms() {
+        return atomspace.iterateAtoms();
+        //TODO look in subgraphs        
+    }
+    
     @Override
     public Iterator<Atom> iterateVertices() {
         return atomspace.iterateVertices();
@@ -502,14 +579,14 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             @Override
             public boolean hasNext() {
                 
-                if (attentionSorted.size() == 0)
+                if (attentionSortedBySTI.size() == 0)
                     return false;
                 
                 if (next == null) {
-                    next = attentionSorted.firstKey();
+                    next = attentionSortedBySTI.firstKey();
                 }
                 else {
-                    next = attentionSorted.higherKey(next);
+                    next = attentionSortedBySTI.higherKey(next);
                 }                                    
                 
                 if (next == null)
@@ -522,7 +599,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
                         return true;
                     else {
                         while (!include.isTrue(next)) {
-                            next = attentionSorted.higherKey(next);
+                            next = attentionSortedBySTI.higherKey(next);
                             if (next == null)
                                 return false;                        
                         }
@@ -543,6 +620,14 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             
         };
         //return iterateAtomsByDecreasingSTI(b, new ArrayList(atomspace.getAtoms()));
+    }
+
+    public boolean remove(Atom a) {
+        return atomspace.remove(a);
+    }
+
+    public String getTypeName(final Atom a) {
+        return getType(a).getSimpleName();
     }
 
     

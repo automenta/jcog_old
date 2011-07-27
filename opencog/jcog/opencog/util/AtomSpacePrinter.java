@@ -3,11 +3,14 @@
  * and open the template in the editor.
  */
 
-package jcog.opencog;
+package jcog.opencog.util;
 
 import com.google.common.collect.Multimap;
 import java.io.PrintStream;
 import java.util.Collection;
+import jcog.opencog.Atom;
+import jcog.opencog.atom.MemoryAtomSpace;
+import jcog.opencog.AtomType;
 
 /**
  *
@@ -21,10 +24,10 @@ public class AtomSpacePrinter {
         o.println("Edges: ("  + a.getEdges().size() + ") " + a.getEdges());
 
         o.println("Types:");
-        Multimap<OCType, Atom> typeIndex = a.getTypeIndex();
-        for (OCType t : typeIndex.keySet()) {
+        Multimap<Class<? extends AtomType>, Atom> typeIndex = a.getTypeIndex();
+        for (Class<? extends AtomType> t : typeIndex.keySet()) {
             Collection<Atom> types = typeIndex.get(t);
-            o.println("  " + t + " (" + types.size() + "): " + types);            
+            o.println("  " + t.getSimpleName() + " (" + types.size() + "): " + types);            
         }
         
         o.println("Names: " + a.getNameIndex());

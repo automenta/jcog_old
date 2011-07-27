@@ -11,19 +11,22 @@ import java.util.logging.Logger;
  *
  * @author seh
  */
-public class MindUpdater implements Runnable {
+public class MindRunner implements Runnable {
 
     public boolean running = true;
     private double period;
     private final OCMind mind;
+    private final Thread thread;
     
-    public MindUpdater(OCMind mind, double period) {
+    public MindRunner(OCMind mind, double period) {
         super();
         
         this.mind = mind;
         this.period = period;
         
-        new Thread(this).start();
+        this.thread = new Thread(this);
+        
+        thread.start();
     }
 
     public double getPeriod() {

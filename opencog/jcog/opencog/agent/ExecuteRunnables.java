@@ -2,19 +2,21 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog;
+package jcog.opencog.agent;
 
 import java.util.LinkedList;
+import jcog.opencog.MindAgent;
+import jcog.opencog.OCMind;
 
 /**
  *
  * @author seh
  */
-public class TaskQueue extends MindAgent {
+public class ExecuteRunnables extends MindAgent {
 
     LinkedList<Runnable> toRun = new LinkedList();
 
-    public TaskQueue(double period) {
+    public ExecuteRunnables(double period) {
         super();
         setPeriod(period);
     }

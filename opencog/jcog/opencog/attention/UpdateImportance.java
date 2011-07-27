@@ -3,7 +3,7 @@ package jcog.opencog.attention;
 import java.util.List;
 import java.util.logging.Logger;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomSpacePrinter;
+import jcog.opencog.util.AtomSpacePrinter;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.AttentionValue;

@@ -6,7 +6,7 @@ package jcog.opencog.attention;
 
 import java.util.Iterator;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
+import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.Predicate;
@@ -33,7 +33,7 @@ public abstract class Ego extends MindAgent {
         Iterator<Atom> ci = mind.iterateAtomsByDecreasingSTI(new Predicate<Atom>() {
             @Override
             public boolean isTrue(Atom x) {
-                return (mind.getType(x).equals(AtomTypes.ConceptNode));
+                return (mind.getType(x).equals(AtomType.conceptNode));
             }            
         });
         while (ci.hasNext()) {

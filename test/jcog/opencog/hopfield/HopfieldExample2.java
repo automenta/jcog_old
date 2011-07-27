@@ -7,7 +7,6 @@ package jcog.opencog.hopfield;
 import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
-import jcog.opencog.attention.UpdateImportance;
 import jcog.opencog.swing.GraphView;
 import jcog.opencog.swing.GraphView.GraphViewProcess;
 
@@ -59,9 +58,6 @@ public class HopfieldExample2 extends HopfieldExample {
         imprint.setRandom();       
         imprint.setPeriod(0.5);
         addAgent(imprint);
-
-        final UpdateImportance ui = new UpdateImportance();        
-        addAgent(ui);
         
         LearnHebbian lh = new LearnHebbian();
         lh.setPeriod(0.15);

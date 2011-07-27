@@ -35,8 +35,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
-import jcog.opencog.DefaultOCMind;
+import jcog.opencog.AtomType;
 import jcog.opencog.OCMind;
 import jcog.opencog.swing.GraphView;
 import jcog.spacegraph.swing.SwingWindow;
@@ -88,7 +87,7 @@ public class TestCoreNLP extends JPanel {
     }
     
     public void graph(final String text) {
-        OCMind mind = new DefaultOCMind();
+        OCMind mind = new OCMind();
         
         String outputText = "";
         
@@ -153,7 +152,7 @@ public class TestCoreNLP extends JPanel {
         
         for (IndexedWord w : semantics.vertexList()) {
             if (!wordAtoms.containsKey(w)) {
-                Atom a = mind.addVertex(AtomTypes.ConceptNode, w.toString());
+                Atom a = mind.addVertex(AtomType.conceptNode, w.toString());
                 wordAtoms.put(w, a);
                 wordSequence[w.index()-1] = a;
             }                
@@ -165,14 +164,14 @@ public class TestCoreNLP extends JPanel {
             //Adds words not contained as semantic vertices. these are usually prepositions like 'a', 'and', 'of', etc
             if (wordSequence[i] == null) {
                 String label = cl.getString(TextAnnotation.class);
-                Atom a = mind.addVertex(AtomTypes.ConceptNode, label + "." + Atom.newIDString());
+                Atom a = mind.addVertex(AtomType.conceptNode, label + "." + Atom.newIDString());
                 wordAtoms.put(cl, a);
                 wordSequence[i] = a;
             }
             i++;
         }
         
-        Atom seq = mind.addEdge(AtomTypes.OrderedLink, wordSequence);
+        Atom seq = mind.addEdge(AtomType.orderedLink, wordSequence);
 
         Map<String, Atom> gramRels = new HashMap();
         
@@ -188,17 +187,17 @@ public class TestCoreNLP extends JPanel {
                 continue;                
             }
             
-            Atom ee = mind.addEdge(AtomTypes.INTENSIONAL_INHERITANCE_LINK, s, t);
+            Atom ee = mind.addEdge(AtomType.intensionalInheritanceLink, s, t);
         
             String rs = e.getRelation().getShortName();
             
             Atom a = gramRels.get(rs);
             if (a==null) {
-                a = mind.addVertex(AtomTypes.ConceptNode, rs);
+                a = mind.addVertex(AtomType.conceptNode, rs);
                 gramRels.put(rs, a);
             }
             
-            Atom er = mind.addEdge(AtomTypes.INTENSIONAL_INHERITANCE_LINK, a, ee);
+            Atom er = mind.addEdge(AtomType.intensionalInheritanceLink, a, ee);
         }
     }
 }

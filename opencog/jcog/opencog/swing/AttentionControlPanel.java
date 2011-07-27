@@ -23,7 +23,7 @@ import javax.swing.SwingUtilities;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.OCType;
+import jcog.opencog.AtomType;
 import org.apache.commons.collections15.IteratorUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -184,7 +184,7 @@ public class AttentionControlPanel extends JPanel {
         String name = mind.getName(a);
         if (name == null)
             name = a.uuid.toString();
-        final String updatedName = name + " " + (int)(mind.getSTI(a)) + " " + mind.getType(a);
+        final String updatedName = name + " " + (int)(mind.getSTI(a)) + " " + mind.getTypeName(a);
 
         if (j == null) {
             j = new JToggleButton(updatedName);
@@ -247,12 +247,12 @@ public class AttentionControlPanel extends JPanel {
 
                     for (final Atom a : atoms) {
                         try {
-                            final OCType type= mind.getType(a);
+                            final String type= mind.getTypeName(a);
                             final double normSTI = mind.getNormalizedSTI(a);
 
                             JToggleButton b = getButton(a);
 
-                            float hue = ((float)(type.toString().hashCode() % 19)) / 19.0f;
+                            float hue = ((float)(type.hashCode() % 19)) / 19.0f;
                             float bri = (float)normSTI * 0.25f + 0.75f;
 
                             b.setBackground(new Color(Color.HSBtoRGB(hue, 0.8f, bri)));

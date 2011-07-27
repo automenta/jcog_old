@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
-import jcog.opencog.DefaultOCMind;
+import jcog.opencog.AtomType;
+import jcog.opencog.OCMind;
 import jcog.opencog.atom.AttentionValue;
 
 /**
@@ -19,11 +19,11 @@ import jcog.opencog.atom.AttentionValue;
 public class AtomArray2D {
 
     public final List<Atom> atoms;
-    private final DefaultOCMind atomspace;
+    private final OCMind atomspace;
     public final int width;
     public final int height;
 
-    public AtomArray2D(DefaultOCMind s, String namePrefix, int width, int height) {
+    public AtomArray2D(OCMind s, String namePrefix, int width, int height) {
         super();
 
         this.atomspace = s;
@@ -35,7 +35,7 @@ public class AtomArray2D {
         // Create nodes for presenting the pattern to be learned:
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                Atom a = s.addVertex(AtomTypes.ConceptNode, namePrefix + "_" + i + "_" + j);
+                Atom a = s.addVertex(AtomType.conceptNode, namePrefix + "_" + i + "_" + j);
 
                 // We don't want the forgetting process to remove these perception atoms
                 s.setVLTI(a, AttentionValue.NonDisposable);

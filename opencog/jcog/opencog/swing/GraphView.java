@@ -35,10 +35,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.AtomTypes;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.OCType;
 import jcog.opencog.atom.TruthValue;
 import jcog.spacegraph.gl.Surface;
 import jcog.spacegraph.math.linalg.Vec3f;
@@ -175,7 +173,7 @@ public class GraphView extends Surface implements Drawable {
             
             String n = mind.getName(v);
             if (n == null) {
-                OCType type = mind.getType(v);
+                String type = mind.getTypeName(v);
                 if (type!=null)
                     n = type.toString();
                 else
@@ -210,11 +208,9 @@ public class GraphView extends Surface implements Drawable {
         public void updateCurveColor(Atom edge, Vec3f vec) {
             final float v = 0.7f + 0.3f * (float) mind.getTruth(edge).getMean();
 
-            OCType type = mind.getType(edge);
-            if (type == null)
-                type = AtomTypes.AtomType;
+            String type = mind.getTypeName(edge);
                         
-            final float hue = ((Math.abs(type.toString().hashCode() )) % 100) / 100.0f;
+            final float hue = ((Math.abs(type.hashCode() )) % 100) / 100.0f;
 
             final Color h = Color.getHSBColor(hue, 0.85f, v);
             float[] hRGB = h.getColorComponents(null);

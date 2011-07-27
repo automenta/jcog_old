@@ -1,136 +1,134 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package jcog.opencog;
 
-import com.syncleus.dann.graph.DirectedEdge;
-import com.syncleus.dann.graph.ImmutableDirectedEdge;
-import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
-import java.util.HashSet;
-import java.util.Set;
-import org.apache.log4j.Logger;
 
 /**
- * Default built-in Atom types
- * 
- * @see http://opencog.org/wiki/Category:Atom_Types
- * @see http://opencog.org/wiki/Node_types
- * @see http://opencog.org/wiki/Link_types
- * @see http://wiki.opencog.org/w/MindOntology:Self-Modifying_Evolving_Probabilistic_Hypergraph
- * TODO add text descriptions for each type as metadata in the atomspace
+ * Type names remain (mostly) compatible with Opencog, though to be consistent with JCog,
+ * we would use 'Vertex' instead of 'Node', and 'Edge' instead of 'Link'
+ * @author seh
  */
-public class AtomTypes {
-    private static final Logger logger = Logger.getLogger(AtomTypes.class);
+public interface AtomType {
     
-    public static final OCType NoType = new OCType("NoType");
+    public static interface Node extends AtomType {    }    //Vertex Only
+    public static final Class<Node> node = Node.class;
+   
+    public static interface Link extends AtomType {    }        //Edge Only
+    public static final Class<Link> link = Link.class;
     
-    public static final OCType AtomType = new OCType("AtomType");
-    
-    //Vertex Only
-    public static final OCType NodeType = new OCType("NodeType");
-    
-    //Edge Only
-    public static final OCType LinkType = new OCType("LinkType");        
-    
-    public static final OCType ConceptNode = new OCType("ConceptNode");
-    public static final OCType NumberNode = new OCType("NumberNode");
-    
-    
-    public static final OCType OrderedLink = new OCType("OrderedLink");
-    public static final OCType UnorderedLink = new OCType("UnorderedLink");
-    
-    public static final OCType PROCEDURE_NODE = new OCType("ProcedureNode");
-    public static final OCType GROUNDED_PROCEDURE_NODE = new OCType("GroundedProcedureNode");
-    public static final OCType SCHEMA_NODE = new OCType("SchemaNode");
-    public static final OCType GROUNDED_SCHEMA_NODE = new OCType("GroundedSchemaNode");
-    public static final OCType SymmetricHebbianLink = new OCType("SymmetricHebbianLink");
-    public static final OCType AsymmetricHebbianLink = new OCType("AsymmetricHebbianLink");
-    
-    public static final OCType InheritsLink = new OCType("InheritsLink");
-    
-    
-    public static final OCType SIMILARITY_LINK = new OCType("SimilarityLink");
-    public static final OCType INTENSIONAL_INHERITANCE_LINK = new OCType("IntensionInheritLink");
-    public static final OCType EXTENSIONAL_INHERITANCE_LINK = new OCType("ExtensionInheritLink");
-    public static final OCType EXTENSIONAL_SIMILARITY_LINK = new OCType("ExtensionSimilarityLink");
+    public static interface ConceptNode extends Node {    }
+    public static final Class<ConceptNode> conceptNode = ConceptNode.class;
 
-    MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>> inheritance = new MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>>();
+    public static interface NumberNode extends Node {    }
+    public static final Class<NumberNode> numberNode = NumberNode.class;
+
+    public static interface OrderedLink extends Link {    }
+    public static final Class<OrderedLink> orderedLink = OrderedLink.class;
+
+    public static interface UnorderedLink extends Link {    }
+    public static final Class<UnorderedLink> unorderedLink = UnorderedLink.class;
+
+    public static interface InheritanceLink extends OrderedLink {    }
+    public static final Class<InheritanceLink> inheritanceLink = InheritanceLink.class;
+
+    public static interface SimilarityLink extends UnorderedLink {    }
+    public static final Class<SimilarityLink> similarityLink = SimilarityLink.class;
+
+    public static interface HebbianLink extends Link {    }
+    public static final Class<HebbianLink> hebbianLink = HebbianLink.class;
+
+    public static interface SymmetricHebbianLink extends UnorderedLink, HebbianLink {    }
+    public static final Class<SymmetricHebbianLink> symmetricHebbianLink = SymmetricHebbianLink.class;
+
+    public static interface AsymmetricHebbianLink extends OrderedLink, HebbianLink {    }
+    public static final Class<AsymmetricHebbianLink> asymmetricHebbianLink = AsymmetricHebbianLink.class;   
+
+    public static interface IntensionalInheritanceLink extends OrderedLink {    }
+    public static final Class<IntensionalInheritanceLink> intensionalInheritanceLink = IntensionalInheritanceLink.class;
+
+    public static interface ExtensionalInheritanceLink extends OrderedLink {    }
+    public static final Class<ExtensionalInheritanceLink> extensionalInheritanceLink = ExtensionalInheritanceLink.class;
+
+    public static interface ExtensionalSimilarityLink extends OrderedLink {    }
+    public static final Class<ExtensionalSimilarityLink> extensionalSimilarityLink = ExtensionalSimilarityLink.class;
     
-    protected void addType(OCType type, OCType... supertypes) {
-        inheritance.add(type);
-        
-        for (OCType s : supertypes) {
-            if (!inheritance.getNodes().contains(s)) {
-                logger.error("supertype " + s + " not present when defining type " + type);
-            }
-            else {
-                inheritance.add(new ImmutableDirectedEdge<OCType>(s, type));
-            }            
-        }
-        
-    }
+
+
     
-    protected void addToAtomSpace(MemoryAtomSpace c) {
-        //System.out.println(inheritance.getNodes());
-        //System.out.println(inheritance.getEdges());
-        
-//        if (Cycles.getCycleCount(inheritance) > 0) {
-//            ExhaustiveDepthFirstSearchCycleFinder<OCType, ImmutableDirectedEdge<OCType>> f = new ExhaustiveDepthFirstSearchCycleFinder();
-//            logger.error("inheritance tree has cycles: " + f.findCycles(inheritance));
-//            return;
+    
+    //        addType(PROCEDURE_NODE, node);
+    ////		GROUNDED_PROCEDURE_NODE <- PROCEDURE_NODE
+    //        addType(GROUNDED_PROCEDURE_NODE, PROCEDURE_NODE);
+    ////		SCHEMA_NODE <- PROCEDURE_NODE
+    //        addType(SCHEMA_NODE, PROCEDURE_NODE);
+    ////		GROUNDED_SCHEMA_NODE <- SCHEMA_NODE,GROUNDED_PROCEDURE_NODE		
+    //        addType(GROUNDED_SCHEMA_NODE, SCHEMA_NODE, GROUNDED_PROCEDURE_NODE);
+
+//    public static final AtomType PROCEDURE_NODE = new AtomType("ProcedureNode");
+//    public static final AtomType GROUNDED_PROCEDURE_NODE = new AtomType("GroundedProcedureNode");
+//    public static final AtomType SCHEMA_NODE = new AtomType("SchemaNode");
+//    public static final AtomType GROUNDED_SCHEMA_NODE = new AtomType("GroundedSchemaNode");
+  
+    
+
+//    MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>> inheritance = new MutableDirectedAdjacencyGraph<OCType, ImmutableDirectedEdge<OCType>>();
+//    
+//    protected void addType(AtomType type, AtomType... supertypes) {
+//        inheritance.add(type);
+//        
+//        for (AtomType s : supertypes) {
+//            if (!inheritance.getNodes().contains(s)) {
+//                logger.error("supertype " + s + " not present when defining type " + type);
+//            }
+//            else {
+//                inheritance.add(new ImmutableDirectedEdge<OCType>(s, type));
+//            }            
 //        }
-        
-        for (OCType t : inheritance.getNodes()) {            
-            c.addVertex(Atom.Type, t, t.toString());
-        }
-        
-        for (OCType t : inheritance.getNodes()) {
-            //System.out.println(t + " has children: " + inheritance.getTraversableNodes(t));
-            Set<OCType> parents = new HashSet();
-            for (DirectedEdge<OCType> e : inheritance.getAdjacentEdges(t)) {
-                if (e.getDestinationNode() == t)
-                    parents.add(e.getSourceNode());
-            }
-            //System.out.println(t + " has parents: " + parents);
-            
-            if (parents.size() > 0) {
-                OCType[] i = new OCType[parents.size() + 1];
-                i[0] = t;
-                int j = 1;
-                for (OCType p : parents) {
-                    i[j++] = p;
-                }
-                c.addEdge(InheritsLink, i);
-            }
-            
-        }
-        
-    }
+//        
+//    }
     
-    public AtomTypes(MemoryAtomSpace c) {
+//    protected void addToAtomSpace(MemoryAtomSpace c) {
+//        //System.out.println(inheritance.getNodes());
+//        //System.out.println(inheritance.getEdges());
+//        
+////        if (Cycles.getCycleCount(inheritance) > 0) {
+////            ExhaustiveDepthFirstSearchCycleFinder<OCType, ImmutableDirectedEdge<OCType>> f = new ExhaustiveDepthFirstSearchCycleFinder();
+////            logger.error("inheritance tree has cycles: " + f.findCycles(inheritance));
+////            return;
+////        }
+//        
+//        for (AtomType t : inheritance.getNodes()) {            
+//            c.addVertex(Atom.Type, t, t.toString());
+//        }
+//        
+//        for (AtomType t : inheritance.getNodes()) {
+//            //System.out.println(t + " has children: " + inheritance.getTraversableNodes(t));
+//            Set<OCType> parents = new HashSet();
+//            for (DirectedEdge<OCType> e : inheritance.getAdjacentEdges(t)) {
+//                if (e.getDestinationNode() == t)
+//                    parents.add(e.getSourceNode());
+//            }
+//            //System.out.println(t + " has parents: " + parents);
+//            
+//            if (parents.size() > 0) {
+//                AtomType[] i = new AtomType[parents.size() + 1];
+//                i[0] = t;
+//                int j = 1;
+//                for (AtomType p : parents) {
+//                    i[j++] = p;
+//                }
+//                c.addEdge(InheritsLink, i);
+//            }
+//            
+//        }
+//        
+//    }
+    
+//    public AtomTypes(MemoryAtomSpace c) {
 
-        // Special type designating that no atom type has been assigned
-        addType(NoType);
-
-        // Base of hierarchy
-        addType(AtomType);
-
-        //NODE <- ATOM
-        addType(NodeType, AtomType);
-
-        //LINK <- ATOM
-        addType(LinkType, AtomType);
-
-        //CONCEPT_NODE <- NODE
-        addType(ConceptNode, NodeType);
-
-        //NUMBER_NODE <- NODE
-        addType(NumberNode, NodeType);
-
-
-        // Basic Links
-        //		ORDERED_LINK <- LINK
-        addType(OrderedLink, LinkType);
-
-        //		UNORDERED_LINK <- LINK
-        addType(UnorderedLink, LinkType);
 
 
 //		// Basic sets
@@ -170,36 +168,13 @@ public class AtomTypes {
 //		// Generic association
 //		ASSOCIATIVE_LINK <- ORDERED_LINK
 //
-//		// Inheritence and association links
-//		INHERITANCE_LINK <- ORDERED_LINK
-        addType(InheritsLink, OrderedLink);
 
 //		SIMILARITY_LINK <- UNORDERED_LINK
-        addType(SIMILARITY_LINK, UnorderedLink);
 
-//		EXTENSIONAL_INHERITANCE_LINK <- ORDERED_LINK
-        addType(EXTENSIONAL_INHERITANCE_LINK, OrderedLink);
 
-//		EXTENSIONAL_SIMILARITY_LINK <- ORDERED_LINK
-        addType(EXTENSIONAL_SIMILARITY_LINK, OrderedLink);
-        
-//		INTENSIONAL_INHERITANCE_LINK <- ORDERED_LINK
-        addType(INTENSIONAL_INHERITANCE_LINK, OrderedLink);
 
 //		INTENSIONAL_SIMILARITY_LINK <- ORDERED_LINK
 //
-//		// Procedure, schema and predicate nodes.
-//		PROCEDURE_NODE <- NODE
-        addType(PROCEDURE_NODE, NodeType);
-
-//		GROUNDED_PROCEDURE_NODE <- PROCEDURE_NODE
-        addType(GROUNDED_PROCEDURE_NODE, PROCEDURE_NODE);
-
-//		SCHEMA_NODE <- PROCEDURE_NODE
-        addType(SCHEMA_NODE, PROCEDURE_NODE);
-
-//		GROUNDED_SCHEMA_NODE <- SCHEMA_NODE,GROUNDED_PROCEDURE_NODE		
-        addType(GROUNDED_SCHEMA_NODE, SCHEMA_NODE, GROUNDED_PROCEDURE_NODE);
 
 //
 //		PREDICATE_NODE <- SCHEMA_NODE
@@ -369,11 +344,6 @@ public class AtomTypes {
         
                 //TODO ^^^
         
-//		ASYMMETRIC_HEBBIAN_LINK <- ORDERED_LINK,HEBBIAN_LINK
-                addType(AtomTypes.AsymmetricHebbianLink, AtomTypes.OrderedLink); 
-
-//		SYMMETRIC_HEBBIAN_LINK <- UNORDERED_LINK,HEBBIAN_LINK
-                addType(AtomTypes.SymmetricHebbianLink, AtomTypes.UnorderedLink); 
                 
 //		INVERSE_HEBBIAN_LINK <- ORDERED_LINK,HEBBIAN_LINK
 //		SYMMETRIC_INVERSE_HEBBIAN_LINK <- UNORDERED_LINK,HEBBIAN_LINK
@@ -392,8 +362,8 @@ public class AtomTypes {
 //		FEELING_NODE <- GROUNDED_PREDICATE_NODE
 //		PHRASE_NODE <- NODE
 
-        addToAtomSpace(c);
-    }
+//        addToAtomSpace(c);
+//    }
 
-
+    
 }
