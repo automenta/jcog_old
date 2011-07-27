@@ -9,7 +9,7 @@ import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.Predicate;
+import org.apache.commons.collections15.Predicate;
 
 /**
  * amplifies already-high STI concepts and iteratively speaks them. implements a markov-chain weighted by STI
@@ -32,7 +32,7 @@ public abstract class Ego extends MindAgent {
     protected void run(final OCMind mind) {
         Iterator<Atom> ci = mind.iterateAtomsByDecreasingSTI(new Predicate<Atom>() {
             @Override
-            public boolean isTrue(Atom x) {
+            public boolean evaluate(Atom x) {
                 return (mind.getType(x).equals(AtomType.conceptNode));
             }            
         });

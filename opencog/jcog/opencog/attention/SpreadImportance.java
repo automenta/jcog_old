@@ -1,6 +1,7 @@
 package jcog.opencog.attention;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
@@ -25,7 +26,10 @@ public class SpreadImportance extends MindAgent {
     
     @Override
     public void run(OCMind mind) {
-        for (Atom a : mind.getAtoms()) {
+        Iterator<Atom> ia = mind.iterateAtoms();
+        while (ia.hasNext()) {
+            Atom a = ia.next();
+            
             final int sti = mind.getSTI(a);
             
             int avgSurroundingSTI = 0;

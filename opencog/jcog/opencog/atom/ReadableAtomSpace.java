@@ -10,7 +10,7 @@ import java.util.Iterator;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.Operation;
-import jcog.opencog.Predicate;
+import org.apache.commons.collections15.Predicate;
 
 /**
  *

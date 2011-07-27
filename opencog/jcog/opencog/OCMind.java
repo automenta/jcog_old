@@ -24,8 +24,9 @@ import java.util.logging.Level;
 import jcog.opencog.atom.AttentionValue;
 import jcog.opencog.atom.SimpleTruthValue;
 import jcog.opencog.atom.TruthValue;
-import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.UpdateImportance;
+import org.apache.commons.collections15.IteratorUtils;
+import org.apache.commons.collections15.Predicate;
 import org.apache.commons.collections15.iterators.FilterIterator;
 import org.apache.log4j.Logger;
 
@@ -43,7 +44,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     private Map<Atom, TruthValue> truth;
     
     //TODO return this to 'private'
-    public Map<Atom, AttentionValue> attention;
+    private Map<Atom, AttentionValue> attention;
         
     private TreeMap<Atom, AttentionValue> attentionSortedBySTI;
     
@@ -176,6 +177,21 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
     
     public void updateAttentionSort() {
+        //cleanup attention
+        List<Atom> toRemoveFromAttentionAndTruth = new LinkedList();
+        
+        for (Atom a : attention.keySet()) {
+            if (!atomspace.hasAtom(a)) {
+                toRemoveFromAttentionAndTruth.add(a);
+            }            
+        }
+        
+        for (Atom a : toRemoveFromAttentionAndTruth) {
+            attention.remove(a);
+            truth.remove(a);            
+        }
+
+        
         attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
             @Override
             public int compare(Atom a, Atom b) {
@@ -187,7 +203,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             }            
         });        
         attentionSortedBySTI.putAll(attention);
-                
     }
     
     public synchronized void cycle() {
@@ -216,7 +231,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             ma.getEdgesToRemove().clear();
         }
 
-
+        //Is this extra-sort necessary?
+        //updateAttentionSort();
     }
     
     public void cycleParallel() {
@@ -365,10 +381,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             ib.addAll(ra.getEdges());
         }        
         return ib.build();
-    }
-
-    public Collection<Atom> getAtoms() {
-        return atomspace.getAtoms();
     }
 
     @Override
@@ -584,6 +596,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public Iterator<Atom> iterateAtomsByIncreasingSTI(final Predicate<Atom> include) {
         return iterateAtomsBySTI(false, include);
     }
+
+//    public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
+//        
+//    }
     
     /**
      * 
@@ -592,70 +608,79 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
      * @return 
      */
     public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
-        return new Iterator<Atom>() {
-
-            Atom next = null;
+        Iterator<Atom> i;
+        if (increasingOrDecreasing)
+            i = attentionSortedBySTI.navigableKeySet().iterator();
+        else
+            i = attentionSortedBySTI.navigableKeySet().descendingIterator();
             
-            @Override
-            public boolean hasNext() {
-                if (attentionSortedBySTI == null)
-                    return false;
-                
-                if (attentionSortedBySTI.size() == 0)
-                    return false;
-                
-                if (next == null) {
-                    if (increasingOrDecreasing == true)
-                        next = attentionSortedBySTI.firstKey();
-                    else
-                        next = attentionSortedBySTI.lastKey();
-                }
-                else {
-                    if (increasingOrDecreasing == true)
-                        next = attentionSortedBySTI.higherKey(next);
-                    else
-                        next = attentionSortedBySTI.lowerKey(next);
-                }                                    
-                
-                if (next == null)
-                    return false;
-                                
-                if (include == null)
-                    return true;
-                else {
-                    if (include.isTrue(next))
-                        return true;
-                    else {
-                        while (!include.isTrue(next)) {
-                            if (increasingOrDecreasing == true)
-                                next = attentionSortedBySTI.higherKey(next);
-                            else
-                                next = attentionSortedBySTI.lowerKey(next);
-                            if (next == null)
-                                return false;                        
-                        }
-                        return true;                        
-                    }
-                }
-            }
-
-            @Override
-            public Atom next() {
-                return next;
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
-            
-        };
+        if (include!=null)
+            return IteratorUtils.filteredIterator(i, include); 
+        else
+            return i;
+        
+//        return new Iterator<Atom>() {
+//
+//            Atom next = null;
+//            
+//            @Override
+//            public boolean hasNext() {
+//                if (attentionSortedBySTI == null)
+//                    return false;
+//                
+//                if (attentionSortedBySTI.size() == 0)
+//                    return false;
+//                
+//                if (next == null) {
+//                    if (increasingOrDecreasing == true)
+//                        next = attentionSortedBySTI.firstKey();
+//                    else
+//                        next = attentionSortedBySTI.lastKey();
+//                }
+//                else {
+//                    if (increasingOrDecreasing == true)
+//                        next = attentionSortedBySTI.ceilingKey(next);
+//                    else
+//                        next = attentionSortedBySTI.floorKey(next);
+//                }                                    
+//                
+//                if (next == null)
+//                    return false;
+//                                
+//                if (include == null)
+//                    return true;
+//                else {
+//                    if (include.isTrue(next))
+//                        return true;
+//                    else {
+//                        while (!include.isTrue(next)) {
+//                            if (increasingOrDecreasing == true)
+//                                next = attentionSortedBySTI.ceilingKey(next);
+//                            else
+//                                next = attentionSortedBySTI.floorKey(next);
+//                            if (next == null)
+//                                return false;                        
+//                        }
+//                        return true;                        
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public Atom next() {
+//                return next;
+//            }
+//
+//            @Override
+//            public void remove() {
+//                throw new UnsupportedOperationException("Not supported yet.");
+//            }
+//            
+//        };
     }
 
     public boolean remove(Atom a) {
         if (atomspace.remove(a)) {
-            attention.remove(a);
-            truth.remove(a);
             return true;
         }
         return false;

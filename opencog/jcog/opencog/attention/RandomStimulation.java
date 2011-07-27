@@ -4,12 +4,12 @@
  */
 package jcog.opencog.attention;
 
-import java.util.ArrayList;
 import java.util.List;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
+import org.apache.commons.collections15.IteratorUtils;
 
 /**
  *
@@ -45,7 +45,7 @@ public class RandomStimulation extends MindAgent {
     @Override
     protected void run(OCMind mind) {
         //TODO avoid having to reinstantiate arraylist each time this is called
-        List<Atom> c = new ArrayList(mind.getAtoms());
+        List<Atom> c = IteratorUtils.toList(mind.iterateAtoms());
         
         if (c != null) {
             if (c.size() > 0) {

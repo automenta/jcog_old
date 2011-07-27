@@ -19,8 +19,8 @@ public class ForgetTest extends TestCase {
     
     
     public void testForget() {
-        final int numVertices = 500;
-        final int numEdges = 2000;
+        final int numVertices = 1500;
+        final int numEdges = 3000;
         final int targetVertices = numVertices/2;
         final int targetEdges = numEdges/2;
         
@@ -37,7 +37,7 @@ public class ForgetTest extends TestCase {
         
         m.cycle();
         
-        RandomStimulation rs = new RandomStimulation(0, (short)0, numVertices*10) {
+        RandomStimulation rs = new RandomStimulation(0, (short)0, numVertices*100) {
             @Override
             public short getBoost() {
                 return (short)RandomNumber.getInt(0, 127);
@@ -50,21 +50,14 @@ public class ForgetTest extends TestCase {
         
         printGraphSize(m);
         
-        Forget f = new Forget(0, targetVertices, targetEdges) {
-
-            @Override
-            public void run(OCMind mind) {
-                super.run(mind);
-                System.out.println("Forgetting atoms.. vert=" + mind.getVertexCount() + ", edge=" + mind.getEdgeCount());
-                System.out.println(mind.attention.size() + " " + IteratorUtils.toList(mind.iterateAtomsByIncreasingSTI()).size() + " " + mind.getAtoms().size());
-            }
-            
-        };
+        Forget f = new Forget(0, targetVertices, targetEdges);
         m.addAgent(f);
         
         int cyclesToFinish = 0;
         while ((targetVertices < m.getVertexCount()) || (targetEdges < m.getEdgeCount())) {
             m.cycle();
+            System.out.println("Forgetting atoms.. vert=" + m.getVertexCount() + ", edge=" + m.getEdgeCount());
+            System.out.println(" " + IteratorUtils.toList(m.iterateAtomsByDecreasingSTI()).size() + " " + IteratorUtils.toList(m.iterateAtoms()).size());
             cyclesToFinish++;
         }
         

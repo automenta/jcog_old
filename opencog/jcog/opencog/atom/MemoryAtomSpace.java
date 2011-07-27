@@ -19,7 +19,8 @@ import jcog.atom.OrderedSetHypergraph;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.Operation;
-import jcog.opencog.Predicate;
+import org.apache.commons.collections15.IteratorUtils;
+import org.apache.commons.collections15.Predicate;
 import org.apache.log4j.Logger;
 
 /**
@@ -232,7 +233,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     @Override
     public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
         for (Atom e : getEdges()) {
-            if (predicate.isTrue(e)) {
+            if (predicate.evaluate(e)) {
                 boolean result = op.operate(this, e);
                 if (!result)
                     return false;
@@ -244,7 +245,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     @Override
     public boolean visitVertices(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
         for (Atom e : getVertices()) {
-            if (predicate.isTrue(e)) {
+            if (predicate.evaluate(e)) {
                 boolean result = op.operate(this, e);
                 if (!result)
                     return false;
@@ -293,8 +294,8 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return names;
     }
     
-    public Collection<Atom> getAtoms() {
-        return atomToType.keySet();
+    public Iterator<Atom> iterateAtoms() {
+        return IteratorUtils.chainedIterator(iterateVertices(), iterateEdges());
     }
 
     /** removes either an edge or a vertex from the hypergraph.  if it is not a vertex, it tries to remove it as an edge. */
@@ -419,11 +420,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 //HandleSeq 	filter_InAttentionalFocus (InputIterator begin, InputIterator end) const
 //AtomSpace & 	operator= (const AtomSpace &)
 // 	AtomSpace (const AtomSpace &)
-
-    public Iterator<Atom> iterateAtoms() {
-        return atomToType.keySet().iterator();
-    }
-
 
 
 }
