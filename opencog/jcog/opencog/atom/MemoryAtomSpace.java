@@ -5,8 +5,6 @@
 
 package jcog.opencog.atom;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.ArrayList;
@@ -34,14 +32,15 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     public final OrderedSetHypergraph<Atom, Atom> graph;
     Map<Atom, Class<? extends AtomType>> atomToType;
     Multimap<Class<? extends AtomType>, Atom> typesToAtom;
-    BiMap<Atom, String> names;
+    Map<Atom, String> names;
 
     public MemoryAtomSpace() {
         super();
         graph = new OrderedSetHypergraph<Atom, Atom>();
         typesToAtom = HashMultimap.create();
         atomToType = new HashMap();
-        names = HashBiMap.create();
+        //names = HashBiMap.create();
+        names = new HashMap();
     }
     
     protected boolean indexAtom(Atom a, Class<? extends AtomType> type, String name) {
@@ -54,11 +53,11 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         }
         
         if (targetName!=null) {
-            if (names.containsValue(name)) {
-                logger.error(this + " can not add atom with existing name: " + name);
-                return false;
-            }
-            
+//            if (names.containsValue(name)) {
+//                logger.error(this + " can not add atom with existing name: " + name);
+//                return false;
+//            }
+//            
             names.put(a, targetName);  
         }
         else {
@@ -289,7 +288,7 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return typesToAtom;
     }
     
-    public BiMap<Atom, String> getNameIndex() {
+    public Map<Atom, String> getNameIndex() {
         //TODO return unmodifiable
         return names;
     }
@@ -421,5 +420,18 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 //AtomSpace & 	operator= (const AtomSpace &)
 // 	AtomSpace (const AtomSpace &)
 
+    public int getIncidentEdgeDegree(Atom a) {
+        Collection<Atom> ie = getIncidentEdges(a);
+        if (ie == null)
+            return 0;
+        return ie.size();
+    }
+
+    public int getIncidentVertexDegree(Atom a) {
+        Collection<Atom> ie = getIncidentVertices(a);
+        if (ie == null)
+            return 0;
+        return ie.size();
+    }
 
 }

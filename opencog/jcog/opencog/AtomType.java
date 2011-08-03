@@ -54,6 +54,12 @@ public interface AtomType {
 
     public static interface ExtensionalSimilarityLink extends OrderedLink {    }
     public static final Class<ExtensionalSimilarityLink> extensionalSimilarityLink = ExtensionalSimilarityLink.class;
+
+    public static interface ImplicationLink extends OrderedLink {    }
+    public static final Class<ImplicationLink> implicationLink = ImplicationLink.class;
+
+    public static interface EvaluationLink extends OrderedLink {    }
+    public static final Class<EvaluationLink> evaluationLink = EvaluationLink.class;
     
 
 

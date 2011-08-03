@@ -126,6 +126,12 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
         return false;
     }
+    public Atom addVertex(Class<? extends AtomType> type) {
+        final Atom a = new Atom();
+        if (addVertex(type, a, a.toString()))
+            return a;
+        return null;        
+    }
 
     public Atom addVertex(Class<? extends AtomType> type, String name) {
         final Atom a = new Atom();
@@ -279,6 +285,14 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return atomspace.getEdges().size();
     }
 
+    public void printAtoms() {
+        Iterator<Atom> i = iterateAtoms();        
+        while (i.hasNext()) {
+            Atom a = i.next();
+            System.out.println("  " + a.toString() + " : " + getType(a).getSimpleName() + " : " + getName(a) + " " + 
+                    atomspace.getIncidentEdgeDegree(a) + "|" + atomspace.getIncidentVertexDegree(a)  );
+        }
+    }
 
     public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
         private final Class<? extends AtomType> type;
