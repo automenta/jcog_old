@@ -4,18 +4,16 @@
  */
 package jcog.opencog.xml;
 
+import jcog.opencog.MindRunner;
 import jcog.opencog.util.AtomizeXML;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import jcog.opencog.Atom;
-import jcog.opencog.AtomType;
 import jcog.opencog.OCMind;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
+import jcog.opencog.attention.LearnHebbian;
+import jcog.opencog.attention.RandomStimulation;
+import jcog.opencog.attention.SpreadImportance;
+import jcog.opencog.swing.AttentionControlPanel;
+import jcog.opencog.swing.GraphPanel;
+import jcog.opencog.swing.GraphView;
+import jcog.spacegraph.swing.SwingWindow;
 
 /**
  *
@@ -25,8 +23,23 @@ public class TestAtomizeXML {
 
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        new AtomizeXML("/tmp/x.xml", m);
+        new AtomizeXML("/tmp/y.xml", m);
         
         m.printAtoms();
+        
+        LearnHebbian lh = new LearnHebbian();
+        m.addAgent(lh);
+        
+        final SpreadImportance si = new SpreadImportance();
+        m.addAgent(si);
+        
+        m.addAgent(new RandomStimulation(10.0, (short)10, 1));
+        
+        
+        new AttentionControlPanel(m, 1.0).newWindow();          
+        new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
+
+        m.start(0.02);
+
     }
 }

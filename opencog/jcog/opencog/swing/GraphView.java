@@ -127,7 +127,7 @@ public class GraphView extends Surface implements Drawable {
                 });
                 control.add(updateButton);
 
-                addSlider("MaxAtoms", 64, 1, 256);
+                addSlider("MaxAtoms", 64, 1, 512);
                 addSlider("MeanEquilibriumDistance", 2.0, 0.1, 6.0);
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
                 addSlider("EdgeWidthScale", 0.05, 0.001, 0.2);

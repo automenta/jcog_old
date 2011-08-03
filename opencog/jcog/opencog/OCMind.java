@@ -294,6 +294,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
     }
 
+    public MindRunner start(double period) {
+        return new MindRunner(this, period);
+    }
+
     public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
         private final Class<? extends AtomType> type;
         private final boolean includeSubtypes;

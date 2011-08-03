@@ -22,6 +22,7 @@ public class SpreadImportance extends MindAgent {
     float importanceSpreadingMultiplier;
     //RecentLong amountSpread;
     double stiTransferRate = 10.0;
+    final int diffusion_momentum = 4;
     int totalSurplus = 0;
     
     @Override
@@ -58,7 +59,6 @@ public class SpreadImportance extends MindAgent {
                 continue;
             }
             
-            final int diffusion_momentum = 60;
             
             short difference = (short)(sti - avgSurroundingSTI);
             if (avgSurroundingSTI < sti) {

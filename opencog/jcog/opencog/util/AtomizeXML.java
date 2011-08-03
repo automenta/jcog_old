@@ -53,10 +53,13 @@ public class AtomizeXML extends DefaultHandler {
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
         final Atom tagPredicateAtom = getPredicate(qName);
         final Atom parent = path.getLast();
+        
         final Atom e = mind.addVertex(AtomType.conceptNode, qName);
-        path.addLast(e);
+        
         mind.addEdge(AtomType.extensionalInheritanceLink, parent, e);
         mind.addEdge(AtomType.intensionalInheritanceLink, tagPredicateAtom, e);
+        
+        
         for (int i = 0; i < attributes.getLength(); i++) {
             String name = attributes.getQName(i);
             Atom predicateAtom = getPredicate(qName + "." + name);
@@ -65,6 +68,8 @@ public class AtomizeXML extends DefaultHandler {
             Atom edge = mind.addEdge(AtomType.evaluationLink, name, e, valueAtom);
             mind.addEdge(AtomType.intensionalInheritanceLink, predicateAtom, edge);
         }
+        
+        path.addLast(e);
     }
 
     public void endElement(String uri, String localName, String qName) throws SAXException {
