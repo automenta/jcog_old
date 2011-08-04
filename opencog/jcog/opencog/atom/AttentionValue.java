@@ -36,6 +36,11 @@ public class AttentionValue {
     public static final short MaxSTI = Short.MAX_VALUE;
     public static final short MaxLTI = Short.MAX_VALUE;
     
+    public AttentionValue(short sti) {
+        this(true);
+        this.sti = sti;
+    }
+    
     public AttentionValue(boolean disposable) {
         super();
         sti = DefaultSTI;

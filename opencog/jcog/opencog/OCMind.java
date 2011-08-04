@@ -201,11 +201,18 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
                 short sa = getSTI(a);
                 short sb = getSTI(b);
                         
-                if (sa == sb) return 0;
+                if (sa == sb) return -1;
                 return (sa > sb) ? -1 : 1;                
             }            
         });        
         attentionSortedBySTI.putAll(attention);
+//        final Iterator<Atom> i = iterateAtoms();
+//        final AttentionValue zv = new AttentionValue(Short.MIN_VALUE);
+//        while (i.hasNext()) {
+//            Atom a = i.next();
+//            if (!attention.containsKey(a))
+//                attentionSortedBySTI.put(a, zv);
+//        }
     }
     
     public synchronized void cycle() {

@@ -23,7 +23,7 @@ public class TestAtomizeXML {
 
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        new AtomizeXML("/tmp/y.xml", m);
+        new AtomizeXML("/tmp/x.xml", m);
         
         m.printAtoms();
         
@@ -32,14 +32,14 @@ public class TestAtomizeXML {
         
         final SpreadImportance si = new SpreadImportance();
         m.addAgent(si);
-        
-        m.addAgent(new RandomStimulation(10.0, (short)10, 1));
+//        
+        m.addAgent(new RandomStimulation(0.02, (short)12, 5));
         
         
         new AttentionControlPanel(m, 1.0).newWindow();          
         new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
 
-        m.start(0.02);
+        m.start(0.1);
 
     }
 }
