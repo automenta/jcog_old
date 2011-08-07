@@ -47,12 +47,13 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     private Map<Atom, AttentionValue> attention;
         
     private TreeMap<Atom, AttentionValue> attentionSortedBySTI;
+    private boolean attentionSortedBySTIchanged = false;
     
     private List<MindAgent> agents = new CopyOnWriteArrayList();
     private short minSTISeen = 0, maxSTISeen = 0;
     private long lastCycle=0, currentCycle=0;
     
-    UpdateImportance updateImportance = new UpdateImportance();    
+    UpdateImportance updateImportance = new UpdateImportance();
          
     public OCMind() {
         this(new MemoryAtomSpace());
@@ -219,7 +220,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
 
-        updateAttentionSort();
+        //updateAttentionSort();
+        attentionSortedBySTIchanged = true;
 
 
         final double dt = getCycleDT();
@@ -241,8 +243,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             ma.getEdgesToRemove().clear();
         }
 
-        //Is this extra-sort necessary?
-        //updateAttentionSort();
     }
 
     /**
@@ -613,6 +613,11 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
      * @return 
      */
     public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
+        if (attentionSortedBySTIchanged) {
+            updateAttentionSort();
+            attentionSortedBySTIchanged = false;
+        }
+        
         Iterator<Atom> i;
         if (increasingOrDecreasing)
             i = attentionSortedBySTI.navigableKeySet().iterator();

@@ -4,8 +4,7 @@
  */
 package jcog.opencog;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import com.google.common.base.Predicate;
 
 /**
  *
@@ -13,20 +12,43 @@ import java.util.logging.Logger;
  */
 public class MindRunner implements Runnable {
 
-    public boolean running = true;
+    public boolean running = false;
     private double period;
     private final OCMind mind;
-    private final Thread thread;
+    private Thread thread;
     
-    public MindRunner(OCMind mind, double period) {
+    /**
+     * executes a per-cycle operation for a given number of cycles
+     * 
+     * @param mind
+     * @param period
+     * @param numCycles
+     * @param perCycle 
+     */
+    public MindRunner(OCMind mind, double period, int numCycles, Predicate<OCMind> perCycle) {
         super();
         
         this.mind = mind;
         this.period = period;
         
-        this.thread = new Thread(this);
+        for (int i = 0; i < numCycles; i++) {
+            mind.cycle();
+            if (perCycle!=null)
+                if (!perCycle.apply(mind))
+                    break;
+        }
         
-        thread.start();
+    }
+
+    /**
+     * when created, starts mindrunner thread
+     * @param mind
+     * @param period 
+     */
+    public MindRunner(OCMind mind, double period) {
+        this(mind, period, 0, null);
+                        
+        restart();
     }
 
     public double getPeriod() {
@@ -35,6 +57,16 @@ public class MindRunner implements Runnable {
 
     public void setPeriod(double period) {
         this.period = period;
+    }
+    
+    public void restart() {
+        if (!running) {
+            if (this.thread == null)
+                this.thread = new Thread(this);
+            
+            running = true;
+            thread.start();
+        }
     }
         
     public void stop() {

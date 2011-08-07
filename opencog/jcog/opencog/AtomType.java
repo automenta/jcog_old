@@ -5,6 +5,8 @@
 
 package jcog.opencog;
 
+import java.util.List;
+
 
 /**
  * Type names remain (mostly) compatible with Opencog, though to be consistent with JCog,
@@ -12,6 +14,7 @@ package jcog.opencog;
  * @author seh
  */
 public interface AtomType {
+
     
     public static interface Node extends AtomType {    }    //Vertex Only
     public static final Class<Node> node = Node.class;

@@ -33,11 +33,14 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JToggleButton;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
+import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.TruthValue;
+import jcog.opencog.util.AtomTypes;
 import jcog.spacegraph.gl.Surface;
 import jcog.spacegraph.math.linalg.Vec3f;
 import jcog.spacegraph.math.linalg.Vec4f;
@@ -49,6 +52,7 @@ import jcog.spacegraph.shape.TrapezoidLine;
 import jcog.spacegraph.swing.SwingWindow;
 import jcog.spacegraph.ui.PointerLayer;
 import org.apache.commons.collections15.IteratorUtils;
+import org.apache.commons.collections15.Predicate;
 
 /**
  *
@@ -102,6 +106,8 @@ public class GraphView extends Surface implements Drawable {
         public double getGraphUpdatePeriod();
 
         public double getGraphProcessPeriod();
+
+        public Predicate<Atom> getIncludedAtoms();
     }
 
     public static class SeHGraphViewModel1 implements GraphViewModel {
@@ -109,6 +115,7 @@ public class GraphView extends Surface implements Drawable {
         private final OCMind mind;
         private final JPanel control = new JPanel();
         private boolean updateGraph = false;
+        private final Predicate<Atom> includedAtoms;
 
         public SeHGraphViewModel1(final OCMind mind) {
             super();
@@ -132,11 +139,36 @@ public class GraphView extends Surface implements Drawable {
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
                 addSlider("EdgeWidthScale", 0.05, 0.001, 0.2);
             }
-            control.add(Box.createVerticalBox());
 
+            final List<Class<? extends AtomType>> types = AtomTypes.getTypes();
+            final Map<Class<? extends AtomType>, JToggleButton> typeEnables = new HashMap();
+            {
+                for (Class<? extends AtomType> ca : types) {
+                    JToggleButton jtb = new JToggleButton(ca.getSimpleName());
+                    jtb.setSelected(true);
+                    typeEnables.put(ca, jtb);
+                    control.add(jtb);
+                }
+            }
+
+            control.add(Box.createVerticalBox());
+            
+            includedAtoms = new Predicate<Atom>() {
+                @Override
+                public boolean evaluate(Atom t) {
+                    final Class<? extends AtomType> tt = mind.getType(t);
+                    for (final Class<? extends AtomType> ca : types) {
+                        if (ca.isAssignableFrom(tt) && typeEnables.get(ca).isSelected())
+                            return true;
+                    }
+                    return false;
+                }                
+            };
+                    
             new SwingWindow(new JScrollPane(control), 400, 500);
 
         }
+        
         final int integerScale = 200;
 
         public int toSlider(double v) {
@@ -252,6 +284,11 @@ public class GraphView extends Surface implements Drawable {
         @Override
         public double getGraphProcessPeriod() {
             return 0.07;
+        }
+
+        @Override
+        public Predicate<Atom> getIncludedAtoms() {
+            return includedAtoms;
         }
         
         
@@ -498,7 +535,7 @@ public class GraphView extends Surface implements Drawable {
 
         int remained = 0, removed = 0, added = 0;
 
-        List<Atom> arank = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI());
+        List<Atom> arank = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI(param.getIncludedAtoms()));
 
         int n = Math.min(arank.size(), param.getMaxAtoms());
 
