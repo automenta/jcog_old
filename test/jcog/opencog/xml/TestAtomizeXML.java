@@ -33,10 +33,10 @@ public class TestAtomizeXML {
         final SpreadImportance si = new SpreadImportance();
         m.addAgent(si);
 //        
-        m.addAgent(new RandomStimulation(0.02, (short)12, 5));
+        m.addAgent(new RandomStimulation(1.0, (short)100, 1));
         
         
-        new AttentionControlPanel(m, 1.0).newWindow();          
+        new AttentionControlPanel(m, 0.5).newWindow();          
         new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
 
         m.start(0.1);

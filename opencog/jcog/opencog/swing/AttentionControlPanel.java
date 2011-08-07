@@ -4,31 +4,40 @@
  */
 package jcog.opencog.swing;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.AtomType;
+import jcog.spacegraph.swing.SwingWindow;
 import org.apache.commons.collections15.IteratorUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
 
@@ -37,15 +46,16 @@ import org.jfree.data.statistics.HistogramType;
  * @author seh
  */
 public class AttentionControlPanel extends JPanel {
-    int maxAtoms = 64;
-            //final short boostAmount = 50;
 
+    int maxAtoms = 64;
+    //final short boostAmount = 50;
     private final OCMind mind;
     private HistogramDataset stiDataset;
     private JFreeChart stiHistogram;
     private ChartPanel stiChart;
 //    Map<MindAgent, MindAgentPanel> mindAgentPanels = new WeakHashMap();
     private final ControlPanelAgent agent;
+    private final List<AtomPanel> atomPanels = new LinkedList();
 
     class ControlPanelAgent extends MindAgent {
 
@@ -53,17 +63,16 @@ public class AttentionControlPanel extends JPanel {
             super();
             setPeriod(period);
         }
-        
+
         @Override
         protected void run(OCMind mind) {
             for (Atom a : pinned) {
-                addStimulus(a, (short)(Short.MAX_VALUE/2));
+                addStimulus(a, (short) (Short.MAX_VALUE / 2));
             }
             refresh();
         }
-        
     }
-    
+
     /** panel representing a mind agent:
      *   --checkbox indicating whether it will be included in a cycle
      *   --button for immediate invocation
@@ -128,15 +137,14 @@ public class AttentionControlPanel extends JPanel {
 //
 //        }
 //    }
-
     public AttentionControlPanel(OCMind mind, double updatePeriod) {
         super(new BorderLayout());
 
         this.mind = mind;
 
-        this.agent = new ControlPanelAgent(updatePeriod);        
+        this.agent = new ControlPanelAgent(updatePeriod);
         mind.addAgent(agent);
-        
+
 //        cycle = new JButton("Update");
 //        cycle.setMnemonic('u');
 //        cycle.addActionListener(new ActionListener() {
@@ -155,7 +163,6 @@ public class AttentionControlPanel extends JPanel {
 
         //refresh();
     }
-
 //    protected MindAgentPanel getMindAgentPanel(MindAgent m) {
 //        MindAgentPanel map = mindAgentPanels.get(m);
 //        if (map == null) {
@@ -164,60 +171,67 @@ public class AttentionControlPanel extends JPanel {
 //        }
 //        return map;
 //    }
-
-    public final Map<Atom, JToggleButton> atomButtons = new WeakHashMap();
-            
+    public final Map<Atom, JButton> atomButtons = new WeakHashMap();
     public final Set<Atom> pinned = new HashSet();
-    
-    public void setPin(final Atom a, boolean enabled) {
-        if (enabled) {            
-            pinned.add(a);
+
+//    public void setPin(final Atom a, boolean enabled) {
+//        if (enabled) {            
+//            pinned.add(a);
+//        }
+//        else {
+//            pinned.remove(a);
+//        }
+//    }
+    public static String minString(String x, int maxChars) {
+        if (x.length() < maxChars) {
+            return x;
         }
-        else {
-            pinned.remove(a);
-        }
+        return x.substring(0, maxChars - 2) + "..";
     }
-    
-    public JToggleButton getButton(final Atom a) {
-        JToggleButton j = atomButtons.get(a);
-        
+
+    public JButton getButton(final Atom a) {
+        JButton j = atomButtons.get(a);
+
         String name = mind.getName(a);
-        if (name == null)
+        if (name == null) {
             name = a.uuid.toString();
-        final String updatedName = name + " " + (int)(mind.getSTI(a)) + " " + mind.getTypeName(a);
+        }
+        final String updatedName = mind.getTypeName(a) + " " + (int) (mind.getSTI(a)) + " " + minString(name, 32);
 
         if (j == null) {
-            j = new JToggleButton(updatedName);
-            
-            final JToggleButton fj = j;
+            j = new JButton(updatedName);
+
+            final JButton fj = j;
             j.addActionListener(new ActionListener() {
+
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    setPin(a, fj.isSelected());
-                }                
+                    newAtomView(a);
+                }
             });
             atomButtons.put(a, j);
-        }
-        else {
+        } else {
             j.setText(updatedName);
         }
         return j;
     }
-    
+
     public void refresh() {
 
         int bins = 10;
-        
-        if (!isDisplayable())
+
+        if (!isDisplayable()) {
             return;
-        if (!isVisible())
+        }
+        if (!isVisible()) {
             return;
-            
+        }
+
         removeAll();
 
         //TODO optimize this by streaming
         List<Atom> _atoms = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI());
-        
+
         if (_atoms.size() > 0) {
             double[] stis = new double[_atoms.size()];
             //double[] ltis = new double[atoms.size()];
@@ -240,35 +254,26 @@ public class AttentionControlPanel extends JPanel {
 
             @Override
             public void run() {
-                JPanel atomPanel = new JPanel(); 
+                JPanel atomPanel = new JPanel();
                 atomPanel.setLayout(new BoxLayout(atomPanel, BoxLayout.PAGE_AXIS));
-                {   
+                {
 
 
                     for (final Atom a : atoms) {
                         try {
-                            final String type= mind.getTypeName(a);
+                            final String type = mind.getTypeName(a);
                             final double normSTI = mind.getNormalizedSTI(a);
 
-                            JToggleButton b = getButton(a);
+                            JButton b = getButton(a);
 
-                            float hue = ((float)(type.hashCode() % 19)) / 19.0f;
-                            float bri = (float)normSTI * 0.25f + 0.75f;
+                            float hue = ((float) (type.hashCode() % 19)) / 19.0f;
+                            float bri = (float) normSTI * 0.25f + 0.75f;
 
                             b.setBackground(new Color(Color.HSBtoRGB(hue, 0.8f, bri)));
 
-                            b.addActionListener(new ActionListener() {
-                                @Override
-                                public void actionPerformed(ActionEvent e) {
-                                    //agent.addStimulus(a, boostAmount);
-                                    refresh();
-                                }                    
-                            });
-
-                            b.setAlignmentX(Component.CENTER_ALIGNMENT);
+                            b.setAlignmentX(Component.LEFT_ALIGNMENT);
                             atomPanel.add(b);
-                        }
-                        catch (NullPointerException npe) {
+                        } catch (NullPointerException npe) {
                             System.out.println("missing atom information: " + a);
                         }
                     }
@@ -276,18 +281,18 @@ public class AttentionControlPanel extends JPanel {
 
                 JPanel agentPanel = new JPanel(new BorderLayout());
                 {
-        //            JPanel agentList = new JPanel();
-        //            agentList.setLayout(new BoxLayout(agentList, BoxLayout.PAGE_AXIS));
-        //            {
-        //                for (MindAgent m : mind.getAgents()) {
-        //                    agentList.add(new JLabel(m) /* getMindAgentPanel(m) */ );
-        //                }
-        //                agentList.add(Box.createVerticalBox());
-        //
-        //            }
-        //            agentPanel.add(new JScrollPane(agentList), BorderLayout.CENTER);
-        //
-        //            agentPanel.add(cycle, BorderLayout.SOUTH);
+                    //            JPanel agentList = new JPanel();
+                    //            agentList.setLayout(new BoxLayout(agentList, BoxLayout.PAGE_AXIS));
+                    //            {
+                    //                for (MindAgent m : mind.getAgents()) {
+                    //                    agentList.add(new JLabel(m) /* getMindAgentPanel(m) */ );
+                    //                }
+                    //                agentList.add(Box.createVerticalBox());
+                    //
+                    //            }
+                    //            agentPanel.add(new JScrollPane(agentList), BorderLayout.CENTER);
+                    //
+                    //            agentPanel.add(cycle, BorderLayout.SOUTH);
                 }
 
                 JPanel statsPanel = new JPanel();
@@ -310,16 +315,17 @@ public class AttentionControlPanel extends JPanel {
 
                 updateUI();
             }
-            
         });
-        
+
+        for (AtomPanel ap : atomPanels) {
+            ap.refresh();
+        }
     }
 
 //    protected void runAgent(MindAgentPanel m) {
 //        //TODO calculate runtime of each agent to display
 //        m.agent._run(mind, 1.0);
 //    }
-
 //    protected void cycle() {        
 ////        for (MindAgent m : mind.getAgents()) {
 ////            MindAgentPanel map = getMindAgentPanel(m);
@@ -330,7 +336,6 @@ public class AttentionControlPanel extends JPanel {
 //
 //        refresh();
 //    }
-
     public JFrame newWindow() {
         final JFrame jf = new JFrame(getClass().getSimpleName());
         jf.getContentPane().add(this);
@@ -338,5 +343,46 @@ public class AttentionControlPanel extends JPanel {
         jf.setVisible(true);
 
         return jf;
+    }
+
+    public void newAtomView(final Atom a) {
+        final AtomPanel ap = new AtomPanel(mind, a);
+        JFrame jf = new SwingWindow(ap, 400, 300);
+        jf.setTitle(mind.getName(a));
+        jf.addWindowListener(new WindowAdapter() {
+
+            @Override
+            public void windowOpened(WindowEvent e) {
+                atomPanels.add(ap);
+            }
+
+            @Override
+            public void windowClosing(WindowEvent e) {
+            }
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                atomPanels.remove(ap);
+            }
+//            @Override
+//            public void windowIconified(WindowEvent e) {
+//                throw new UnsupportedOperationException("Not supported yet.");
+//            }
+//
+//            @Override
+//            public void windowDeiconified(WindowEvent e) {
+//                throw new UnsupportedOperationException("Not supported yet.");
+//            }
+//
+//            @Override
+//            public void windowActivated(WindowEvent e) {
+//                throw new UnsupportedOperationException("Not supported yet.");
+//            }
+//
+//            @Override
+//            public void windowDeactivated(WindowEvent e) {
+//                throw new UnsupportedOperationException("Not supported yet.");
+//            }
+        });
     }
 }

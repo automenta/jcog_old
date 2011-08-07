@@ -8,7 +8,6 @@
  */
 package jcog.spacegraph.gl;
 
-import jcog.spacegraph.gl.Surface;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentEvent;
 import javax.media.opengl.GLCapabilities;
@@ -19,7 +18,6 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JPanel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
-
 
 public class SGPanel extends JPanel implements ComponentListener {
 
@@ -32,7 +30,7 @@ public class SGPanel extends JPanel implements ComponentListener {
         super(new BorderLayout());
 
         this.sg = sg;
-        
+
         GLCapabilities caps = new GLCapabilities(GLProfile.get(GLProfile.GL2));
         canvas = new GLCanvas(caps);
         //canvas = new GLJPanel(caps); /** a "lightweight" GLJPanel component for cooperation with other Swing components. */
@@ -47,8 +45,8 @@ public class SGPanel extends JPanel implements ComponentListener {
 
         animator = new Animator(canvas);
         animator.setRunAsFastAsPossible(false);
-        
-        
+
+
 
         addComponentListener(this);
 
@@ -57,53 +55,63 @@ public class SGPanel extends JPanel implements ComponentListener {
             @Override
             public void ancestorAdded(AncestorEvent event) {
                 //System.out.println("ancestor added: " + event);
-                startGL();
+                setGLRunning(true);
             }
 
             @Override
             public void ancestorRemoved(AncestorEvent event) {
                 //System.out.println("ancestor removed: " + event);
-                stopGL();
+                setGLRunning(false);
             }
 
             @Override
             public void ancestorMoved(AncestorEvent event) {
             }
-
         });
 
 
     }
 
+    public synchronized void setGLRunning(boolean trueToStart) {
+        if (trueToStart) {
+            if (!running) {
+                //System.out.println("STARTING GL");
 
-    public void startGL() {
-         if (!running) {
-            //System.out.println("STARTING GL");
-             
-            running = true;
-            new Thread(new Runnable() {
-                public void run() {
-                    add(canvas, BorderLayout.CENTER);
-                    updateUI();
-                    animator.start();
-                }
-            }).start();
-         }
-    }
+                running = true;
 
-    public void stopGL() {
-        if (running) {
-            //System.out.println("STOPPING GL");
-
-            running = false;
-
-            // Run this on another thread than the AWT event queue to make sure the call to Animator.stop() completes before exiting
-            new Thread(new Runnable() {
-                public void run() {
+                if (animator.isAnimating()) {
                     animator.stop();
-                    removeAll();
                 }
-            }).start();
+
+                removeAll();
+
+                add(canvas, BorderLayout.CENTER);
+                updateUI();
+
+                new Thread(new Runnable() {
+
+                    public void run() {
+
+
+                        animator.start();
+                    }
+                }).start();
+            }
+        } else {
+            if (running) {
+                //System.out.println("STOPPING GL");
+
+                running = false;
+
+                // Run this on another thread than the AWT event queue to make sure the call to Animator.stop() completes before exiting
+//                new Thread(new Runnable() {
+//                    public void run() {
+                animator.stop();
+                removeAll();
+//                    }
+//                }).start();
+            }
+
         }
     }
 
@@ -134,7 +142,4 @@ public class SGPanel extends JPanel implements ComponentListener {
     public Animator getAnimator() {
         return animator;
     }
-
-    
-
 }
