@@ -4,6 +4,7 @@
  */
 package jcog.opencog.swing;
 
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import javax.swing.JPanel;
@@ -55,29 +56,21 @@ public class AtomPanel extends JPanel {
         //legend.setDisplaySeriesLines(true);
         chart.setBackgroundPaint(Color.white);
         final CategoryPlot plot = (CategoryPlot) chart.getPlot();
-        plot.setBackgroundPaint(Color.lightGray);
+        plot.setBackgroundPaint(Color.BLACK);
         plot.setRangeGridlinePaint(Color.white);
         // customise the range axis...
         final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         rangeAxis.setAutoRangeIncludesZero(true);
-        // ****************************************************************************
-        // * JFREECHART DEVELOPER GUIDE                                               *
-        // * The JFreeChart Developer Guide, written by David Gilbert, is available   *
-        // * to purchase from Object Refinery Limited:                                *
-        // *                                                                          *
-        // * http://www.object-refinery.com/jfreechart/guide.html                     *
-        // *                                                                          *
-        // * Sales are used to provide funding for the JFreeChart project - please    *
-        // * support us so that we can continue developing free software.             *
-        // ****************************************************************************
-        // customise the renderer...
+        
         final LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
-        //        renderer.setDrawShapes(true);
-        //            renderer.setSeriesStroke(
-        //                    0, new BasicStroke(
-        //                    2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-        //                    1.0f, new float[]{10.0f, 6.0f}, 0.0f));
+                //renderer.setDrawShapes(true);
+        
+        renderer.setSeriesStroke(
+                0, new BasicStroke(
+                2.0f));
+        renderer.setSeriesPaint(0, Color.WHITE);
+        
         //            renderer.setSeriesStroke(
         //                    1, new BasicStroke(
         //                    2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,

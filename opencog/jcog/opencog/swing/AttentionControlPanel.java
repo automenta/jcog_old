@@ -4,10 +4,11 @@
  */
 package jcog.opencog.swing;
 
-import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -29,15 +30,6 @@ import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.spacegraph.swing.SwingWindow;
 import org.apache.commons.collections15.IteratorUtils;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.HistogramDataset;
 import org.jfree.data.statistics.HistogramType;
 
@@ -51,8 +43,10 @@ public class AttentionControlPanel extends JPanel {
     //final short boostAmount = 50;
     private final OCMind mind;
     private HistogramDataset stiDataset;
-    private JFreeChart stiHistogram;
-    private ChartPanel stiChart;
+    //private JFreeChart stiHistogram;
+    //private ChartPanel stiChart;
+    private JPanel stiChart;
+    
 //    Map<MindAgent, MindAgentPanel> mindAgentPanels = new WeakHashMap();
     private final ControlPanelAgent agent;
     private final List<AtomPanel> atomPanels = new LinkedList();
@@ -218,7 +212,7 @@ public class AttentionControlPanel extends JPanel {
 
     public void refresh() {
 
-        int bins = 10;
+        int bins = 50;
 
         if (!isDisplayable()) {
             return;
@@ -246,6 +240,7 @@ public class AttentionControlPanel extends JPanel {
             stiDataset.setType(HistogramType.FREQUENCY);
             stiDataset.addSeries("STI", stis, bins);
             //stiDataset.addSeries("LTI", ltis, 10);
+            
         }
 
         final List<Atom> atoms = (_atoms.size() > maxAtoms) ? _atoms.subList(0, maxAtoms) : _atoms;
@@ -300,11 +295,72 @@ public class AttentionControlPanel extends JPanel {
                 {
 
                     if (atoms.size() > 0) {
-                        stiHistogram = ChartFactory.createHistogram("STI Distribution", "Importance", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);
+//                        stiHistogram = ChartFactory.createHistogram("STI Distribution", "Importance", "Count", stiDataset, PlotOrientation.VERTICAL, false, false, false);
+//
+//                        stiChart = new ChartPanel(stiHistogram, true, true, true, true, true);
 
-                        stiChart = new ChartPanel(stiHistogram, true, true, true, true, true);
+                        stiChart = new JPanel() {
+                             public void paint(Graphics g) {
+                                // Dynamically calculate size information
+                                Dimension size = getSize();
 
+                                g.setColor(Color.BLACK);
+                                g.fillRect(0,0,(int)size.getWidth(),(int)size.getHeight());
+                                
+//                                // diameter
+//                                int d = Math.min(size.width, size.height); 
+//                                int x = (size.width - d)/2;
+//                                int y = (size.height - d)/2;
+//
+//                                // draw circle (color already set to foreground)
+//                                g.fillOval(x, y, d, d);
+//                                g.setColor(Color.black);
+//                                g.drawOval(x, y, d, d);
+                                
+                                double minX=0, minY=0, maxX=0, maxY=0;
+                                
+                                int numBins = stiDataset.getItemCount(0);
+                                for (int i = 0; i < numBins; i++) {
+                                    if (i == 0) {
+                                        minX = stiDataset.getStartXValue(0, i);
+                                        maxX = stiDataset.getEndXValue(0, i);
+                                        minY = stiDataset.getStartYValue(0, i);
+                                        maxY = stiDataset.getEndYValue(0, i);
+                                    }
+                                    else {
+                                        double lsX = stiDataset.getStartXValue(0, i);
+                                        double leX = stiDataset.getEndXValue(0, i);
+                                        double lsY = stiDataset.getStartYValue(0, i);
+                                        double leY = stiDataset.getEndYValue(0, i);
+                                        
+                                        if (lsX < minX) minX = lsX;
+                                        if (lsY < minY) minY = lsY;
+                                        if (leX > maxX) maxX = leX;
+                                        if (leY > maxY) maxY = leY;
+                                    }
+                                    
+                                }
+                                double width = maxX - minX;
+                                double height = maxY - minY;
+                                for (int i = 0; i < stiDataset.getItemCount(0); i++) {
+                                            
+                                    double p = (stiDataset.getEndY(0, i).doubleValue() / maxY);
+                                    
+                                    float hue = (float)(0.0 + (1.0 - p) * 0.25);
+                                    float bri = (float)(0.75 + 0.25 * p);
+                                    g.setColor(Color.getHSBColor(hue, 0.6f, bri));
+                                    
+                                    double w = size.getWidth() / numBins;
+                                    
+                                    double hh = size.getHeight() * p;
+                                    g.fillRect((int)(w*i), (int)(size.getHeight() - hh), (int)w, (int)hh);
+                                }
+                            }
+                        };
+                        
                         statsPanel.add(stiChart);
+                        
+                        
                     } else {
                     }
                 }

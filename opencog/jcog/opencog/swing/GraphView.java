@@ -114,7 +114,7 @@ public class GraphView extends Surface implements Drawable {
 
         final int integerScale = 200;
         private short PARAMETER_CHANGE_BOOST = 100;
-        private short DECREASE_STI = 10;
+        private short DECREASE_STI = 20;
 
         private final OCMind mind;
         private final JPanel control = new JPanel();
