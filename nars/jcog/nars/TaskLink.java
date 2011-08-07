@@ -21,9 +21,7 @@
 package jcog.nars;
 
 import java.util.*;
-
-import org.opencog.reason.nars.language.Term;
-
+import jcog.nars.reason.language.Term;
 
 
 /**

@@ -22,10 +22,9 @@ package jcog.nars.reason.language;
 
 import java.util.ArrayList;
 import java.util.TreeSet;
-
-import org.opencog.atom.nars.TemporalValue;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.io.Symbols;
+import jcog.nars.TemporalValue;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
 /**
  * Conjunction of statements

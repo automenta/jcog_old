@@ -21,8 +21,8 @@
 
 package jcog.nars.reason.store;
 
-import org.opencog.atom.nars.TaskLink;
-import org.opencog.reason.nars.NARParams;
+import jcog.nars.TaskLink;
+import jcog.nars.reason.NARParams;
 
 
 /**

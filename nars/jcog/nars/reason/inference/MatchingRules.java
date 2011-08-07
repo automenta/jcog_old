@@ -20,20 +20,19 @@
  */
 package jcog.nars.reason.inference;
 
-import opencog.atom.rdf.RDFStatement;
+import jcog.nars.BudgetValue;
+import jcog.nars.Judgment;
+import jcog.nars.NARTruth;
+import jcog.nars.Question;
+import jcog.nars.Sentence;
+import jcog.nars.Task;
+import jcog.nars.TemporalValue;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.language.Equivalence;
+import jcog.nars.reason.language.Inheritance;
+import jcog.nars.reason.language.Similarity;
+import jcog.nars.reason.language.Term;
 
-import org.opencog.atom.nars.BudgetValue;
-import org.opencog.atom.nars.Judgment;
-import org.opencog.atom.nars.Question;
-import org.opencog.atom.nars.Sentence;
-import org.opencog.atom.nars.Task;
-import org.opencog.atom.nars.TemporalValue;
-import org.opencog.atom.nars.TruthValue;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.language.Equivalence;
-import org.opencog.reason.nars.language.Inheritance;
-import org.opencog.reason.nars.language.Similarity;
-import org.opencog.reason.nars.language.Term;
 
 
 /**
@@ -77,9 +76,9 @@ public final class MatchingRules {
     public static boolean revision(Task task, Judgment oldBelief, boolean feedbackToLinks) {
         Judgment newBelief = (Judgment) task.getSentence();
         if (TemporalRules.sameTime(newBelief, oldBelief)) {
-            TruthValue tTruth = newBelief.getTruth();
-            TruthValue bTruth = oldBelief.getTruth();
-            TruthValue truth = TruthFunctions.revision(tTruth, bTruth);
+            NARTruth tTruth = newBelief.getTruth();
+            NARTruth bTruth = oldBelief.getTruth();
+            NARTruth truth = TruthFunctions.revision(tTruth, bTruth);
             BudgetValue budget = BudgetFunctions.revise(tTruth, bTruth, truth, task, feedbackToLinks);
             Term content = newBelief.getContent();
             Memory.doublePremiseTask(budget, content, truth);
@@ -95,13 +94,13 @@ public final class MatchingRules {
      * @param belief The proposed answer
      * @param task The task to be processed
      */
-    public static void trySolution(Sentence problem, Judgment belief, Task task) {
+    public static void trySolution(Memory m, Sentence problem, Judgment belief, Task task) {
         Judgment oldBest = problem.getBestSolution();
         if (betterSolution(belief, oldBest, problem)) {
             problem.setBestSolution(belief);
-            BudgetValue budget = BudgetFunctions.solutionEval(problem, belief, task);
-            if ((budget != null) && budget.aboveThreshold()) {
-                Memory.activatedTask(budget, belief, problem.isInput());
+            BudgetValue budget = BudgetFunctions.solutionEval(m, problem, belief, task);
+            if ((budget != null) && budget.aboveThreshold(m)) {
+                m.activatedTask(budget, belief, problem.isInput());
             }
         }
     }
@@ -190,9 +189,9 @@ public final class MatchingRules {
             else
                 content = Equivalence.make(t1, t2, order);
         }
-        TruthValue value1 = judgment1.getTruth();
-        TruthValue value2 = judgment2.getTruth();
-        TruthValue truth = TruthFunctions.intersection(value1, value2);
+        NARTruth value1 = judgment1.getTruth();
+        NARTruth value2 = judgment2.getTruth();
+        NARTruth truth = TruthFunctions.intersection(value1, value2);
         BudgetValue budget = BudgetFunctions.forward(truth);
         Memory.doublePremiseTask(budget, content, truth);
     }
@@ -208,7 +207,7 @@ public final class MatchingRules {
         Term sub = statement.getPredicate();
         Term pre = statement.getSubject();
         RDFStatement content = RDFStatement.make(statement, sub, pre, order);
-        TruthValue truth = TruthFunctions.reduceConjunction(sym.getTruth(), asym.getTruth());
+        NARTruth truth = TruthFunctions.reduceConjunction(sym.getTruth(), asym.getTruth());
         BudgetValue budget = BudgetFunctions.forward(truth);
         Memory.doublePremiseTask(budget, content, truth);
     }
@@ -219,7 +218,7 @@ public final class MatchingRules {
      * Produce an Inheritance/Implication from a reversed Inheritance/Implication
      */
     private static void conversion() {
-        TruthValue truth = TruthFunctions.conversion(Memory.currentBelief.getTruth());
+        NARTruth truth = TruthFunctions.conversion(Memory.currentBelief.getTruth());
         BudgetValue budget = BudgetFunctions.forward(truth);
         Memory.convertedJudgment(truth, budget);
     }
@@ -230,7 +229,7 @@ public final class MatchingRules {
      * Switch between Inheritance/Implication and Similarity/Equivalence
      */
     private static void convertRelation() {
-        TruthValue truth = Memory.currentBelief.getTruth();
+        NARTruth truth = Memory.currentBelief.getTruth();
         if (((RDFStatement) Memory.currentTask.getContent()).isCommutative()) {
             truth = TruthFunctions.implied(truth);
         } else {

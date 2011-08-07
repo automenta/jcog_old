@@ -5,11 +5,11 @@
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>jcog</name>
             <source-roots>
+                <root id="src.nars.dir"/>
                 <root id="src.spacegraph.dir"/>
-                <root id="src.opencog.swing.dir"/>
-                <root id="src.opencog.dir"/>
-                <root id="src.genifer.dir"/>
-                <root id="src.dir"/>
+                <root id="src.opencog.dir" name="Source Packages"/>
+                <root id="src.genifer.dir" name="opencog"/>
+                <root id="src.dir" name="genifer"/>
             </source-roots>
             <test-roots>
                 <root id="test.test.dir"/>

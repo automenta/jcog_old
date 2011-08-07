@@ -5,50 +5,40 @@ import java.util.List;
 import java.util.logging.Logger;
 import jcog.nars.reason.io.Experience;
 
-import org.opencog.reason.nars.io.Experience;
-
 public class DefaultNAR implements NAR {
 
     /** System clock, relatively defined to guaranttee the repeatability of behaviors */
     private long now;
-    
-    /** Timer for fixed distance walking */    
+    /** Timer for fixed distance walking */
     private long stoper;
-    
     /** Flag for running continously */
     private boolean running;
+    private Memory memory;
+    private Experience experienceStream;
+    private Logger log;
+    private List<NARObserver> observers = new LinkedList();
+    private NARParams params;
 
-	private Memory memory;
-
-	private Experience experienceStream;
-
-	private Logger log;
-	
-	private List<NARObserver> observers = new LinkedList();
-
-	private NARParams params;
-
-    
     public DefaultNAR(NARParams params) {
-    	super();
-    	
-    	this.params = params;
-    	
-    	log = Logger.getLogger(toString());
-    	
-    	this.memory = new Memory(params);
-    	
-    	start();
-    }
-    
-    public DefaultNAR() {
-    	this(new DefaultNARParams());
-	}
+        super();
 
-	public void start() {
+        this.params = params;
+
+        log = Logger.getLogger(toString());
+
+        this.memory = new Memory(params);
+
+        start();
+    }
+
+    public DefaultNAR() {
+        this(new DefaultNARParams());
+    }
+
+    public void start() {
         experienceStream = new Experience(getMemory());
 
-    	reset();
+        reset();
     }
 
     public void reset() {
@@ -59,7 +49,6 @@ public class DefaultNAR implements NAR {
         getMemory().init();
 
     }
-    
 
     /**
      * Walk a fixed number of steps or continously. Called from MainWindow only.
@@ -75,6 +64,11 @@ public class DefaultNAR implements NAR {
         }
     }
 
+    public void cycle(int cycles) {
+        for (int i = 0; i < cycles; i++)
+            cycle();        
+    }
+    
     /**
      * A clock tick. Run one working cycle or read input. Called from NARS only.
      */
@@ -84,18 +78,18 @@ public class DefaultNAR implements NAR {
 //        }
 //        
 //        if (running || (stoper > 0)) {
-            now++;
+        now++;
 
 //            if (getLog().isLoggable(Level.INFO))
 //            	getLog().info(" --- " + now + " ---\n");
-            
-            getMemory().cycle(now);
-            
-            //this will be responsible for when previously calling mainWindow.tickTimer();
-            for (NARObserver o : observers) {
-            	o.onCycle(this);
-            }
-            
+
+        getMemory().cycle(/*now*/);
+
+        //this will be responsible for when previously calling mainWindow.tickTimer();
+        for (NARObserver o : observers) {
+            o.onCycle(this);
+        }
+
 
 //            if (stoper > 0) {
 //                stoper--;
@@ -104,10 +98,10 @@ public class DefaultNAR implements NAR {
     }
 
     private NARParams getParams() {
-		return params;
-	}
+        return params;
+    }
 
-	/**
+    /**
      * Get the current time from the clock
      * Called in nars.entity.Stamp
      * @return The current time
@@ -117,19 +111,19 @@ public class DefaultNAR implements NAR {
     }
 
     public Memory getMemory() {
-		return memory;
-	}
+        return memory;
+    }
 
     public Experience getExperience() {
-		return experienceStream;
-	}
+        return experienceStream;
+    }
 
     public Logger getLog() {
-		return log;
-	}
-    
-    @Override public long getNow() {
-    	return now;
+        return log;
     }
-    
+
+    @Override
+    public long getNow() {
+        return now;
+    }
 }

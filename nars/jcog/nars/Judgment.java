@@ -20,9 +20,10 @@
  */
 package jcog.nars;
 
-import java.util.Date;
+import jcog.nars.reason.NARParams;
+import jcog.nars.reason.io.Symbols;
+import jcog.nars.reason.language.Term;
 
-import org.opencog.reason.nars.language.Term;
 
 
 
@@ -50,11 +51,11 @@ public class Judgment extends Sentence {
      * Construct a Judgment to indicate an operation just executed
      * @param g The goal that trigger the execution
      */
-    public Judgment(Goal g) {
+    public Judgment(NARParams params, Goal g) {
         content = g.cloneContent();
         punctuation = Symbols.JUDGMENT_MARK;
         temporalOrder = new TemporalValue(0);
-        truth = new TruthValue(1.0f, Parameters.DEFAULT_JUDGMENT_CONFIDENCE);
+        truth = new NARTruth(1.0f, params.getDefaultJudgmentConfidence());
         stamp = new Stamp();
     }
 

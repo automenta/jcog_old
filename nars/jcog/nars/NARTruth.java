@@ -1,6 +1,6 @@
 package jcog.nars;
 
-import org.opencog.reason.nars.io.Symbols;
+import jcog.nars.reason.io.Symbols;
 
 
 

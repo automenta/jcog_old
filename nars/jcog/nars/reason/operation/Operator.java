@@ -23,13 +23,11 @@ package jcog.nars.reason.operation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import jcog.nars.Task;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.language.Statement;
+import jcog.nars.reason.language.Term;
 
-import opencog.atom.rdf.RDFStatement;
-
-import org.opencog.atom.nars.Task;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.language.Statement;
-import org.opencog.reason.nars.language.Term;
 
 /**
  * An individual operator that can be execute by the system, though implemented
@@ -53,13 +51,13 @@ public abstract class Operator extends Term {
      * Execute an operation, then handle feedback
      * @param task The task to be executed
      */
-    public void call(Task task) {
+    public void call(Memory memory, Task task) {
         ArrayList<Task> feedback = execute(task);
-        showExecution((RDFStatement) task.getContent());
-        Memory.executedTask(task);
+        showExecution((Statement) task.getContent());
+        memory.executedTask(task);
         if (feedback != null) {
             for (Task t : feedback) {
-                Memory.inputTask(t);
+                memory.inputTask(t);
             }
         }
     }

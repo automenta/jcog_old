@@ -22,11 +22,10 @@ package jcog.nars.reason.language;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import org.opencog.atom.nars.TemporalValue;
-import org.opencog.atom.nars.TermLink;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.io.Symbols;
+import jcog.nars.TemporalValue;
+import jcog.nars.TermLink;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
 /**
  * A CompoundTerm is a Term with internal (syntactic) structure
@@ -151,7 +150,7 @@ public abstract class CompoundTerm extends Term {
      * @param arg Component list
      * @return A compound term or null
      */
-    public static Term make(String op, ArrayList<Term> arg) {
+    public static Term make(Memory m, String op, ArrayList<Term> arg) {
         if (op.length() == 1) {
             if (op.equals(Symbols.INTERSECTION_EXT_OPERATOR)) {
                 return IntersectionExt.make(arg);
@@ -177,7 +176,7 @@ public abstract class CompoundTerm extends Term {
         }
         if (op.length() == 2) {
             if (op.equals(Symbols.NEGATION_OPERATOR)) {
-                return Negation.make(arg);
+                return Negation.make(m, arg);
             }
             if (op.equals(Symbols.DISJUNCTION_OPERATOR)) {
                 return Disjunction.make(arg);

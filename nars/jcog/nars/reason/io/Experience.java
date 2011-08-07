@@ -23,8 +23,8 @@ package jcog.nars.reason.io;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import jcog.nars.reason.Memory;
 
-import org.opencog.reason.nars.Memory;
 
 
 /**
@@ -41,9 +41,10 @@ public class Experience {
     /** Output experience into a file */
     private PrintWriter outExp;
 
-	private Memory memory;
+    private Memory memory;
 
-	private StringParser stringParser;
+    private StringParser stringParser;
+    
 
     /** 
      * Default constructor

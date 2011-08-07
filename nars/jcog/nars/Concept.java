@@ -21,24 +21,25 @@
 package jcog.nars;
 
 import java.util.ArrayList;
+import java.util.Date;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.NARParams;
+import jcog.nars.reason.inference.BudgetFunctions;
+import jcog.nars.reason.inference.MatchingRules;
+import jcog.nars.reason.inference.RuleTables;
+import jcog.nars.reason.inference.TemporalRules;
+import jcog.nars.reason.inference.UtilityFunctions;
+import jcog.nars.reason.language.CompoundTerm;
+import jcog.nars.reason.language.Inheritance;
+import jcog.nars.reason.language.Term;
+import jcog.nars.reason.operation.Operator;
+import jcog.nars.reason.store.TaskLinkBag;
+import jcog.nars.reason.store.TermLinkBag;
 
 
 
 
 
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.NARParams;
-import org.opencog.reason.nars.inference.BudgetFunctions;
-import org.opencog.reason.nars.inference.MatchingRules;
-import org.opencog.reason.nars.inference.RuleTables;
-import org.opencog.reason.nars.inference.TemporalRules;
-import org.opencog.reason.nars.inference.UtilityFunctions;
-import org.opencog.reason.nars.language.CompoundTerm;
-import org.opencog.reason.nars.language.Inheritance;
-import org.opencog.reason.nars.language.Term;
-import org.opencog.reason.nars.operation.Operator;
-import org.opencog.reason.nars.store.TaskLinkBag;
-import org.opencog.reason.nars.store.TermLinkBag;
 
 
 /**
@@ -125,14 +126,14 @@ public final class Concept extends Item {
      * @param now 
      * @param params 
      */
-    public void directProcess(Task task, long now, NARParams params) {
+    public void directProcess(Task task, long now, Memory memory) {
         Sentence sentence = task.getSentence();
         if (sentence instanceof Question) {
-            processQuestion((Question) sentence, task);
+            processQuestion(memory, (Question) sentence, task);
         } else if (sentence instanceof Goal) {
-            processGoal((Goal) sentence, task, params);
+            processGoal((Goal) sentence, task, memory);
         } else {
-            processJudgment((Judgment) sentence, task, now, params);
+            processJudgment(memory, (Judgment) sentence, task, now);
         }
 //        if (showing) {
 //            window.post(displayContent());  // show changes
@@ -144,7 +145,7 @@ public final class Concept extends Item {
      * @param ques The question to be answered
      * @param task The task to be processed
      */
-    private void processQuestion(Question ques, Task task) {
+    private void processQuestion(Memory memory, Question ques, Task task) {
         boolean duplicate = false;
         for (Question q : pendingQuestions) {           // keep the existing one for answer information
             if (q.equals(ques)) {
@@ -156,14 +157,14 @@ public final class Concept extends Item {
         }
         if ((ques.temporalOrder == null) || ques.temporalOrder.getDelta() < 0) {
             for (Judgment judg : pastRecords) {
-                MatchingRules.trySolution(ques, judg, task);    // look for better answer
+                MatchingRules.trySolution(memory, ques, judg, task);    // look for better answer
             }
         } else if (ques.temporalOrder.getDelta() > 0) {
             for (Judgment judg : predictions) {
-                MatchingRules.trySolution(ques, judg, task);    // look for better answer
+                MatchingRules.trySolution(memory, ques, judg, task);    // look for better answer
             }
         } else if (presentBelief != null) {
-            MatchingRules.trySolution(ques, presentBelief, task);
+            MatchingRules.trySolution(memory, ques, presentBelief, task);
         }
     }
 
@@ -173,16 +174,18 @@ public final class Concept extends Item {
      * @param task The task to be processed
      * @param params 
      */
-    private void processGoal(Goal goal, Task task, NARParams params) {
+    private void processGoal(Goal goal, Task task, Memory memory) {
+        NARParams params = memory.getParams();
+        
         boolean revised = false;
         if (revisible) {
-            revised = reviseTable(goal, task, pendingGoals);     // revise desire
+            revised = reviseTable(memory, goal, task, pendingGoals, new Date().getTime());     // revise desire
             if (revised) {      // don't process this goal, but the revised version
                 return;
             }
         }
         if (presentBelief != null) {
-            MatchingRules.trySolution(goal, presentBelief, task);   // reality check
+            MatchingRules.trySolution(memory, goal, presentBelief, task);   // reality check
         }
         Term content = goal.getContent();
         if ((task.getPriority() >= params.getPriorityThreshold()) && (content instanceof Inheritance)) {
@@ -190,16 +193,16 @@ public final class Concept extends Item {
             if (pred instanceof Operator) {
                 float netDesire = goal.getTruth().getExpectation();
                 if (netDesire > params.getDecisionThreshold()) {
-                    ((Operator) pred).call(task);
+                    ((Operator) pred).call(memory, task);
                     task.setPriority(0.0f);        // each call is executed once
                     return;
                 }
             }
         }
-        if (task.aboveThreshold()) {
+        if (task.aboveThreshold(memory)) {
             addToTable(goal, pendingGoals, params.getMaximumGoalsLength());   // indirectly archiving
             Question ques = new Question(goal);
-            Memory.activatedTask(task.getBudget(), ques, false);
+            memory.activatedTask(task.getBudget(), ques, false);
         }
     }
 
@@ -210,27 +213,27 @@ public final class Concept extends Item {
      * @param now 
      * @param params 
      */
-    private void processJudgment(Judgment judg, Task task, long now, NARParams params) {
+    private void processJudgment(final Memory memory, final Judgment judg, final Task task, final long now) {
         if (revisible) {
             boolean revised;
             if (judg.isFuture(now)) {
-                revised = reviseTable(judg, task, predictions, now, params);
+                revised = reviseTable(memory, judg, task, predictions, now);
             } else {
-                revised = reviseTable(judg, task, pastRecords, now, params);
+                revised = reviseTable(memory, judg, task, pastRecords, now);
             }
             if (!revised) {
-                tryUpdate(judg, now);
+                tryUpdate(memory, judg, now);
             }
         }
-        if (task.aboveThreshold(params.getBudgetThreshold())) {
+        if (task.aboveThreshold(memory.getParams().getBudgetThreshold())) {
             for (Question ques : pendingQuestions) {
-                MatchingRules.trySolution(ques, judg, task);
+                MatchingRules.trySolution(memory, ques, judg, task);
             }
             for (Goal goal : pendingGoals) {
-                MatchingRules.trySolution(goal, judg, task);
+                MatchingRules.trySolution(memory, goal, judg, task);
             }
             
-            int maxBeliefLength = params.getMaximumBeliefLength();
+            int maxBeliefLength = memory.getParams().getMaximumBeliefLength();
             if (judg.isFuture(now)) {
                 addToTable(judg, predictions, maxBeliefLength);
             } else {
@@ -246,15 +249,15 @@ public final class Concept extends Item {
      * @param params 
      * @return Whether the new belief triggered a temporalRevision
      */
-    private boolean reviseTable(Judgment newSentence, Task task, ArrayList table, long now, NARParams params) {
+    private boolean reviseTable(Memory memory, Judgment newSentence, Task task, ArrayList<? extends Judgment> table, long now) {
         boolean revised = false;
         Judgment belief;
         for (int i = table.size() - 1; i >= 0; i--) {
-            belief = (Judgment) table.get(i);
+            belief = table.get(i);
             if ((table == predictions) && !newSentence.isFuture(now)) {
                 table.remove(i);
-                addToTable(belief, pastRecords, params.getMaximumBeliefLength());
-            } else if (belief.noOverlapping(newSentence)) {
+                addToTable(belief, pastRecords, memory.getParams().getMaximumBeliefLength());
+            } else if (belief.noOverlapping(memory, newSentence)) {
                 revised |= MatchingRules.revision(task, belief, false);
             }
         }
@@ -266,7 +269,7 @@ public final class Concept extends Item {
      * @param judg The new belief
      * @param now 
      */
-    private void tryUpdate(Judgment judg, long now) {
+    private void tryUpdate(Memory memory, Judgment judg, long now) {
         if (presentBelief == null) {
             presentBelief = judg;
         } else {    // presentBelief != null
@@ -287,7 +290,7 @@ public final class Concept extends Item {
                     }
                     if (judg.getTruth().getExpDifAbs(presentBelief.getTruth()) > 0.5) {
                         presentBelief = judg;
-                    } else if (judg.noOverlapping(presentBelief)) {
+                    } else if (judg.noOverlapping(memory, presentBelief)) {
                         TemporalRules.temporalRevision(judg, presentBelief, now, false);
                     } else if (presentBelief.getTruth().getConfidence() < judg.getTruth().getConfidence()) {
                         presentBelief = judg;
@@ -434,12 +437,12 @@ public final class Concept extends Item {
      * @param task The selected task
      * @return The selected belief
      */
-    public Judgment getBelief(Task task) {
+    public Judgment getBelief(Memory memory, Task task) {
         Sentence taskSentence = task.getSentence();
         Judgment belief;
         for (int i = 0; i < pastRecords.size(); i++) {
             belief = pastRecords.get(i);
-            if (belief.noOverlapping(taskSentence)) {
+            if (belief.noOverlapping(memory, taskSentence)) {
                 //Record.append(" * Selected Belief: " + belief + "\n");
                 return belief;
             }
@@ -460,7 +463,7 @@ public final class Concept extends Item {
         memory.currentTaskLink = tLink;
         memory.currentBeliefLink = null;
         
-        memory.notice(" * Selected TaskLink: " + tLink + "\n");
+        memory.getLogger().info(" * Selected TaskLink: " + tLink + "\n");
         
         Task task = tLink.getTargetTask();
         memory.currentTask = task;
@@ -474,7 +477,7 @@ public final class Concept extends Item {
         while (memory.noResult() && (termLinkCount > 0)) {
             TermLink termLink = termLinks.takeOut(tLink);
             if (termLink != null) {
-                memory.notice(" * Selected TermLink: " + termLink + "\n");
+                memory.getLogger().info(" * Selected TermLink: " + termLink + "\n");
                 
                 memory.currentBeliefLink = termLink;
                 

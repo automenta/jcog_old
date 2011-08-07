@@ -21,9 +21,9 @@
 package jcog.nars.reason.language;
 
 import java.util.ArrayList;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.io.Symbols;
 
 /**
  * A Statement about an Inheritance relation.

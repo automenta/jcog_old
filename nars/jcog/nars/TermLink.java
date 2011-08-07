@@ -20,8 +20,8 @@
  */
 package jcog.nars;
 
-import org.opencog.reason.nars.io.Symbols;
-import org.opencog.reason.nars.language.Term;
+import jcog.nars.reason.io.Symbols;
+import jcog.nars.reason.language.Term;
 
 
 /**

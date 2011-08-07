@@ -22,8 +22,8 @@
 package jcog.nars.reason.operation;
 
 import java.util.ArrayList;
+import jcog.nars.Task;
 
-import org.opencog.atom.nars.Task;
 
 /**
  * A class used in testing only.

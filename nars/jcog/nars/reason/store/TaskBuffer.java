@@ -21,10 +21,8 @@
 
 package jcog.nars.reason.store;
 
-import org.opencog.atom.nars.Task;
-import org.opencog.reason.nars.NARParams;
-
-
+import jcog.nars.Task;
+import jcog.nars.reason.NARParams;
 
 
 /**
@@ -48,10 +46,12 @@ public class TaskBuffer extends Bag<Task> {
 	}
 	
 	@Override public int forgetRate() {
-		return params.getNewTaskForgetRate();
+            if (params == null)
+                return 0;
+            return params.getNewTaskForgetRate();
 	}
 	
-	
+    
     
 //    /**
 //     * Sepecial treatment: the display also include Tasks in the NewTask list

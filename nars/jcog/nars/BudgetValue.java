@@ -20,9 +20,11 @@
  */
 package jcog.nars;
 
-import org.opencog.reason.nars.inference.BudgetFunctions;
-import org.opencog.reason.nars.inference.UtilityFunctions;
-import org.opencog.reason.nars.io.Symbols;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.NARParams;
+import jcog.nars.reason.inference.BudgetFunctions;
+import jcog.nars.reason.inference.UtilityFunctions;
+import jcog.nars.reason.io.Symbols;
 
 
 
@@ -205,6 +207,10 @@ public class BudgetValue implements Cloneable {
         return (summary() >= budgetThreshold);
     }
 
+    public boolean aboveThreshold(Memory memory) {
+        return aboveThreshold(memory.busyValue() * memory.getParams().getBudgetThreshold());
+//        return (summary() >= Parameters.BUDGET_THRESHOLD);
+    }
     /**
      * Fully display the BudgetValue
      * @return String representation of the value

@@ -21,10 +21,8 @@
 package jcog.nars;
 
 import java.util.*;
-
-import org.opencog.reason.nars.io.Symbols;
-
-
+import jcog.nars.reason.NARParams;
+import jcog.nars.reason.io.Symbols;
 
 
 
@@ -68,7 +66,7 @@ public class Stamp implements Cloneable {
     private Stamp(Stamp first, Stamp second) {
         int i1, i2, j;
         i1 = i2 = j = 0;
-        length = Math.min(first.length() + second.length(), Parameters.MAXMUM_STAMP_LENGTH);
+        length = Math.min(first.length() + second.length(), NARParams.MAXMUM_STAMP_LENGTH);
         list = new long[length];
         while (i2 < second.length() && j < length) {
             list[j] = first.get(i1);

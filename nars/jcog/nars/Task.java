@@ -20,8 +20,7 @@
  */
 package jcog.nars;
 
-import org.opencog.reason.nars.language.Term;
-
+import jcog.nars.reason.language.Term;
 
 
 /**
@@ -113,7 +112,7 @@ public class Task extends Item {
         if (sentence instanceof Question) {
             s.append(sentence);
         } else {
-            s.append(((Judgment) sentence).toString2());
+            s.append(((Judgment) sentence).toString());
         }
         return s.toString();
     }

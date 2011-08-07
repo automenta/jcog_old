@@ -21,11 +21,9 @@
 package jcog.nars.reason.language;
 
 import java.util.ArrayList;
-
-import org.opencog.atom.nars.TemporalValue;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.io.Symbols;
-
+import jcog.nars.TemporalValue;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
 
 /**

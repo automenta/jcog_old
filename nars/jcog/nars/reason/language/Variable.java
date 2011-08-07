@@ -22,8 +22,8 @@ package jcog.nars.reason.language;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import jcog.nars.reason.io.Symbols;
 
-import org.opencog.reason.nars.io.Symbols;
 
 /**
  * A variable term, which does not correspond to a concept

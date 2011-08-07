@@ -21,9 +21,9 @@
 package jcog.nars.reason.language;
 
 import java.util.*;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
-import nars.io.Symbols;
-import nars.main.Memory;
 
 /**
  * A compound term whose extension is the difference of the extensions of its components
@@ -64,7 +64,7 @@ public class DifferenceExt extends CompoundTerm {
      * @return the Term generated from the arguments
      * @param argList The list of components
      */
-    public static Term make(ArrayList<Term> argList) {
+    public static Term make(Memory memory, ArrayList<Term> argList) {
         if (argList.size() == 1) { // special case from CompoundTerm.reduceComponent
             return argList.get(0);
         }
@@ -72,7 +72,7 @@ public class DifferenceExt extends CompoundTerm {
             return null;
         }
         String name = makeCompoundName(Symbols.DIFFERENCE_EXT_OPERATOR, argList);
-        Term t = Memory.nameToListedTerm(name);
+        Term t = memory.nameToListedTerm(name);
         return (t != null) ? t : new DifferenceExt(name, argList);
     }
 
@@ -83,7 +83,7 @@ public class DifferenceExt extends CompoundTerm {
      * @return A compound generated or a term it reduced to
      */
     @SuppressWarnings("unchecked")
-    public static Term make(Term t1, Term t2) {
+    public static Term make(Memory m, Term t1, Term t2) {
         if (t1.equals(t2)) {
             return null;
         }
@@ -93,7 +93,7 @@ public class DifferenceExt extends CompoundTerm {
             return SetExt.make(set);
         }
         ArrayList<Term> list = argumentsToList(t1, t2);
-        return make(list);
+        return make(m, list);
     }
 
     /**

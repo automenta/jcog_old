@@ -20,19 +20,20 @@
  */
 package jcog.nars.reason.inference;
 
-import org.opencog.atom.nars.BudgetValue;
-import org.opencog.atom.nars.Concept;
-import org.opencog.atom.nars.Goal;
-import org.opencog.atom.nars.Judgment;
-import org.opencog.atom.nars.NARTruth;
-import org.opencog.atom.nars.Question;
-import org.opencog.atom.nars.Sentence;
-import org.opencog.atom.nars.Task;
-import org.opencog.atom.nars.TaskLink;
-import org.opencog.atom.nars.TermLink;
-import org.opencog.atom.nars.TruthValue;
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.language.Term;
+import jcog.nars.BudgetValue;
+import jcog.nars.Concept;
+import jcog.nars.Goal;
+import jcog.nars.Judgment;
+import jcog.nars.NARTruth;
+import jcog.nars.Question;
+import jcog.nars.Sentence;
+import jcog.nars.Task;
+import jcog.nars.TaskLink;
+import jcog.nars.TermLink;
+import jcog.nars.TruthValue;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.language.Term;
+
 
 
 /**
@@ -74,11 +75,11 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param task The task to be immediatedly processed, or null for continued process
      * @return The budget for the new task which is the belief activated, if necessary
      */
-    static BudgetValue solutionEval(Sentence problem, Judgment solution, Task task) {
+    static BudgetValue solutionEval(Memory memory, Sentence problem, Judgment solution, Task task) {
         BudgetValue budget = null;
         boolean feedbackToLinks = false;
         if (task == null) {                   // called in continued processing
-            task = Memory.currentTask;
+            task = memory.getCurrentTask();
             feedbackToLinks = true;
         }
         boolean judgmentTask = task.getSentence().isJudgment();
@@ -96,9 +97,9 @@ public final class BudgetFunctions extends UtilityFunctions {
             budget = new BudgetValue(quality, task.getDurability(), truthToQuality(solution.getTruth()));
         }
         if (feedbackToLinks) {
-            TaskLink tLink = Memory.currentTaskLink;
+            TaskLink tLink = memory.currentTaskLink;
             tLink.setPriority(Math.min(1 - quality, tLink.getPriority()));
-            TermLink bLink = Memory.currentBeliefLink;
+            TermLink bLink = memory.currentBeliefLink;
             bLink.incPriority(quality);
         }
         return budget;
@@ -112,15 +113,15 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param task The task to be immediatedly or continuely processed
      * @return The budget for the new task 
      */
-    static BudgetValue revise(TruthValue tTruth, TruthValue bTruth, TruthValue truth, Task task, boolean feedbackToLinks) {
+    static BudgetValue revise(Memory memory, TruthValue tTruth, TruthValue bTruth, TruthValue truth, Task task, boolean feedbackToLinks) {
         float difT = truth.getExpDifAbs(tTruth);
         task.decPriority(1 - difT);
         task.decDurability(1 - difT);
         if (feedbackToLinks) {
-            TaskLink tLink = Memory.currentTaskLink;
+            TaskLink tLink = memory.currentTaskLink;
             tLink.decPriority(1 - difT);
             tLink.decDurability(1 - difT);
-            TermLink bLink = Memory.currentBeliefLink;
+            TermLink bLink = memory.currentBeliefLink;
             float difB = truth.getExpDifAbs(bTruth);
             bLink.decPriority(1 - difB);
             bLink.decDurability(1 - difB);
@@ -138,8 +139,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param bTruth Truth value of the previous belief
      * @return Budget value of the updating task
      */
-    static BudgetValue update(Task task, TruthValue bTruth) {
-        TruthValue tTruth = task.getSentence().getTruth();
+    static BudgetValue update(Task task, NARTruth bTruth) {
+        NARTruth tTruth = task.getSentence().getTruth();
         float dif = tTruth.getExpDifAbs(bTruth);
         float priority = or(dif, task.getPriority());
         float durability = or(dif, task.getDurability());
@@ -214,8 +215,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param truth The truth value of the conclusion
      * @return The budget value of the conclusion
      */
-    static BudgetValue forward(TruthValue truth) {
-        return budgetInference(truthToQuality(truth), 1);
+    static BudgetValue forward(Memory m, NARTruth truth) {
+        return budgetInference(m, truthToQuality(truth), 1);
     }
 
     /**
@@ -223,8 +224,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param truth The truth value of the belief deriving the conclusion
      * @return The budget value of the conclusion
      */
-    public static BudgetValue backward(TruthValue truth) {
-        return budgetInference(truthToQuality(truth), 1);
+    public static BudgetValue backward(Memory m, NARTruth truth) {
+        return budgetInference(m, truthToQuality(truth), 1);
     }
 
     /**
@@ -232,8 +233,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param truth The truth value of the belief deriving the conclusion
      * @return The budget value of the conclusion
      */
-    public static BudgetValue backwardWeak(TruthValue truth) {
-        return budgetInference(w2c(1) * truthToQuality(truth), 1);
+    public static BudgetValue backwardWeak(Memory m, NARTruth truth) {
+        return budgetInference(m, w2c(1) * truthToQuality(truth), 1);
     }
 
     /* ----- Task derivation in CompositionalRules and StructuralRules ----- */
@@ -243,8 +244,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param content The content of the conclusion
      * @return The budget of the conclusion
      */
-    public static BudgetValue compoundForward(TruthValue truth, Term content) {
-        return budgetInference(truthToQuality(truth), content.getComplexity());
+    public static BudgetValue compoundForward(Memory memory, NARTruth truth, Term content) {
+        return budgetInference(memory, truthToQuality(truth), content.getComplexity());
     }
 
     /**
@@ -252,8 +253,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param content The content of the conclusion
      * @return The budget of the conclusion
      */
-    public static BudgetValue compoundBackward(Term content) {
-        return budgetInference(1, content.getComplexity());
+    public static BudgetValue compoundBackward(Memory memory, Term content) {
+        return budgetInference(memory, 1, content.getComplexity());
     }
 
     /**
@@ -261,8 +262,8 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param content The content of the conclusion
      * @return The budget of the conclusion
      */
-    public static BudgetValue compoundBackwardWeak(Term content) {
-        return budgetInference(w2c(1), content.getComplexity());
+    public static BudgetValue compoundBackwardWeak(Memory memory, Term content) {
+        return budgetInference(memory, w2c(1), content.getComplexity());
     }
 
     /**
@@ -271,9 +272,9 @@ public final class BudgetFunctions extends UtilityFunctions {
      * @param complexity Syntactic complexity of the conclusion
      * @return Budget of the conclusion task
      */
-    private static BudgetValue budgetInference(float qual, int complexity) {
-        TaskLink tLink = Memory.currentTaskLink;
-        TermLink bLink = Memory.currentBeliefLink;
+    private static BudgetValue budgetInference(Memory memory, float qual, int complexity) {
+        TaskLink tLink = memory.currentTaskLink;
+        TermLink bLink = memory.currentBeliefLink;
         float priority = tLink.getPriority();
         float durability = tLink.getDurability();
         float quality = (float) (qual / Math.sqrt(complexity));

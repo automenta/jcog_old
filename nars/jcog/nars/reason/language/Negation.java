@@ -21,9 +21,9 @@
 package jcog.nars.reason.language;
 
 import java.util.*;
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.io.Symbols;
 
-import nars.io.Symbols;
-import nars.main.Memory;
 
 /**
  * A negation of a Statement.
@@ -64,13 +64,13 @@ public class Negation extends CompoundTerm {
      * @param t The compoment
      * @return A compound generated or a term it reduced to
      */
-    public static Term make(Term t) {
+    public static Term make(Memory m, Term t) {
         if (t instanceof Negation) {
             return ((CompoundTerm) t).cloneComponents().get(0);
         }         // (--,(--,P)) = P
         ArrayList<Term> argument = new ArrayList<Term>();
         argument.add(t);
-        return make(argument);
+        return make(m, argument);
     }
 
     /**
@@ -78,12 +78,12 @@ public class Negation extends CompoundTerm {
      * @return the Term generated from the arguments
      * @param argument The list of components
      */
-    public static Term make(ArrayList<Term> argument) {
+    public static Term make(Memory m, ArrayList<Term> argument) {
         if (argument.size() != 1) {
             return null;
         }
         String name = makeCompoundName(Symbols.NEGATION_OPERATOR, argument);
-        Term t = Memory.nameToListedTerm(name);
+        Term t = m.nameToListedTerm(name);
         return (t != null) ? t : new Negation(name, argument);
     }
 

@@ -18,39 +18,39 @@
  * You should have received a copy of the GNU General Public License
  * along with Open-NARS.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 package jcog.nars.reason.store;
 
-import org.opencog.atom.nars.Concept;
-import org.opencog.reason.nars.NARParams;
-
-
-
+import java.util.HashMap;
+import jcog.nars.Concept;
+import jcog.nars.reason.NARParams;
 
 /**
  * Contains Concepts.
  */
 public class ConceptBag extends Bag<Concept> {
-    
-	private NARParams param;
 
-	/**
-	 * 
-	 * @param loadFactor
-	 * @param threshold
-	 * @param totalLevel
-	 * @param capacity			Parameters.CONCEPT_BAG_SIZE;
-	 * @param forgetRate		MainWindow.forgetCW.value();
-	 */
-	public ConceptBag(NARParams param) {
-		super(param.getBagLoadFactor(), param.getBagThreshold(), param.getBagLevel(), param.getConceptBagSize());
-		this.param = param;
-	}
-	
-	@Override public int forgetRate() {
-		return param.getConceptForgetRate();
-	}
-	
-	
+    private NARParams param;
 
+    /**
+     * 
+     * @param loadFactor
+     * @param threshold
+     * @param totalLevel
+     * @param capacity			Parameters.CONCEPT_BAG_SIZE;
+     * @param forgetRate		MainWindow.forgetCW.value();
+     */
+    public ConceptBag(NARParams param) {
+        super(param.getBagLoadFactor(), param.getBagThreshold(), param.getBagLevel(), param.getConceptBagSize());
+        this.param = param;
+    }
+
+    @Override
+    public int forgetRate() {
+        return param.getConceptForgetRate();
+    }
+
+
+    public HashMap<String, Concept> getNameTable() {
+        return this.nameTable;
+    }
 }

@@ -20,14 +20,11 @@
  */
 package jcog.nars;
 
-import java.util.Date;
-
-import org.opencog.reason.nars.Memory;
-import org.opencog.reason.nars.NAR;
-import org.opencog.reason.nars.io.Symbols;
-import org.opencog.reason.nars.language.CompoundTerm;
-import org.opencog.reason.nars.language.Term;
-
+import jcog.nars.reason.Memory;
+import jcog.nars.reason.NAR;
+import jcog.nars.reason.io.Symbols;
+import jcog.nars.reason.language.CompoundTerm;
+import jcog.nars.reason.language.Term;
 
 
 /**
@@ -216,9 +213,9 @@ public abstract class Sentence implements Cloneable {
      * @param that The sentence to be checked against
      * @return Whether the two have overlapping stamps
      */
-    public boolean noOverlapping(Sentence that) {
-        Memory.currentStamp = Stamp.make(stamp, that.getStamp());
-        return (Memory.currentStamp != null);
+    public boolean noOverlapping(Memory memory, Sentence that) {
+        memory.setCurrentStamp(Stamp.make(stamp, that.getStamp()));
+        return (memory.getCurrentStamp() != null);
     }
 
     /**

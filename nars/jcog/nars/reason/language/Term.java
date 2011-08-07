@@ -20,7 +20,8 @@
  */
 package jcog.nars.reason.language;
 
-import org.opencog.atom.nars.TemporalValue;
+import jcog.nars.TemporalValue;
+
 
 
 /**
