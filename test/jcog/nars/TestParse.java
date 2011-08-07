@@ -29,6 +29,8 @@ public class TestParse extends TestCase {
         n.cycle(10);
         n.getExperience().eval("<?1 --> bird>?  {30: 4}");
         n.cycle(150);
+        
+        n.getMemory();
     }
 
     public void testParse2() {

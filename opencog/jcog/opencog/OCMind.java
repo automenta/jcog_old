@@ -305,6 +305,10 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return new MindRunner(this, period);
     }
 
+    public boolean setName(Atom a, String newName) {
+        return atomspace.setName(a, newName);
+    }
+
     public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
         private final Class<? extends AtomType> type;
         private final boolean includeSubtypes;

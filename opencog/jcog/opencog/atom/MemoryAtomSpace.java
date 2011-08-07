@@ -53,11 +53,6 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         }
         
         if (targetName!=null) {
-//            if (names.containsValue(name)) {
-//                logger.error(this + " can not add atom with existing name: " + name);
-//                return false;
-//            }
-//            
             names.put(a, targetName);  
         }
         else {
@@ -432,6 +427,15 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         if (ie == null)
             return 0;
         return ie.size();
+    }
+
+    public boolean setName(Atom a, String newName) {
+        if (hasAtom(a)) {
+            names.put(a, newName);
+            return true;
+        }
+        
+        return false;        
     }
 
 }

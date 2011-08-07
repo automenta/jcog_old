@@ -9,10 +9,9 @@ import com.syncleus.dann.graph.AbstractDirectedEdge;
 import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
 import com.syncleus.dann.math.Vector;
 import edu.uci.ics.jung.graph.Hypergraph;
+import edu.uci.ics.jung.graph.util.Pair;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,12 +27,13 @@ import java.util.concurrent.Executors;
 import javax.media.opengl.GL2;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
@@ -112,28 +112,56 @@ public class GraphView extends Surface implements Drawable {
 
     public static class SeHGraphViewModel1 implements GraphViewModel {
 
+        final int integerScale = 200;
+        private short PARAMETER_CHANGE_BOOST = 100;
+        private short DECREASE_STI = 10;
+
         private final OCMind mind;
         private final JPanel control = new JPanel();
-        private boolean updateGraph = false;
-        private final Predicate<Atom> includedAtoms;
 
+        private final Predicate<Atom> includedAtoms;
+        
+        private final Map<String,Pair<Atom>> parameters = new HashMap();
+        
+        private final Atom parameterNode;
+        
+        private final MindAgent ma;
+        
         public SeHGraphViewModel1(final OCMind mind) {
             super();
             this.mind = mind;
 
+            ma = new MindAgent(getGraphProcessPeriod()) {
+                @Override
+                protected void run(OCMind mind) {
+                    for (String s : parameters.keySet()) {
+                        Atom v = parameters.get(s).getSecond();
+                        mind.setName(v, Double.toString(getSliderValue(s)));
+                        
+                    }
+                    if (mind.getSTI(parameterNode) > 0)
+                        addStimulus(parameterNode, (short)-DECREASE_STI);
+                    
+                }                
+            };
+            
+            mind.addAgent(ma);
+            
+            parameterNode = mind.addVertex(AtomType.conceptNode, this.toString());
 
             control.setLayout(new BoxLayout(control, BoxLayout.PAGE_AXIS));
             {
-                JButton updateButton = new JButton("Update");
-                updateButton.addActionListener(new ActionListener() {
+//                JButton updateButton = new JButton("Update");
+//                updateButton.addActionListener(new ActionListener() {
+//
+//                    @Override
+//                    public void actionPerformed(ActionEvent e) {
+//                        //updateGraph();                        
+//                    }
+//                });
+//                control.add(updateButton);
 
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        updateGraph = true;
-                    }
-                });
-                control.add(updateButton);
-
+                addSlider("AutoUpdateHz", 0, 0, 3.0);
                 addSlider("MaxAtoms", 64, 1, 512);
                 addSlider("MeanEquilibriumDistance", 2.0, 0.1, 6.0);
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
@@ -169,8 +197,7 @@ public class GraphView extends Surface implements Drawable {
 
         }
         
-        final int integerScale = 200;
-
+        
         public int toSlider(double v) {
             return (int) (v * integerScale);
         }
@@ -178,11 +205,12 @@ public class GraphView extends Surface implements Drawable {
         public double fromSlider(int x) {
             return (double) x / ((double) integerScale);
         }
+        
         Map<String, JSlider> sliders = new HashMap();
 
         public JSlider addSlider(String methodSuffix, double initialValue, double min, double max) {
 
-            JSlider js = new JSlider(JSlider.HORIZONTAL);
+            final JSlider js = new JSlider(JSlider.HORIZONTAL);
             js.setValue(toSlider(initialValue));
             js.setMinimum(toSlider(min));
             js.setMaximum(toSlider(max));
@@ -191,7 +219,21 @@ public class GraphView extends Surface implements Drawable {
 
             control.add(new JLabel(methodSuffix));
             control.add(js);
+            
+            final Atom a = mind.addVertex(AtomType.conceptNode, methodSuffix);
+            mind.addEdge(AtomType.extensionalInheritanceLink, parameterNode, a);
+            
+            final Atom v = mind.addVertex(AtomType.conceptNode, Double.toString(getSliderValue(methodSuffix)));
+            mind.addEdge(AtomType.evaluationLink, a, v);
+            parameters.put(methodSuffix, new Pair<Atom>(a,v));
 
+            js.addChangeListener(new ChangeListener() {
+                @Override
+                public void stateChanged(ChangeEvent e) {
+                    ma.addStimulus(a, PARAMETER_CHANGE_BOOST);
+                }                
+            });
+            
             return js;
         }
 
@@ -257,6 +299,7 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public float getVertexEquilibriumDistance(Atom n) {
+            //TODO use a log curve to make it feel more linear
             final double sti = mind.getNormalizedSTI(n);
             return getMeanEquilibriumDistance() / ((float) sti + 1.0f);
         }
@@ -278,12 +321,14 @@ public class GraphView extends Surface implements Drawable {
 
 
         public double getGraphUpdatePeriod() {
-            return 3.0;        
+            double p = getSliderValue("AutoUpdateHz");
+            if (p == 0) return 0;
+            return 1.0 / p;
         }
 
         @Override
         public double getGraphProcessPeriod() {
-            return 0.07;
+            return 0.05;
         }
 
         @Override
@@ -294,12 +339,29 @@ public class GraphView extends Surface implements Drawable {
         
     }
 
+    public class GraphViewUpdate extends MindAgent {
+
+        public GraphViewUpdate() {
+            super(0);
+        }
+        
+        @Override
+        protected void run(OCMind mind) {                
+            if (getPeriod() > 0) {
+                updateGraph();
+            }
+        }
+             
+    }
+    
+    GraphViewUpdate graphViewUpdate;
+    
     @Deprecated
     public GraphView(final OCMind mind, GraphViewProcess... p) {
         this(mind, new SeHGraphViewModel1(mind), p);
     }
 
-    public GraphView(OCMind mind, GraphViewModel param, GraphViewProcess... p) {
+    public GraphView(OCMind mind, final GraphViewModel param, GraphViewProcess... p) {
         super();
 
         this.mind = mind;
@@ -340,20 +402,14 @@ public class GraphView extends Surface implements Drawable {
                     } else {
                         p.accumulate(getDT());
                     }
+                    graphViewUpdate.setPeriod(param.getGraphUpdatePeriod());
                 }
             }
         }).setPeriod(param.getGraphProcessPeriod());
 
-        mind.addAgent(new MindAgent() {
-
-            @Override
-            protected void run(OCMind mind) {                
-                if (getPeriod() > 0) {
-                    updateGraph();
-                }
-                setPeriod(GraphView.this.param.getGraphUpdatePeriod());
-            }
-        }).setPeriod(param.getGraphUpdatePeriod());
+        graphViewUpdate = new GraphViewUpdate();
+        mind.addAgent(graphViewUpdate);
+                
 
         processes.add(new HyperassociativeLayoutProcess());
     }
@@ -823,7 +879,7 @@ public class GraphView extends Surface implements Drawable {
         
     }
 
-    public static GraphPanel newGraphPanel(OCMind mind, GraphViewProcess... p) {
+    @Deprecated public static GraphPanel newGraphPanel(OCMind mind, GraphViewProcess... p) {
         return new GraphPanel(new GraphView(mind, p));
     }
 
