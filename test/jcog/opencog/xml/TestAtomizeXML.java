@@ -5,10 +5,13 @@
 package jcog.opencog.xml;
 
 import java.awt.Color;
-import java.io.IOException;
 import jcog.opencog.util.AtomizeXML;
 import jcog.opencog.OCMind;
+import jcog.opencog.attention.AddRandomHebbianEdges;
+import jcog.opencog.attention.DecaySTI;
+import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
+import jcog.opencog.attention.MessageTokenizer;
 import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.swing.AttentionControlPanel;
@@ -42,24 +45,22 @@ public class TestAtomizeXML {
     
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        new AtomizeXML("/tmp/x.xml", m);
+        new AtomizeXML(m, "/tmp/x.xml", "/tmp/y.xml", "/tmp/z.xml");
         
-        m.printAtoms();
+        m.addAgent(new LearnHebbian());        
+        m.addAgent(new SpreadImportance());
+        m.addAgent(new DecaySTI(0.2, (short)1));
+        m.addAgent(new Forget(0.5, 20000, 40000));
         
-        LearnHebbian lh = new LearnHebbian();
-        m.addAgent(lh);
-        
-        final SpreadImportance si = new SpreadImportance();
-        m.addAgent(si);
-//        
-        m.addAgent(new RandomStimulation(1.0, (short)100, 1));
-        
+        m.addAgent(new AddRandomHebbianEdges(0.5, 64, 8, 4000, 5000));
+        m.addAgent(new RandomStimulation(0.5, (short)200, 3));
+        m.addAgent(new MessageTokenizer(0.5));
         
         new MindJavascriptConsoleWindow(m);
-        new AttentionControlPanel(m, 0.5).newWindow();          
+        new AttentionControlPanel(m, 0.75).newWindow();          
         new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
 
-        m.start(0.1);
+        m.start(0.05);
 
     }
 }

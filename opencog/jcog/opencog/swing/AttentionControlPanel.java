@@ -190,7 +190,7 @@ public class AttentionControlPanel extends JPanel {
         if (name == null) {
             name = a.uuid.toString();
         }
-        final String updatedName = mind.getTypeName(a) + " " + (int) (mind.getSTI(a)) + " " + minString(name, 32);
+        final String updatedName = mind.getTypeName(a) + " " + (mind.getSTI(a)) + " " + minString(name, 32);
 
         if (j == null) {
             j = new JButton(updatedName);
@@ -205,14 +205,15 @@ public class AttentionControlPanel extends JPanel {
             });
             atomButtons.put(a, j);
         } else {
-            j.setText(updatedName);
+            j.setText(updatedName);    
+            j.updateUI();
         }
         return j;
     }
 
     public void refresh() {
 
-        int bins = 50;
+        int bins = 25;
 
         if (!isDisplayable()) {
             return;
@@ -225,7 +226,7 @@ public class AttentionControlPanel extends JPanel {
 
         //TODO optimize this by streaming
         List<Atom> _atoms = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI());
-
+        
         if (_atoms.size() > 0) {
             double[] stis = new double[_atoms.size()];
             //double[] ltis = new double[atoms.size()];

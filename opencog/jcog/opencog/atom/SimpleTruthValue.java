@@ -11,7 +11,7 @@ public class SimpleTruthValue implements TruthValue {
 
     public SimpleTruthValue() {
         super();
-        mean = 0;
+        mean = 0.5;
         count = 0;
         confidence = 0;
     }

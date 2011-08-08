@@ -113,8 +113,8 @@ public class GraphView extends Surface implements Drawable {
     public static class SeHGraphViewModel1 implements GraphViewModel {
 
         final int integerScale = 200;
-        private short PARAMETER_CHANGE_BOOST = 100;
-        private short DECREASE_STI = 20;
+        private short PARAMETER_CHANGE_BOOST = 0;
+        private short DECREASE_STI = 0;
 
         private final OCMind mind;
         private final JPanel control = new JPanel();
@@ -271,13 +271,15 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public float[] getCurveProfile(Atom edge) {
+            float rti = (float)mind.getNormalizedSTI(edge);
             final TruthValue tv = mind.getTruth(edge);
             final float w = 1f + (float) tv.getMean() * 4f;
-            final float edgeWidthScale = (float) getSliderValue("EdgeWidthScale");
+            final float edgeWidthScale = (float) getSliderValue("EdgeWidthScale") * (1.0f + rti);
             final float edgeRatio = 3.0f;
             return new float[]{w * edgeWidthScale, w * (edgeWidthScale / edgeRatio)};
         }
 
+        
         @Override
         public void updateCurveColor(Atom edge, Vec3f vec) {
             final float v = 0.7f + 0.3f * (float) mind.getTruth(edge).getMean();
@@ -624,7 +626,7 @@ public class GraphView extends Surface implements Drawable {
         //System.out.println("Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
 
         digraph = foldHypergraphEdges(hm, new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(),
-                mind.atomspace.graph, true);
+                mind.getAtomSpace().graph, true);
         
         Collection<FoldedEdge> diEdges = digraph.getEdges();
 

@@ -45,7 +45,13 @@ public class STIIterationTest extends TestCase {
         assertEquals(numAtoms, m.getVertexCount() + m.getEdgeCount());
         assertEquals(numAtoms, IteratorUtils.toList(m.iterateAtoms()).size());
         
-        assertEquals(numAtoms, IteratorUtils.toList(m.iterateAtomsByIncreasingSTI()).size());
+        List<Atom> mal = IteratorUtils.toList(m.iterateAtomsByIncreasingSTI());
+        for (int i = 0; i < mal.size()-1; i++) {
+            //System.out.println(mal.get(i) + " " + m.getSTI(mal.get(i)));
+            assertTrue(m.getSTI(mal.get(i)) <= m.getSTI(mal.get(i+1)));
+        }
+        
+        assertEquals(numAtoms, mal.size());
         
                 
 //        List<Atom> dec = IteratorUtils.toList(m.iterateAtomsByIncreasingSTI());

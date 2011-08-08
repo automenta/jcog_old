@@ -6,6 +6,7 @@ import java.util.List;
 import jcog.opencog.Atom;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
+import jcog.opencog.atom.TruthValue;
 
 /** Spreads short term importance along HebbianLinks.
  *
@@ -21,8 +22,7 @@ public class SpreadImportance extends MindAgent {
     short stealingLimit;
     float importanceSpreadingMultiplier;
     //RecentLong amountSpread;
-    double stiTransferRate = 10.0;
-    final int diffusion_momentum = 4;
+    final int diffusion_momentum = 2;
     int totalSurplus = 0;
     
     @Override
@@ -60,7 +60,10 @@ public class SpreadImportance extends MindAgent {
             }
             
             
-            short difference = (short)(sti - avgSurroundingSTI);
+            final double _difference = ((double)(sti - avgSurroundingSTI)) / ((double)diffusion_momentum) * getTruthFactor(mind.getTruth(a));
+            
+            short difference = (short)_difference;
+            
             if (avgSurroundingSTI < sti) {
                 difference /= diffusion_momentum;
                 if (difference < 1) difference = 1;
@@ -69,8 +72,7 @@ public class SpreadImportance extends MindAgent {
                 totalSurplus+=difference;
             }
             else if (avgSurroundingSTI > sti) {
-                difference = (short)(avgSurroundingSTI - sti);
-                difference /= diffusion_momentum;
+                difference *= -1;
                 if (difference < 1) difference = 1;
 
                 difference = (short)Math.min(difference, totalSurplus);
@@ -220,5 +222,9 @@ public class SpreadImportance extends MindAgent {
      */
     void setImportanceSpreadingMultiplier(float m) {
         importanceSpreadingMultiplier = m;
+    }
+
+    private double getTruthFactor(final TruthValue t) {
+        return 0.5 + 0.5 * t.getMean();
     }
 }

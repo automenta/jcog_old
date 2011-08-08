@@ -175,7 +175,7 @@ public class HopfieldExample extends OCMind {
         addAgent(new SpreadImportance());
         //addAgent(new Forget());
         
-        new AtomSpacePrinter().print(atomspace, System.out);
+        new AtomSpacePrinter().print(this, System.out);
         
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();

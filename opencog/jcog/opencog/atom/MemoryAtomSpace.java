@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import jcog.atom.OrderedSetHypergraph;
@@ -129,6 +130,9 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
             return null;
         
         Collection<Atom> incidentEdges = getIncidentEdges(members[0]);
+        if (incidentEdges == null)
+            return null;
+        
         for (Atom e : incidentEdges) {
             if (getType(e).equals(type)) {
                 Collection<Atom> iv = getIncidentVertices(e);
@@ -147,8 +151,13 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
             return typesToAtom.get(type);
         }
         else {
-            logger.error("subtype type fetch not implemented yet");
-            return null;
+            List<Atom> la = new LinkedList();
+            for (Class<? extends AtomType> ca : typesToAtom.keySet()) {
+                if (type.isAssignableFrom(ca)) {
+                    la.addAll(typesToAtom.get(ca));
+                }
+            }
+            return la;
         }
     }
     
@@ -173,8 +182,17 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         //preventing duplicate edges (type, members). allows updating the name if already exists
         
         for (final Atom eaa : typesToAtom.get(t)) {
-            if (graph.getIncidentVertices(eaa).equals(memberList)) {
-
+            boolean allowNameChange = false;
+            if (graph.getIncidentVertices(eaa) == null) {
+                if (members.length == 0) {
+                    allowNameChange = true;
+                }
+            }
+            else if (graph.getIncidentVertices(eaa).equals(memberList)) {
+                allowNameChange = true;
+            }
+            
+            if (allowNameChange) {
                 String oldName = getName(eaa);
                 if (name!=null) {
                     if (oldName == null) oldName = "";

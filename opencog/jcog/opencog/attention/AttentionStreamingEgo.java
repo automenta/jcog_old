@@ -18,13 +18,13 @@ import org.apache.commons.collections15.Predicate;
  *
  * @author seh
  */
-public abstract class Ego extends MindAgent {
+public abstract class AttentionStreamingEgo extends MindAgent {
     //        int historySize = 4;
     //        Queue<Atom> history = new ArrayDeque<Atom>(historySize);
     short egoFocusBoost = 0;
     Atom last = null;
 
-    public Ego(double period) {
+    public AttentionStreamingEgo(double period) {
         setPeriod(period);
     }
 

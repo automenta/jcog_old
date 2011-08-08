@@ -184,8 +184,9 @@ abstract public class SeHHyperassociativeMap<G extends Graph<N, ?>, N> implement
 				throw new UnexpectedInterruptedException("Unexpected interuption. Get should block indefinately", caught);
 			}
 		}
-		else
+                else {
 			center = this.processLocally();
+                }
                 
 		//LOGGER.debug("maxMove: " + this.maxMovement + ", Average Move: " + this.getAverageMovement());
 

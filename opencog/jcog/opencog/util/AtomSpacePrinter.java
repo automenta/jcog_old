@@ -11,12 +11,17 @@ import java.util.Collection;
 import jcog.opencog.Atom;
 import jcog.opencog.atom.MemoryAtomSpace;
 import jcog.opencog.AtomType;
+import jcog.opencog.OCMind;
 
 /**
  *
  * @author seh
  */
 public class AtomSpacePrinter {
+    /** TODO generalize this to ReadableAtomSpace */
+    public void print(OCMind m, PrintStream o) {
+        print(m.getAtomSpace(), o);
+    }
 
     /** TODO generalize this to ReadableAtomSpace */
     public void print(MemoryAtomSpace a, PrintStream o) {
