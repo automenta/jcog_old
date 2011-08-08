@@ -49,14 +49,14 @@ public class TestAtomizeXML {
         
         m.addAgent(new LearnHebbian());        
         m.addAgent(new SpreadImportance());
-        m.addAgent(new DecaySTI(0.2, (short)1));
+        m.addAgent(new DecaySTI(0.5, (short)1));
         m.addAgent(new Forget(0.5, 20000, 40000));
         
         m.addAgent(new AddRandomHebbianEdges(0.5, 64, 8, 4000, 5000));
         m.addAgent(new RandomStimulation(0.5, (short)200, 3));
         m.addAgent(new MessageTokenizer(0.5));
         
-        new MindJavascriptConsoleWindow(m);
+        //new MindJavascriptConsoleWindow(m);
         new AttentionControlPanel(m, 0.75).newWindow();          
         new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
 

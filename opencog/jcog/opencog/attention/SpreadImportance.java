@@ -22,7 +22,7 @@ public class SpreadImportance extends MindAgent {
     short stealingLimit;
     float importanceSpreadingMultiplier;
     //RecentLong amountSpread;
-    final int diffusion_momentum = 2;
+    final int diffusion_momentum = 16;
     int totalSurplus = 0;
     
     @Override

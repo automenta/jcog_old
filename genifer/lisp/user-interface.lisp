@@ -121,8 +121,6 @@
 
 ;;; **** Main loop (REPL)
 (defun main ()
-  (init-memories)
-  (defvar from-GUI)
   ;(trace resolve)
   ;(trace unify)
   ;(trace do-subst)

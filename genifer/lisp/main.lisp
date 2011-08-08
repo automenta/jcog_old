@@ -63,5 +63,9 @@
 ;(load "coherence.lisp")
 ;(load "natural-language.lisp")
 ;(load "GUI.lisp")
+
 (load "genifer/lisp/user-interface.lisp")    ; this must be loaded last
-(main)
+
+(init-memories)
+(defvar from-GUI)
+;(main)

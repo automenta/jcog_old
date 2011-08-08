@@ -161,7 +161,4 @@ public class ConsoleWindow extends JFrame {
         
     }
     
-    public static void main(String[] args) {
-        ConsoleWindow cw = new JavascriptConsoleWindow();
-    }
 }

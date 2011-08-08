@@ -37,6 +37,7 @@ import javax.swing.event.ChangeListener;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
+import jcog.opencog.AtomType.UnorderedLink;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.TruthValue;
@@ -275,7 +276,8 @@ public class GraphView extends Surface implements Drawable {
             final TruthValue tv = mind.getTruth(edge);
             final float w = 1f + (float) tv.getMean() * 4f;
             final float edgeWidthScale = (float) getSliderValue("EdgeWidthScale") * (1.0f + rti);
-            final float edgeRatio = 3.0f;
+            final float edgeRatio = UnorderedLink.class.isAssignableFrom(mind.getType(edge)) ? 1.0f : 3.0f;
+            
             return new float[]{w * edgeWidthScale, w * (edgeWidthScale / edgeRatio)};
         }
 
@@ -302,8 +304,9 @@ public class GraphView extends Surface implements Drawable {
         @Override
         public float getVertexEquilibriumDistance(Atom n) {
             //TODO use a log curve to make it feel more linear
-            final double sti = mind.getNormalizedSTI(n);
-            return getMeanEquilibriumDistance() / ((float) sti + 1.0f);
+//            final double sti = mind.getNormalizedSTI(n);
+//            return getMeanEquilibriumDistance() / ((float) sti + 1.0f);
+            return getMeanEquilibriumDistance();
         }
 
         @Override
@@ -719,6 +722,8 @@ public class GraphView extends Surface implements Drawable {
     public class HyperassociativeLayoutProcess extends GraphViewProcess {
 
         final int alignCycles = 1;
+        final int numDimensions = 2;
+        
         private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
 
         public HyperassociativeLayoutProcess() {
@@ -730,7 +735,6 @@ public class GraphView extends Surface implements Drawable {
         public void reset() {
             super.reset();
 
-            int numDimensions = 2;
 
             if (digraph == null) {
                 return;
