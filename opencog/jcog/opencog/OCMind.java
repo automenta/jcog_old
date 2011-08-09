@@ -185,7 +185,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ((double) (currentCycle - lastCycle)) / 1.0e9;
     }
 
-    public void updateAttentionSort() {
+    public synchronized void updateAttentionSort() {
         //cleanup attention
         List<Atom> toRemoveFromAttentionAndTruth = new LinkedList();
 
@@ -201,20 +201,22 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
 
 
-        attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
+            attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
 
-            @Override
-            public int compare(Atom a, Atom b) {
-                short sa = getSTI(a);
-                short sb = getSTI(b);
+                @Override
+                public int compare(Atom a, Atom b) {
+                    short sa = getSTI(a);
+                    short sb = getSTI(b);
 
-                if (sa == sb) {
-                    return -1;
+                    if (sa == sb) {
+                        return -1;
+                    }
+                    return (sa > sb) ? -1 : 1;
                 }
-                return (sa > sb) ? -1 : 1;
-            }
-        });
-        attentionSortedBySTI.putAll(attention);
+            });
+        synchronized (attentionSortedBySTI) {
+            attentionSortedBySTI.putAll(attention);
+        }
 //        final Iterator<Atom> i = iterateAtoms();
 //        final AttentionValue zv = new AttentionValue(Short.MIN_VALUE);
 //        while (i.hasNext()) {
@@ -227,8 +229,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     public synchronized void cycle() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
-
-        //updateAttentionSort();
 
         if (parallel) {
             final ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
@@ -628,18 +628,20 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
      * @return 
      */
     public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
+        synchronized (attentionSortedBySTI) {
 
-        Iterator<Atom> i;
-        if (increasingOrDecreasing) {
-            i = attentionSortedBySTI.navigableKeySet().iterator();
-        } else {
-            i = attentionSortedBySTI.navigableKeySet().descendingIterator();
-        }
+            Iterator<Atom> i;
+            if (increasingOrDecreasing) {
+                i = attentionSortedBySTI.navigableKeySet().iterator();
+            } else {
+                i = attentionSortedBySTI.navigableKeySet().descendingIterator();
+            }
 
-        if (include != null) {
-            return IteratorUtils.filteredIterator(i, include);
-        } else {
-            return i;
+            if (include != null) {
+                return IteratorUtils.filteredIterator(i, include);
+            } else {
+                return i;
+            }
         }
     }
 

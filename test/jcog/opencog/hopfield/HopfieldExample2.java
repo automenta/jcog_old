@@ -8,7 +8,7 @@ import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.swing.GraphView;
-import jcog.opencog.swing.GraphView.GraphViewProcess;
+import jcog.opencog.swing.graph.GraphViewProcess;
 
 /**
  *

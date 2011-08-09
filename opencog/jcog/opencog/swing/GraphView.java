@@ -4,6 +4,10 @@
  */
 package jcog.opencog.swing;
 
+import jcog.opencog.swing.graph.FoldedEdge;
+import jcog.opencog.swing.graph.HyperassociativeLayoutProcess;
+import jcog.opencog.swing.graph.GraphViewProcess;
+import jcog.opencog.swing.graph.SeHHyperassociativeMap;
 import com.sun.opengl.util.awt.TextRenderer;
 import com.syncleus.dann.graph.AbstractDirectedEdge;
 import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
@@ -62,24 +66,18 @@ import org.apache.commons.collections15.Predicate;
 public class GraphView extends Surface implements Drawable {
 
     final public static ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    
-    
-    private ConcurrentHashMap<Atom, TextRect> atomRect = new ConcurrentHashMap();
-    private ConcurrentHashMap<FoldedEdge, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
-    
+    public final ConcurrentHashMap<Atom, TextRect> atomRect = new ConcurrentHashMap();
+    public final ConcurrentHashMap<FoldedEdge, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
     //TODO
     //TODO
     // remove entries from these maps when an object disappears, or store them in the shape objects
     //TODO
     //TODO    
-    private Map<Spatial, Vec3f> targetCenter = new ConcurrentHashMap();
-    private Map<Spatial, Vec3f> targetScale = new ConcurrentHashMap();
-
-    
+    public final Map<Spatial, Vec3f> targetCenter = new ConcurrentHashMap();
+    public final Map<Spatial, Vec3f> targetScale = new ConcurrentHashMap();
     private final OCMind mind;
     final static TextRenderer textRenderer = TextRect.newTextRenderer(new Font("Arial", Font.PLAIN, 32));
-    private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
-    private final GraphViewModel param;
+    public final GraphViewModel param;
     private long currentTime = 0;
     private long lastTime = 0;
     private short minSTI, maxSTI;
@@ -103,7 +101,7 @@ public class GraphView extends Surface implements Drawable {
         public float getInterpolationMomentum();
 
         public int getMaxAtoms();
-        
+
         public double getGraphUpdatePeriod();
 
         public double getGraphProcessPeriod();
@@ -116,38 +114,35 @@ public class GraphView extends Surface implements Drawable {
         final int integerScale = 200;
         private short PARAMETER_CHANGE_BOOST = 0;
         private short DECREASE_STI = 0;
-
         private final OCMind mind;
         private final JPanel control = new JPanel();
-
         private final Predicate<Atom> includedAtoms;
-        
-        private final Map<String,Pair<Atom>> parameters = new HashMap();
-        
+        private final Map<String, Pair<Atom>> parameters = new HashMap();
         private final Atom parameterNode;
-        
         private final MindAgent ma;
-        
+
         public SeHGraphViewModel1(final OCMind mind) {
             super();
             this.mind = mind;
 
             ma = new MindAgent(getGraphProcessPeriod()) {
+
                 @Override
                 protected void run(OCMind mind) {
                     for (String s : parameters.keySet()) {
                         Atom v = parameters.get(s).getSecond();
                         mind.setName(v, Double.toString(getSliderValue(s)));
-                        
+
                     }
-                    if (mind.getSTI(parameterNode) > 0)
-                        addStimulus(parameterNode, (short)-DECREASE_STI);
-                    
-                }                
+                    if (mind.getSTI(parameterNode) > 0) {
+                        addStimulus(parameterNode, (short) -DECREASE_STI);
+                    }
+
+                }
             };
-            
+
             mind.addAgent(ma);
-            
+
             parameterNode = mind.addVertex(AtomType.conceptNode, this.toString());
 
             control.setLayout(new BoxLayout(control, BoxLayout.PAGE_AXIS));
@@ -181,24 +176,25 @@ public class GraphView extends Surface implements Drawable {
             }
 
             control.add(Box.createVerticalBox());
-            
+
             includedAtoms = new Predicate<Atom>() {
+
                 @Override
                 public boolean evaluate(Atom t) {
                     final Class<? extends AtomType> tt = mind.getType(t);
                     for (final Class<? extends AtomType> ca : types) {
-                        if (ca.isAssignableFrom(tt) && typeEnables.get(ca).isSelected())
+                        if (ca.isAssignableFrom(tt) && typeEnables.get(ca).isSelected()) {
                             return true;
+                        }
                     }
                     return false;
-                }                
+                }
             };
-                    
+
             new SwingWindow(new JScrollPane(control), 400, 500);
 
         }
-        
-        
+
         public int toSlider(double v) {
             return (int) (v * integerScale);
         }
@@ -206,7 +202,6 @@ public class GraphView extends Surface implements Drawable {
         public double fromSlider(int x) {
             return (double) x / ((double) integerScale);
         }
-        
         Map<String, JSlider> sliders = new HashMap();
 
         public JSlider addSlider(String methodSuffix, double initialValue, double min, double max) {
@@ -220,21 +215,22 @@ public class GraphView extends Surface implements Drawable {
 
             control.add(new JLabel(methodSuffix));
             control.add(js);
-            
+
             final Atom a = mind.addVertex(AtomType.conceptNode, methodSuffix);
             mind.addEdge(AtomType.extensionalInheritanceLink, parameterNode, a);
-            
+
             final Atom v = mind.addVertex(AtomType.conceptNode, Double.toString(getSliderValue(methodSuffix)));
             mind.addEdge(AtomType.evaluationLink, a, v);
-            parameters.put(methodSuffix, new Pair<Atom>(a,v));
+            parameters.put(methodSuffix, new Pair<Atom>(a, v));
 
             js.addChangeListener(new ChangeListener() {
+
                 @Override
                 public void stateChanged(ChangeEvent e) {
                     ma.addStimulus(a, PARAMETER_CHANGE_BOOST);
-                }                
+                }
             });
-            
+
             return js;
         }
 
@@ -244,18 +240,19 @@ public class GraphView extends Surface implements Drawable {
 
         @Override
         public void updateVertexColor(Atom v, Vec4f vec) {
-            final float sti = (float)mind.getNormalizedSTI(v);
-            
+            final float sti = (float) mind.getNormalizedSTI(v);
+
             String n = mind.getName(v);
             if (n == null) {
                 String type = mind.getTypeName(v);
-                if (type!=null)
+                if (type != null) {
                     n = type.toString();
-                else
+                } else {
                     n = "UNKNOWN";
+                }
             }
-            
-            final float hue = ((Math.abs( (n.toString().hashCode()))) % 100) / 100.0f;
+
+            final float hue = ((Math.abs((n.toString().hashCode()))) % 100) / 100.0f;
 
             final Color h = Color.getHSBColor(hue, 0.85f, sti * 0.5f + 0.5f);
             float[] hRGB = h.getColorComponents(null);
@@ -266,29 +263,28 @@ public class GraphView extends Surface implements Drawable {
         public void updateVertexScale(Atom v, short maxSTI, short minSTI, Vec3f vec) {
             final float vertexScale = (float) getSliderValue("VertexScale");
             final double sti = mind.getNormalizedSTI(v, maxSTI, minSTI);
-            float sx = 0.1f + (float) (sti) * vertexScale;            
+            float sx = 0.1f + (float) (sti) * vertexScale;
             vec.set(sx, sx, 1.0f);
         }
 
         @Override
         public float[] getCurveProfile(Atom edge) {
-            float rti = (float)mind.getNormalizedSTI(edge);
+            float rti = (float) mind.getNormalizedSTI(edge);
             final TruthValue tv = mind.getTruth(edge);
             final float w = 1f + (float) tv.getMean() * 4f;
             final float edgeWidthScale = (float) getSliderValue("EdgeWidthScale") * (1.0f + rti);
             final float edgeRatio = UnorderedLink.class.isAssignableFrom(mind.getType(edge)) ? 1.0f : 3.0f;
-            
+
             return new float[]{w * edgeWidthScale, w * (edgeWidthScale / edgeRatio)};
         }
 
-        
         @Override
         public void updateCurveColor(Atom edge, Vec3f vec) {
             final float v = 0.7f + 0.3f * (float) mind.getTruth(edge).getMean();
 
             String type = mind.getTypeName(edge);
-                        
-            final float hue = ((Math.abs(type.hashCode() )) % 100) / 100.0f;
+
+            final float hue = ((Math.abs(type.hashCode())) % 100) / 100.0f;
 
             final Color h = Color.getHSBColor(hue, 0.85f, v);
             float[] hRGB = h.getColorComponents(null);
@@ -324,10 +320,11 @@ public class GraphView extends Surface implements Drawable {
             return (int) getSliderValue("MaxAtoms");
         }
 
-
         public double getGraphUpdatePeriod() {
             double p = getSliderValue("AutoUpdateHz");
-            if (p == 0) return 0;
+            if (p == 0) {
+                return 0;
+            }
             return 1.0 / p;
         }
 
@@ -340,8 +337,6 @@ public class GraphView extends Surface implements Drawable {
         public Predicate<Atom> getIncludedAtoms() {
             return includedAtoms;
         }
-        
-        
     }
 
     public class GraphViewUpdate extends MindAgent {
@@ -349,18 +344,16 @@ public class GraphView extends Surface implements Drawable {
         public GraphViewUpdate() {
             super(0);
         }
-        
+
         @Override
-        protected void run(OCMind mind) {                
+        protected void run(OCMind mind) {
             if (getPeriod() > 0) {
                 updateGraph();
             }
         }
-             
     }
-    
     GraphViewUpdate graphViewUpdate;
-    
+
     @Deprecated
     public GraphView(final OCMind mind, GraphViewProcess... p) {
         this(mind, new SeHGraphViewModel1(mind), p);
@@ -400,7 +393,7 @@ public class GraphView extends Surface implements Drawable {
         mind.addAgent(new MindAgent() {
 
             @Override
-            protected void run(OCMind mind) {                
+            protected void run(OCMind mind) {
                 for (GraphViewProcess p : processes) {
                     if (p.isReady()) {
                         p._update(GraphView.this);
@@ -414,9 +407,9 @@ public class GraphView extends Surface implements Drawable {
 
         graphViewUpdate = new GraphViewUpdate();
         mind.addAgent(graphViewUpdate);
-                
 
-        processes.add(new HyperassociativeLayoutProcess());
+
+        processes.add(new HyperassociativeLayoutProcess(this));
     }
 
     protected void addVertex(final Atom v) {
@@ -436,7 +429,7 @@ public class GraphView extends Surface implements Drawable {
     }
 
     private void updateRect(Atom vertex, TextRect r) {
-        param.updateVertexScale(vertex, maxSTI, minSTI, getTargetScale(r));        
+        param.updateVertexScale(vertex, maxSTI, minSTI, getTargetScale(r));
         param.updateVertexColor(vertex, r.getBackgroundColor());
         r.setFilled(true);
     }
@@ -447,7 +440,7 @@ public class GraphView extends Surface implements Drawable {
         return new Vec3f(RandomNumber.getFloat(-r, r), RandomNumber.getFloat(-r, r), z);
     }
 
-    private void addEdge(final FoldedEdge e) {
+    public void addEdge(final FoldedEdge e) {
         final Atom s = e.getSourceNode();
         final Atom t = e.getDestinationNode();
         TrapezoidLine c = edgeCurve.get(e);
@@ -455,41 +448,6 @@ public class GraphView extends Surface implements Drawable {
             c = new TrapezoidLine(atomRect.get(s), atomRect.get(t), 0.1f, 0.05f);
             edgeCurve.put(e, c);
         }
-    }
-
-    protected static class FoldedEdge extends AbstractDirectedEdge<Atom> {
-
-        private final String label;
-        private final Atom parentEdge;
-
-        public FoldedEdge(final Atom src, final Atom dest, final Atom parentEdge, final String label) {
-            super(src, dest);
-            this.label = label;
-            this.parentEdge = parentEdge;
-        }
-
-        @Override
-        public String toString() {
-            return label;
-        }
-
-        @Override
-        public int hashCode() {
-            return parentEdge.hashCode() + getSourceNode().hashCode() + getDestinationNode().hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof FoldedEdge) {
-                FoldedEdge fe = (FoldedEdge)obj;
-                return (fe.parentEdge == parentEdge) && (fe.getSourceNode() == getSourceNode()) && (fe.getDestinationNode() == getDestinationNode());
-            }
-            return false;
-        }
-        
-        
-        
-        
     }
 
     private void updateCurve(FoldedEdge e) {
@@ -501,7 +459,7 @@ public class GraphView extends Surface implements Drawable {
         final Atom a = e.parentEdge;
 
         c.setWidths(param.getCurveProfile(a));
-       
+
         param.updateCurveColor(a, c.getColor());
     }
 
@@ -520,78 +478,6 @@ public class GraphView extends Surface implements Drawable {
 //        }
 //        
 //    }
-    /**
-     * Creates a <code>Graph</code> which is an edge-folded version of <code>h</code>, where
-     * hyperedges are replaced by k-cliques in the output graph.
-     * 
-     * <p>The vertices of the new graph are the same objects as the vertices of 
-     * <code>h</code>, and <code>a</code> 
-     * is connected to <code>b</code> in the new graph if the corresponding vertices
-     * in <code>h</code> are connected by a hyperedge.  Thus, each hyperedge with 
-     * <i>k</i> vertices in <code>h</code> induces a <i>k</i>-clique in the new graph.</p>
-     * 
-     * <p>The edges of the new graph are generated by the specified edge factory.</p>
-     * 
-     * @param <V> vertex type
-     * @param <E> input edge type
-     * @param h hypergraph to be folded
-     * @param graph_factory factory used to generate the output graph
-     * @param edge_factory factory used to create the new edges 
-     * @return a copy of the input graph where hyperedges are replaced by cliques
-     */
-    public MutableDirectedAdjacencyGraph<Atom, FoldedEdge> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, FoldedEdge> target, final Hypergraph<Atom, Atom> h, boolean linkEdgeToMembers) {
-        for (Atom v : vertices) {
-            target.add(v);
-        }
-
-        for (Atom e : h.getEdges()) {
-            boolean contained = true;
-            for (Atom iv : mind.getIncidentVertices(e)) {
-                if (!vertices.contains(iv)) {
-                    contained = false;
-                    break;
-                }
-            }
-
-            if (!contained) {
-                continue;
-            }
-
-            target.add(e);
-
-            ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
-            if (incident.size() == 0)
-                continue;
-
-            if (linkEdgeToMembers) {
-                for (int i = 0; i < incident.size(); i++) {
-                    Atom i1 = incident.get(i);
-                    if (i == 0) {
-                        target.add(new FoldedEdge(e, i1, e, "("));
-                    }
-                    else {
-                        target.add(new FoldedEdge(incident.get(i - 1), i1, e, "" /*Integer.toString(i)*/));
-                    }
-                }
-            } else {
-                final String typeString = mind.getType(e).toString();
-
-                //Just link the edge to the first element
-                for (int i = 0; i < incident.size(); i++) {
-
-                    if (i > 0) {
-                        target.add(new FoldedEdge(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
-                    } else {
-                        target.add(new FoldedEdge(e, incident.get(i), e, "(" + typeString));
-                    }
-                }
-
-            }
-
-        }
-        return target;
-    }
-
     protected void updateGraph() {
 
         int remained = 0, removed = 0, added = 0;
@@ -628,31 +514,6 @@ public class GraphView extends Surface implements Drawable {
 
         //System.out.println("Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
 
-        digraph = foldHypergraphEdges(hm, new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(),
-                mind.getAtomSpace().graph, true);
-        
-        Collection<FoldedEdge> diEdges = digraph.getEdges();
-
-        edgeCurve.clear();
-        
-//        List<FoldedEdge> edgesToRemove = new LinkedList();
-//        for (FoldedEdge e : edgeCurve.keySet()) {
-//            if (!hm.contains(e.parentEdge)) {
-//                edgesToRemove.add(e);
-//                removed++;
-//            } else {
-//                remained++;
-//            }
-//        }
-//        for (FoldedEdge e : edgesToRemove) {
-//            edgeCurve.remove(e);
-//        }
-
-        for (FoldedEdge fe : diEdges) {
-            //if (!edgeCurve.containsKey(fe)) {
-                addEdge(fe);
-            //}
-        }
 
         if ((added > 0) || (removed > 0)) {
             for (GraphViewProcess gvp : processes) {
@@ -663,32 +524,6 @@ public class GraphView extends Surface implements Drawable {
         //System.out.println("  Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
 
     }
-
-    public abstract static class GraphViewProcess {
-
-        double accumulated = 0;
-
-        public void _update(GraphView g) {
-            accumulated = 0;
-            update(g);
-        }
-
-        public void reset() {
-        }
-
-        abstract protected void update(GraphView g);
-
-        abstract public boolean isReady();
-
-        public void accumulate(double dt) {
-            accumulated += dt;
-        }
-
-        public double getAccumulated() {
-            return accumulated;
-        }
-    }
-    
 
     public void setTargetCenter(Spatial s, float x, float y, float z) {
         Vec3f v = targetCenter.get(s);
@@ -703,12 +538,12 @@ public class GraphView extends Surface implements Drawable {
     public Vec3f getTargetScale(Spatial s) {
         Vec3f v = targetScale.get(s);
         if (v == null) {
-            v = new Vec3f(0,0,0);
+            v = new Vec3f(0, 0, 0);
             targetScale.put(s, v);
         }
-        return v;        
+        return v;
     }
-    
+
     public void setTargetScale(Spatial s, float x, float y, float z) {
         Vec3f v = targetScale.get(s);
         if (v == null) {
@@ -719,107 +554,27 @@ public class GraphView extends Surface implements Drawable {
         }
     }
 
-    public class HyperassociativeLayoutProcess extends GraphViewProcess {
-
-        final int alignCycles = 1;
-        final int numDimensions = 2;
-        
-        private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
-
-        public HyperassociativeLayoutProcess() {
-
-            reset();
-        }
-
-        @Override
-        public void reset() {
-            super.reset();
-
-
-            if (digraph == null) {
-                return;
-            }
-
-            ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, true, executor) {
-
-                @Override
-                public float getEquilibriumDistance(Atom n) {
-                    return param.getVertexEquilibriumDistance(n);
-                }
-
-                @Override
-                public float getMeanEquilibriumDistance() {
-                    return param.getMeanEquilibriumDistance();
-                }
-            };
-            for (Atom a : atomRect.keySet()) {
-                Rect r = atomRect.get(a);
-
-                final float x = r.getCenter().x();
-                final float y = r.getCenter().y();
-                final float z = r.getCenter().z();
-
-                if (numDimensions >= 2) {
-                    ham.getCoordinates().get(a).setCoordinate(x, 1);
-                    ham.getCoordinates().get(a).setCoordinate(y, 2);
-                }
-                if (numDimensions >= 3) {
-                    ham.getCoordinates().get(a).setCoordinate(z, 3);
-                }
-                setTargetCenter(r, x, y, z);
-            }
-        }
-
-        @Override
-        protected void update(GraphView g) {
-            if (ham == null)
-                return;
-
-            for (int i = 0; i < alignCycles; i++) {
-                ham.align();
-            }
-
-
-            final float s = 0.2f;
-            for (Entry<Atom, TextRect> i : g.atomRect.entrySet()) {
-                final Vector v = ham.getCoordinates().get(i.getKey());
-                if (v == null) {
-                    System.err.println(i + " not mapped by " + this);
-                }
-
-                TextRect tr = i.getValue();
-                if (v.getDimensions() == 2) {
-                    float x = (float) v.getCoordinate(1) * s;
-                    float y = (float) v.getCoordinate(2) * s;
-                    //i.getValue().setCenter(x, y);
-                    setTargetCenter(tr, x, y, 0);
-                } else if (v.getDimensions() == 3) {
-                    float x = (float) v.getCoordinate(1) * s;
-                    float y = (float) v.getCoordinate(2) * s;
-                    float z = (float) v.getCoordinate(3) * s;
-                    //i.getValue().setCenter(x, y, z);
-                    setTargetCenter(tr, x, y, z);
-                }
-            }
-        }
-
-        @Override
-        public boolean isReady() {
-            return accumulated > param.getLayoutUpdatePeriod();
-        }
+    public OCMind getMind() {
+        return mind;
     }
     final List<GraphViewProcess> processes = new LinkedList();
 
     protected void layoutGraph() {
 
         for (Atom v : atomRect.keySet()) {
-            TextRect r = atomRect.get(v);
-            if (r!=null)
-                updateRect(v, r);
-            else
-                System.out.println("failed to remove atom: " + v);
+            if (mind.hasAtom(v)) {
+                TextRect r = atomRect.get(v);
+                if (r != null) {
+                    updateRect(v, r);
+                } else {
+                    System.out.println("failed to remove atom: " + v);
+                }
+            }
+            else {
+                //atomRect.remove(v);
+            }
         }
-        for (FoldedEdge e : digraph.getEdges()) {
+        for (FoldedEdge e : edgeCurve.keySet()) {
             updateCurve(e);
         }
 
@@ -860,11 +615,9 @@ public class GraphView extends Surface implements Drawable {
         lastTime = currentTime;
         currentTime = System.nanoTime();
 
-        if (digraph == null)
-            return;
-        
         boolean first = true;
-        for (Atom a : digraph.getNodes()) {
+        
+        for (Atom a : atomRect.keySet()) {
             if (first) {
                 minSTI = maxSTI = mind.getSTI(a);
                 first = false;
@@ -882,14 +635,7 @@ public class GraphView extends Surface implements Drawable {
         layoutGraph();
         drawAtoms(gl);
         drawEdges(gl);
-        
+
     }
 
-    @Deprecated public static GraphPanel newGraphPanel(OCMind mind, GraphViewProcess... p) {
-        return new GraphPanel(new GraphView(mind, p));
-    }
-
-    @Deprecated public static void newGraphWindow(OCMind mind, GraphViewProcess... p) {
-        new SwingWindow(newGraphPanel(mind, p), 800, 800, true);
-    }
 }

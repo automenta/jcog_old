@@ -45,7 +45,7 @@ public class TestAtomizeXML {
     
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        new AtomizeXML(m, "/tmp/x.xml", "/tmp/y.xml", "/tmp/z.xml");
+        new AtomizeXML(m, "/tmp/x.xml");
         
         m.addAgent(new LearnHebbian());        
         m.addAgent(new SpreadImportance());

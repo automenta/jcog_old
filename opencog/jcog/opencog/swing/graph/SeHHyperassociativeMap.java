@@ -16,7 +16,7 @@
  *  Philadelphia, PA 19148                                                     *
  *                                                                             *
  ******************************************************************************/
-package jcog.opencog.swing;
+package jcog.opencog.swing.graph;
 
 import java.util.*;
 import java.util.Map.Entry;
