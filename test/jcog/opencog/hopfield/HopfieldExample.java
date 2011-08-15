@@ -153,7 +153,7 @@ public class HopfieldExample extends OCMind {
 
         AtomArray2D bitmap;
 
-        bitmap = new AtomArray2D(HopfieldExample.this, getClass().getSimpleName(), width, height);
+        bitmap = new AtomArray2D(HopfieldExample.this, "h_", width, height);
 
         /* A number of HebbianLinks are also randomly distributed
          * to connect these nodes, (the number is specified either
@@ -188,6 +188,6 @@ public class HopfieldExample extends OCMind {
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(8, 8, 0);
+        new HopfieldExample(6, 6, 0);
     }
 }

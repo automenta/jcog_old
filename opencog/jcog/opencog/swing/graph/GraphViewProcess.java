@@ -4,6 +4,7 @@
  */
 package jcog.opencog.swing.graph;
 
+import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.swing.GraphView;
 
@@ -11,7 +12,7 @@ import jcog.opencog.swing.GraphView;
  *
  * @author seh
  */
-public abstract class GraphViewProcess {
+public abstract class GraphViewProcess  {
     protected double accumulated = 0;
     protected final OCMind mind;
     protected final GraphView graphView;

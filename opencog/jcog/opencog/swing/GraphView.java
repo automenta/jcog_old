@@ -4,6 +4,7 @@
  */
 package jcog.opencog.swing;
 
+import java.util.Iterator;
 import jcog.opencog.swing.graph.FoldedEdge;
 import jcog.opencog.swing.graph.GraphViewProcess;
 import com.sun.opengl.util.awt.TextRenderer;
@@ -28,8 +29,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
@@ -149,11 +148,11 @@ public class GraphView extends Surface implements Drawable {
 //                });
 //                control.add(updateButton);
 
-                addSlider("AutoUpdateHz", 2.0, 0, 3.0);
+                addSlider("AutoUpdateHz", 0.25, 0, 3.0);
                 addSlider("MaxAtoms", 128, 1, 512);
-                addSlider("MeanEquilibriumDistance", 2.0, 0.1, 6.0);
+                addSlider("MeanEquilibriumDistance", 4.0, 0.1, 6.0);
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
-                addSlider("EdgeWidthScale", 0.05, 0.001, 0.2);
+                addSlider("EdgeWidthScale", 0.01, 0.001, 0.1);
             }
 
             final List<Class<? extends AtomType>> types = AtomTypes.getTypes();
@@ -404,7 +403,21 @@ public class GraphView extends Surface implements Drawable {
         mind.addAgent(graphViewUpdate);
 
 
-        processes.add(new HyperassociativeLayoutProcess(this));
+        final HyperassociativeLayoutProcess hlp = new HyperassociativeLayoutProcess(this);
+        processes.add(hlp);
+//        mind.addAgent(new MindAgent(2.0) {
+//            @Override
+//            protected void run(OCMind mind) {
+//                if (mind.getVertexCount() > 0) {
+//                    Iterator<Atom> i = mind.iterateAtomsByDecreasingSTI();
+//                    if (i.hasNext()) {
+//                        Atom a = i.next();
+//                        hlp.setSelected(a);
+//                    }
+//                }
+//            }            
+//        });
+
         //processes.add(new FDLayoutProcess(this));
     }
 

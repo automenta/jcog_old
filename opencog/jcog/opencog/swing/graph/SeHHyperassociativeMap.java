@@ -102,6 +102,11 @@ abstract public class SeHHyperassociativeMap<G extends Graph<N, ?>, N> implement
 		this(ourGraph, ourDimensions, true, null);
 	}
 
+    public void setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+    }
+
+        
 	@Override
 	public G getGraph()
 	{

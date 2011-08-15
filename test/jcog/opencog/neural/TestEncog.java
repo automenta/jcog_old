@@ -90,10 +90,22 @@ public class TestEncog {
                 for (int i = 0; i < bn.getLayerCount(); i++) {
                     int n = bn.getLayerTotalNeuronCount(i);
 
+                    double[] randomInputs = new double[bn.getInputCount()];
+                    double[] outputs = new double[bn.getOutputCount()];
+//                    for (int p = 0; p < randomInputs.length; p++) {
+//                        randomInputs[p] = RandomNumber.getDouble(0.0, 1.0);
+//                        System.out.println("> " + p + "=" + randomInputs[p]);
+//                    }
+                    bn.compute(randomInputs, outputs);
+                    
+//                    for (int p = 0; p < outputs.length; p++) {
+//                        System.out.println("< " + p + "=" + outputs[p]);
+//                    }
+
                     for (int x = 0; x < n; x++) {
                         Atom a = getAtom(mind, i, x);
                         double o = bn.getLayerOutput(i, x);
-                        setStimulus(a, (short) (o * 100));
+                        setStimulus(a, (short) (o * 10));
                         
 
                         if (i < bn.getLayerCount()-1) {
@@ -101,7 +113,7 @@ public class TestEncog {
                                 try {
                                     double w = bn.getWeight(i, x, y);
                                     Atom e = getEdge(mind, i, x, i+1, y);
-                                    mind.getTruth(e).setMean(w);
+                                    mind.getTruth(e).setMean(w/10.0);
                                 }
                                 catch (ArrayIndexOutOfBoundsException ex) {
                                     
@@ -115,14 +127,18 @@ public class TestEncog {
                             }
                         }
                     }
+                    
 
                 }
 
+                
 
             }
             
             train.iteration();
-            System.out.println(train.getError());
+            //System.out.println(train.getError());
+            
+            
         }
     }
 
@@ -156,7 +172,7 @@ public class TestEncog {
         ElmanPattern pattern = new ElmanPattern();
         pattern.setActivationFunction(new ActivationSigmoid());
         pattern.setInputNeurons(1);
-        pattern.addHiddenLayer(16);
+        pattern.addHiddenLayer(1);
         pattern.setOutputNeurons(1);
         return (BasicNetwork) pattern.generate();
     }
@@ -167,6 +183,7 @@ public class TestEncog {
         pattern.setActivationFunction(new ActivationSigmoid());
         pattern.setInputNeurons(1);
         pattern.addHiddenLayer(4);
+        pattern.addHiddenLayer(4);
         pattern.setOutputNeurons(1);
         return (BasicNetwork) pattern.generate();
     }
@@ -176,20 +193,23 @@ public class TestEncog {
         final TemporalXOR temp = new TemporalXOR();
         final MLDataSet trainingSet = temp.generate(120);
 
-        final BasicNetwork network = createElmanNetwork();
-        //final BasicNetwork network = createFeedforwardNetwork();
-
+        //final BasicNetwork network = createElmanNetwork();
+        final BasicNetwork network = createFeedforwardNetwork();
         //final double elmanError = trainNetwork("Elman", elmanNetwork,               trainingSet);
 //        final double feedforwardError = ElmanXOR.trainNetwork("Feedforward",
 //                feedforwardNetwork, trainingSet);
 
+        double learningRate = 0.000001 * 100000;
+
         final CalculateScore score = new TrainingSetScore(trainingSet);
-        final MLTrain trainMain = new Backpropagation(network, trainingSet, 0.000001, 0.0);
+        final MLTrain trainMain = new Backpropagation(network, trainingSet, learningRate, 0.0);
         final MLTrain trainAlt = new NeuralSimulatedAnnealing(network, score, 10, 2, 100);
 
         final StopTrainingStrategy stop = new StopTrainingStrategy();
         trainMain.addStrategy(new Greedy());
         trainMain.addStrategy(new HybridStrategy(trainAlt));
+        
+        
         //trainMain.addStrategy(stop);
 
 //        int epoch = 0;
@@ -208,12 +228,13 @@ public class TestEncog {
 
         OCMind mind = new OCMind();
 
-        mind.addAgent(new EncogAgent(0.5, network, trainMain));
+        mind.addAgent(new EncogAgent(0, network, trainMain));
 
         new AttentionControlPanel(mind, 0.75).newWindow();          
         new SwingWindow(new GraphPanel(new GraphView(mind)), 800, 800, true);
 
         mind.start(0.04);
+        
 
         //Encog.getInstance().shutdown();
     }
@@ -223,7 +244,9 @@ public class TestEncog {
         CalculateScore score = new TrainingSetScore(trainingSet);
         final MLTrain trainAlt = new NeuralSimulatedAnnealing(network, score, 10, 2, 100);
 
-        final MLTrain trainMain = new Backpropagation(network, trainingSet, 0.000001, 0.0);
+        double learningRate = 0.000001 * 100;
+        
+        final MLTrain trainMain = new Backpropagation(network, trainingSet, learningRate, 0.0);
 
         final StopTrainingStrategy stop = new StopTrainingStrategy();
         trainMain.addStrategy(new Greedy());

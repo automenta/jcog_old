@@ -56,6 +56,7 @@ public abstract class MindAgent {
     public MindAgent(double period, String id) {
         super();
         this.id = id;
+        setPeriod(period);
     }
 
     /** determines how often this agent is scheduled to run().  1 means will be executed each cycle, 2 means every other cycle, etc. (was 'frequency' parameter) */

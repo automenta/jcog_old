@@ -12,8 +12,6 @@ import java.util.Collection;
 import java.util.Map.Entry;
 import jcog.opencog.Atom;
 import jcog.opencog.swing.GraphView;
-import jcog.opencog.swing.graph.GraphViewProcess;
-import jcog.opencog.swing.graph.SeHHyperassociativeMap;
 import jcog.spacegraph.shape.Rect;
 import jcog.spacegraph.shape.TextRect;
 
@@ -23,10 +21,11 @@ import jcog.spacegraph.shape.TextRect;
  */
 public class HyperassociativeLayoutProcess extends GraphViewProcess {
     final int alignCycles = 1;
-    final int numDimensions = 2;
+    final int numDimensions = 3;
     private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
     private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
-
+    private Atom selected = null;
+    
     public HyperassociativeLayoutProcess(GraphView gv) {
         super(gv);
         reset();
@@ -66,35 +65,48 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
             if (!contained) {
                 continue;
             }
-            target.add(e);
             ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
             if (incident.size() == 0) {
+                target.add(e);
                 continue;
             }
-            if (linkEdgeToMembers) {
-                for (int i = 0; i < incident.size(); i++) {
-                    Atom i1 = incident.get(i);
-                    if (i == 0) {
-                        target.add(new FoldedEdge(e, i1, e, "("));
-                    } else {
-                        target.add(new FoldedEdge(incident.get(i - 1), i1, e, ""));
+            else if (incident.size() == 2) {
+                Atom a = incident.get(0);
+                Atom b = incident.get(1);
+                target.add(new FoldedEdge(a, b, e, ""));
+            }
+            else {
+                target.add(e);
+                if (linkEdgeToMembers) {
+                    for (int i = 0; i < incident.size(); i++) {
+                        Atom i1 = incident.get(i);
+                        if (i == 0) {
+                            target.add(new FoldedEdge(e, i1, e, "("));
+                        } else {
+                            target.add(new FoldedEdge(incident.get(i - 1), i1, e, ""));
+                        }
+                    }
+                } else {
+                    final String typeString = mind.getType(e).toString();
+                    //Just link the edge to the first element
+                    for (int i = 0; i < incident.size(); i++) {
+                        if (i > 0) {
+                            target.add(new FoldedEdge(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
+                        } else {
+                            target.add(new FoldedEdge(e, incident.get(i), e, "(" + typeString));
+                        }
                     }
                 }
-            } else {
-                final String typeString = mind.getType(e).toString();
-                //Just link the edge to the first element
-                for (int i = 0; i < incident.size(); i++) {
-                    if (i > 0) {
-                        target.add(new FoldedEdge(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
-                    } else {
-                        target.add(new FoldedEdge(e, incident.get(i), e, "(" + typeString));
-                    }
-                }
+                
             }
         }
         return target;
     }
 
+    public void setSelected(Atom selected) {
+        this.selected = selected;
+    }
+    
     @Override
     public void reset() {
         super.reset();
@@ -118,6 +130,8 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
                 return graphView.param.getMeanEquilibriumDistance();
             }
         };
+        ham.setLearningRate(0.8);
+        
         for (Atom a : graphView.atomRect.keySet()) {
             Rect r = graphView.atomRect.get(a);
             final float x = r.getCenter().x();
@@ -139,6 +153,17 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
         if (ham == null) {
             return;
         }
+
+        if (selected!=null) {
+            double minZ = -5;
+            Vector v = ham.getCoordinates().get(selected);
+            if (v==null) {
+                v = new Vector(ham.getDimensions());
+                ham.getCoordinates().put(selected, v);
+            }
+            v.multiply(0.9); //head to 0,0,0
+        }
+        
         for (int i = 0; i < alignCycles; i++) {
             ham.align();
         }
