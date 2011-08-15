@@ -5,7 +5,6 @@ import jcog.opencog.atom.EditableAtomSpace;
 import jcog.opencog.atom.MemoryAtomSpace;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import edu.stanford.nlp.util.CollectionUtils;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,6 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +43,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     private final List<ReadableAtomSpace> subspaces;
     private Map<Atom, TruthValue> truth;
     private Map<Atom, AttentionValue> attention;
-    private TreeMap<Atom, AttentionValue> attentionSortedBySTI;
+    private NavigableMap<Atom, AttentionValue> attentionSortedBySTI;
     private List<MindAgent> agents = new CopyOnWriteArrayList();
     private short minSTISeen = 0, maxSTISeen = 0;
     private long lastCycle = 0, currentCycle = 0;
@@ -201,22 +201,22 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         }
 
 
-            attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
+        attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
 
-                @Override
-                public int compare(Atom a, Atom b) {
-                    short sa = getSTI(a);
-                    short sb = getSTI(b);
+            @Override
+            public int compare(Atom a, Atom b) {
+                short sa = getSTI(a);
+                short sb = getSTI(b);
 
-                    if (sa == sb) {
-                        return -1;
-                    }
-                    return (sa > sb) ? -1 : 1;
+                if (sa == sb) {
+                    return -1;
                 }
-            });
-        synchronized (attentionSortedBySTI) {
-            attentionSortedBySTI.putAll(attention);
-        }
+                return (sa > sb) ? -1 : 1;
+            }
+        });
+        
+        attentionSortedBySTI.putAll(attention);
+        
 //        final Iterator<Atom> i = iterateAtoms();
 //        final AttentionValue zv = new AttentionValue(Short.MIN_VALUE);
 //        while (i.hasNext()) {
@@ -628,7 +628,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
      * @return 
      */
     public Iterator<Atom> iterateAtomsBySTI(final boolean increasingOrDecreasing, final Predicate<Atom> include) {
-        synchronized (attentionSortedBySTI) {
 
             Iterator<Atom> i;
             if (increasingOrDecreasing) {
@@ -642,7 +641,6 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             } else {
                 return i;
             }
-        }
     }
 
     public boolean remove(Atom a) {

@@ -1,0 +1,39 @@
+Experimental unification of several "artificial intelligence", 
+"cognition", "reasoning", "semantic", and "virtual reality" 
+software systems - for the Java Virtual Machine.
+
+Features
+--------
+Graph
+    Undirected, Directed, & Hyper
+    Graph Algorithms (dANN & JUNG)
+
+Mind and MindAgent
+
+Attention Dynamics
+    Spread
+    Decay
+    Forget
+    
+Learning
+    Hebbian
+    dANN Neural Networks
+
+Language
+    XML
+    Java (Bytecodes, Source, & JavaDoc via reflection, incomplete)
+    RDF/OWL (incomplete)
+    LISP (via Armed Bear Common LISP, incomplete)
+    English, Spanish, Chinese
+        Word / Sentence Tokenization
+        Part of Speech
+        Semantic Parsing
+
+Logic
+    NARS (incomplete)
+    Genifer (incomplete)
+
+
+Dependencies (included)
+-----------------------
+    

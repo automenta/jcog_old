@@ -13,10 +13,11 @@ import jcog.opencog.AtomType;
 import jcog.opencog.util.AtomSpacePrinter;
 import jcog.opencog.OCMind;
 import jcog.opencog.MindAgent;
-import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
+import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView;
+import jcog.spacegraph.swing.SwingWindow;
 
 /**
  *
@@ -173,20 +174,20 @@ public class HopfieldExample extends OCMind {
         
         addAgent(new LearnHebbian());
         addAgent(new SpreadImportance());
-        //addAgent(new Forget());
+        //addAgent(new Forget());   
         
         new AtomSpacePrinter().print(this, System.out);
         
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
         
-        new AttentionControlPanel(this, 0.5).newWindow();
-        
-        GraphView.newGraphWindow(this);        
+        new AttentionControlPanel(this, 0.75).newWindow();          
+        new SwingWindow(new GraphPanel(new GraphView(this)), 800, 800, true);
 
+        start(0.05);
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(4, 4, 0);
+        new HopfieldExample(8, 8, 0);
     }
 }

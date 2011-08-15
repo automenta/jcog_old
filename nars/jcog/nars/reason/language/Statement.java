@@ -60,18 +60,17 @@ public abstract class Statement extends CompoundTerm {
 
     /**
      * Make a Statement from String, called by StringParser
-     * @param memory 
      * @param relation The relation String
      * @param subject The first component
      * @param predicate The second component
      * @return The Statement built
      */
-    public static Statement make(Memory memory, String relation, Term subject, Term predicate) {
+    public static Statement make(String relation, Term subject, Term predicate) {
         if (invalidStatement(subject, predicate)) {
             return null;
         }
         if (relation.equals(Symbols.INHERITANCE_RELATION)) {
-            return Inheritance.make(memory, subject, predicate);
+            return Inheritance.make(subject, predicate);
         }
         if (relation.equals(Symbols.SIMILARITY_RELATION)) {
             return Similarity.make(subject, predicate);
@@ -86,19 +85,25 @@ public abstract class Statement extends CompoundTerm {
             return InstanceProperty.make(subject, predicate);
         }
         if (relation.equals(Symbols.IMPLICATION_RELATION)) {
-            return Implication.make(memory, subject, predicate, null);
+            return Implication.make(subject, predicate, false, 0);
         }
         if (relation.equals(Symbols.EQUIVALENCE_RELATION)) {
-            return Equivalence.make(memory, subject, predicate, null);
+            return Equivalence.make(subject, predicate, false, 0);
         }
-        if (relation.equals(Symbols.IMPLICATION_AFTER_RELATION) ||
-            relation.equals(Symbols.IMPLICATION_WHEN_RELATION) ||
-            relation.equals(Symbols.IMPLICATION_BEFORE_RELATION)) {
-            return Implication.make(memory, subject, predicate, new TemporalValue(relation));
+        if (relation.equals(Symbols.IMPLICATION_AFTER_RELATION)) {
+            return Implication.make(subject, predicate, true, 1);
         }
-        if (relation.equals(Symbols.EQUIVALENCE_AFTER_RELATION) ||
-            relation.equals(Symbols.EQUIVALENCE_WHEN_RELATION)) {
-            return Equivalence.make(memory, subject, predicate, new TemporalValue(relation));
+        if (relation.equals(Symbols.IMPLICATION_WHEN_RELATION)) {
+            return Implication.make(subject, predicate, true, 0);
+        }
+        if (relation.equals(Symbols.IMPLICATION_BEFORE_RELATION)) {
+            return Implication.make(subject, predicate, true, -1);
+        }
+        if (relation.equals(Symbols.EQUIVALENCE_AFTER_RELATION)) {
+            return Equivalence.make(subject, predicate, true, 1);
+        }
+        if (relation.equals(Symbols.EQUIVALENCE_WHEN_RELATION)) {
+            return Equivalence.make(subject, predicate, true, 0);
         }
         return null;
     }
@@ -110,18 +115,18 @@ public abstract class Statement extends CompoundTerm {
      * @param pred The second component
      * @param statement A sample statement providing the class type
      */
-    public static Statement make(Memory memory, Statement statement, Term subj, Term pred) {
+    public static Statement make(Statement statement, Term subj, Term pred) {
         if (statement instanceof Inheritance) {
-            return Inheritance.make(memory, subj, pred);
+            return Inheritance.make(subj, pred);
         }
         if (statement instanceof Similarity) {
             return Similarity.make(subj, pred);
         }
         if (statement instanceof Implication) {
-            return Implication.make(memory, subj, pred, null);
+            return Implication.make(subj, pred, ((Implication) statement).isTemporal(), statement.getOrder());
         }
         if (statement instanceof Equivalence) {
-            return Equivalence.make(memory, subj, pred, null);
+            return Equivalence.make(subj, pred, ((Equivalence) statement).isTemporal(), statement.getOrder());
         }
         return null;
     }
@@ -131,24 +136,25 @@ public abstract class Statement extends CompoundTerm {
      * @param statement A sample statement providing the class type
      * @param subj The first component
      * @param pred The second component
-     * @param t The temporal order of the statement
+     * @param temporal Whether there is a temporal relation between the components
+     * @param distance The temporal distance between the components
      * @return The Statement built
      */
-    public static Statement make(Memory memory, Statement statement, Term subj, Term pred, TemporalValue t) {
-        if (t == null) {
-            return make(memory, statement, subj, pred);
+    public static Statement make(Statement statement, Term subj, Term pred, boolean temporal, int distance) {
+        if (!temporal) {
+            return make(statement, subj, pred);
         }
         if (statement instanceof Implication) {
-            return Implication.make(memory, subj, pred, t);
+            return Implication.make(subj, pred, true, distance);
         }
         if (statement instanceof Equivalence) {
-            if (t.getDelta() < 0) {
-                return Equivalence.make(memory, pred, subj, TemporalValue.getReverse(t));
+            if (distance < 0) {
+                return Equivalence.make(pred, subj, true, 0 - distance);
             } else {
-                return Equivalence.make(memory, subj, pred, t);
+                return Equivalence.make(subj, pred, true, distance);
             }
         }
-        return null;
+        return make(statement, subj, pred);
     }
 
     /**
@@ -156,19 +162,22 @@ public abstract class Statement extends CompoundTerm {
      * @param statement A sample asymmetric statement providing the class type
      * @param subj The first component
      * @param pred The second component
-     * @param t The temporal order of the statement
+     * @param temporal Whether there is a temporal relation between the components
+     * @param distance The temporal distance between the components
      * @return The Statement built
      */
-    public static Statement makeSym(Memory memory, Statement statement, Term subj, Term pred, TemporalValue t) {
+    public static Statement makeSym(Statement statement, Term subj, Term pred, boolean temporal, int distance) {
         if (statement instanceof Inheritance) {
             return Similarity.make(subj, pred);
         }
         if (statement instanceof Implication) {
-            if ((t != null) && (t.getDelta() < 0)) {
-                return Equivalence.make(memory, pred, subj, TemporalValue.getReverse(t));
-            } else {
-                return Equivalence.make(memory, subj, pred, t);
+            if (!temporal) {
+                return Equivalence.make(subj, pred, false, distance);
             }
+            if (distance < 0) {
+                return Equivalence.make(pred, subj, true, 0 - distance);
+            }
+            return Equivalence.make(subj, pred, true, distance);
         }
         return null;
     }
@@ -241,6 +250,17 @@ public abstract class Statement extends CompoundTerm {
         if ((predicate instanceof CompoundTerm) && ((CompoundTerm) predicate).containComponent(subject)) {
             return true;
         }
+        if ((subject instanceof Statement) && (predicate instanceof Statement)) {
+            Statement s1 = (Statement) subject;
+            Statement s2 = (Statement) predicate;
+            Term t11 = s1.getSubject();
+            Term t12 = s1.getPredicate();
+            Term t21 = s2.getSubject();
+            Term t22 = s2.getPredicate();
+            if (t11.equals(t22) && t12.equals(t21)) {
+                return true;
+            }
+        }
         return false;
     }
 
@@ -268,5 +288,47 @@ public abstract class Statement extends CompoundTerm {
      */
     public Term getPredicate() {
         return components.get(1);
+    }
+
+    /**
+     * Return the operator if the statement is an operation
+     * @return The second component
+     */
+    public String getOperatorName() {           // useful???
+        if (this instanceof Inheritance) {
+            Term t = getPredicate();
+            String s = t.getName();
+            Operator op = Memory.nameToOperator(s);
+            if (op != null) {
+                return op.getName();
+            } else if (getSubject() instanceof ImageInt) {
+                ImageInt subj = (ImageInt) getSubject();
+                s = subj.componentAt(subj.getRelationIndex()).getName();
+                op = Memory.nameToOperator(s);
+                if (op != null) {
+                    return s;
+                }
+            } else if (getPredicate() instanceof ImageExt) {
+                ImageExt pred = (ImageExt) getPredicate();
+                s = pred.componentAt(pred.getRelationIndex()).getName();
+                op = Memory.nameToOperator(s);
+                if (op != null) {
+                    return s;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Given operations special treatment, used in display only.
+     * @return The name of the term as a String
+     */
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer(Symbols.STATEMENT_OPENER + "");
+        buf.append(getSubject() + " " + operator() + " ");
+        buf.append(getPredicate().toString() + Symbols.STATEMENT_CLOSER);
+        return buf.toString();
     }
 }

@@ -5,19 +5,11 @@
 package jcog.opencog.swing;
 
 import jcog.opencog.swing.graph.FoldedEdge;
-import jcog.opencog.swing.graph.HyperassociativeLayoutProcess;
 import jcog.opencog.swing.graph.GraphViewProcess;
-import jcog.opencog.swing.graph.SeHHyperassociativeMap;
 import com.sun.opengl.util.awt.TextRenderer;
-import com.syncleus.dann.graph.AbstractDirectedEdge;
-import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
-import com.syncleus.dann.math.Vector;
-import edu.uci.ics.jung.graph.Hypergraph;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.awt.Color;
 import java.awt.Font;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -45,12 +37,12 @@ import jcog.opencog.AtomType.UnorderedLink;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.atom.TruthValue;
+import jcog.opencog.swing.graph.HyperassociativeLayoutProcess;
 import jcog.opencog.util.AtomTypes;
 import jcog.spacegraph.gl.Surface;
 import jcog.spacegraph.math.linalg.Vec3f;
 import jcog.spacegraph.math.linalg.Vec4f;
 import jcog.spacegraph.shape.Drawable;
-import jcog.spacegraph.shape.Rect;
 import jcog.spacegraph.shape.Spatial;
 import jcog.spacegraph.shape.TextRect;
 import jcog.spacegraph.shape.TrapezoidLine;
@@ -118,7 +110,7 @@ public class GraphView extends Surface implements Drawable {
         private final JPanel control = new JPanel();
         private final Predicate<Atom> includedAtoms;
         private final Map<String, Pair<Atom>> parameters = new HashMap();
-        private final Atom parameterNode;
+        //private final Atom parameterNode;
         private final MindAgent ma;
 
         public SeHGraphViewModel1(final OCMind mind) {
@@ -134,16 +126,16 @@ public class GraphView extends Surface implements Drawable {
                         mind.setName(v, Double.toString(getSliderValue(s)));
 
                     }
-                    if (mind.getSTI(parameterNode) > 0) {
-                        addStimulus(parameterNode, (short) -DECREASE_STI);
-                    }
+//                    if (mind.getSTI(parameterNode) > 0) {
+//                        addStimulus(parameterNode, (short) -DECREASE_STI);
+//                    }
 
                 }
             };
 
             mind.addAgent(ma);
 
-            parameterNode = mind.addVertex(AtomType.conceptNode, this.toString());
+            //parameterNode = mind.addVertex(AtomType.conceptNode, this.toString());
 
             control.setLayout(new BoxLayout(control, BoxLayout.PAGE_AXIS));
             {
@@ -157,8 +149,8 @@ public class GraphView extends Surface implements Drawable {
 //                });
 //                control.add(updateButton);
 
-                addSlider("AutoUpdateHz", 0, 0, 3.0);
-                addSlider("MaxAtoms", 64, 1, 512);
+                addSlider("AutoUpdateHz", 2.0, 0, 3.0);
+                addSlider("MaxAtoms", 128, 1, 512);
                 addSlider("MeanEquilibriumDistance", 2.0, 0.1, 6.0);
                 addSlider("VertexScale", 0.2, 0.1, 1.0);
                 addSlider("EdgeWidthScale", 0.05, 0.001, 0.2);
@@ -207,29 +199,32 @@ public class GraphView extends Surface implements Drawable {
         public JSlider addSlider(String methodSuffix, double initialValue, double min, double max) {
 
             final JSlider js = new JSlider(JSlider.HORIZONTAL);
-            js.setValue(toSlider(initialValue));
             js.setMinimum(toSlider(min));
             js.setMaximum(toSlider(max));
+            js.setValue(toSlider(initialValue));
 
             sliders.put(methodSuffix, js);
 
             control.add(new JLabel(methodSuffix));
             control.add(js);
 
+            /*
             final Atom a = mind.addVertex(AtomType.conceptNode, methodSuffix);
             mind.addEdge(AtomType.extensionalInheritanceLink, parameterNode, a);
 
             final Atom v = mind.addVertex(AtomType.conceptNode, Double.toString(getSliderValue(methodSuffix)));
             mind.addEdge(AtomType.evaluationLink, a, v);
-            parameters.put(methodSuffix, new Pair<Atom>(a, v));
+             * 
+             */
+//            parameters.put(methodSuffix, new Pair<Atom>(a, v));
 
-            js.addChangeListener(new ChangeListener() {
-
-                @Override
-                public void stateChanged(ChangeEvent e) {
-                    ma.addStimulus(a, PARAMETER_CHANGE_BOOST);
-                }
-            });
+//            js.addChangeListener(new ChangeListener() {
+//
+//                @Override
+//                public void stateChanged(ChangeEvent e) {
+//                    ma.addStimulus(a, PARAMETER_CHANGE_BOOST);
+//                }
+//            });
 
             return js;
         }
@@ -410,6 +405,7 @@ public class GraphView extends Surface implements Drawable {
 
 
         processes.add(new HyperassociativeLayoutProcess(this));
+        //processes.add(new FDLayoutProcess(this));
     }
 
     protected void addVertex(final Atom v) {

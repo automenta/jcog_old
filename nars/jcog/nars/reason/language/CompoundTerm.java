@@ -22,7 +22,7 @@ package jcog.nars.reason.language;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import jcog.nars.TemporalValue;
+import java.util.TreeSet;
 import jcog.nars.TermLink;
 import jcog.nars.reason.Memory;
 import jcog.nars.reason.io.Symbols;
@@ -88,6 +88,14 @@ public abstract class CompoundTerm extends Term {
         markVariables();
         name = makeName();
     }
+    
+    /**
+     * Change the name of a CompoundTerm, called after variable substitution
+     * @param s The new name
+     */
+    protected void setName(String s) {
+        name = s;
+    }
 
     /**
      * The complexity of the term is the sum of those of the components plus 1
@@ -139,6 +147,9 @@ public abstract class CompoundTerm extends Term {
         if (compound instanceof Conjunction) {
             return Conjunction.make(components, ((Conjunction) compound).getOrder());
         }
+        if (compound instanceof Statement) {
+            return Statement.make(((Statement) compound).operator(), components.get(0), components.get(1));
+        }
         return null;
     }
 
@@ -150,7 +161,7 @@ public abstract class CompoundTerm extends Term {
      * @param arg Component list
      * @return A compound term or null
      */
-    public static Term make(Memory m, String op, ArrayList<Term> arg) {
+    public static Term make(String op, ArrayList<Term> arg) {
         if (op.length() == 1) {
             if (op.equals(Symbols.INTERSECTION_EXT_OPERATOR)) {
                 return IntersectionExt.make(arg);
@@ -176,16 +187,19 @@ public abstract class CompoundTerm extends Term {
         }
         if (op.length() == 2) {
             if (op.equals(Symbols.NEGATION_OPERATOR)) {
-                return Negation.make(m, arg);
+                return Negation.make(arg);
             }
             if (op.equals(Symbols.DISJUNCTION_OPERATOR)) {
                 return Disjunction.make(arg);
             }
             if (op.equals(Symbols.CONJUNCTION_OPERATOR)) {
-                return Conjunction.make(arg, null);
+                return Conjunction.make(arg, -1);
             }
-            if (op.equals(Symbols.SEQUENCE_OPERATOR) || op.equals(Symbols.PARALLEL_OPERATOR)) {
-                return Conjunction.make(arg, new TemporalValue(op));
+            if (op.equals(Symbols.SEQUENCE_OPERATOR)) {
+                return Conjunction.make(arg, 1);
+            }
+            if (op.equals(Symbols.PARALLEL_OPERATOR)) {
+                return Conjunction.make(arg, 0);
             }
         }
         if (isBuiltInOperator(op)) {
@@ -263,9 +277,12 @@ public abstract class CompoundTerm extends Term {
         StringBuffer name = new StringBuffer();
         name.append(Symbols.COMPOUND_TERM_OPENER);
         name.append(op);
-        for (int i = 0; i < arg.size(); i++) {
+        for (Term t : arg) {
             name.append(Symbols.ARGUMENT_SEPARATOR);
-            name.append(arg.get(i).getName());
+            if (t instanceof CompoundTerm) {
+                ((CompoundTerm) t).setName(((CompoundTerm) t).makeName());
+            }
+            name.append(t.getName());
         }
         name.append(Symbols.COMPOUND_TERM_CLOSER);
         return name.toString();
@@ -281,7 +298,7 @@ public abstract class CompoundTerm extends Term {
     protected static String makeSetName(char opener, ArrayList<Term> arg, char closer) {
         StringBuffer name = new StringBuffer();
         name.append(opener);
-        name.append(arg.get(0).toString());
+        name.append(arg.get(0).getName());
         for (int i = 1; i < arg.size(); i++) {
             name.append(Symbols.ARGUMENT_SEPARATOR);
             name.append(arg.get(i).getName());
@@ -351,13 +368,20 @@ public abstract class CompoundTerm extends Term {
     public boolean isConstant() {
         return (openVariables == null);
     }
+    /**
+     * check if the term contains any variable
+     * @return if the name contains no variable
+     */
+    public boolean containNoVariable() {
+        return (name.indexOf(Symbols.VARIABLE_TAG) < 0);
+    }
 
     /**
      * Check if the order of the components matters
      * <p>
-     * commutative CompoundTerms: Sets, Intersections;
-     * communative Statements: Similarity, Equivalence, EquivalenceWhen;
-     * communative CompoundStatements: Disjunction, Conjunction, ConjunctionParallel
+     * commutative CompoundTerms: Sets, Intersections
+     * communative Statements: Similarity, Equivalence (except the one with a temporal order)
+     * communative CompoundStatements: Disjunction, Conjunction (except the one with a temporal order)
      * @return The default value is false
      */
     public boolean isCommutative() {
@@ -623,6 +647,8 @@ public abstract class CompoundTerm extends Term {
 
     /**
      * Substitute a variable component according to a given substitution
+     * <p>
+     * This method cannot be changed into a static method retuning a new object with a different reference
      * @param subs The substitution
      * @param first Whether it is the first term in the mapping
      */
@@ -641,9 +667,14 @@ public abstract class CompoundTerm extends Term {
                 ((CompoundTerm) t1).substituteComponent(subs, first);
             }
         }
+        if (this.isCommutative()) {
+            TreeSet<Term> s = new TreeSet<Term>(components);
+            components = new ArrayList<Term>(s);
+        }
         markVariables();
         name = makeName();
     }
+
 
     /* ----- link CompoundTerm and its components ----- */
     /**
@@ -673,8 +704,10 @@ public abstract class CompoundTerm extends Term {
             if (t1.isConstant()) {
                 componentLinks.add(new TermLink(t1, type, i));
             }
-            if ((this instanceof Implication) && (i == 0) && (t1 instanceof Conjunction)) {
-                ((CompoundTerm) t1).prepareComponentLinks(componentLinks, TermLink.COMPOUND_CONDITION, (CompoundTerm) t1);
+//            if ((this instanceof Implication) && (i == 0) && (t1 instanceof Conjunction)) {
+            // 7/8/2010
+            if ((t1 instanceof Conjunction) && ((this instanceof Equivalence) || ((this instanceof Implication) && (i == 0)))) {
+                  ((CompoundTerm) t1).prepareComponentLinks(componentLinks, TermLink.COMPOUND_CONDITION, (CompoundTerm) t1);
             } else if (t1 instanceof CompoundTerm) {
                 for (int j = 0; j < ((CompoundTerm) t1).size(); j++) {  // second level components
                     t2 = ((CompoundTerm) t1).componentAt(j);

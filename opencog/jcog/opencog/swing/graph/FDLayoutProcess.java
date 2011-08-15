@@ -5,15 +5,18 @@
 package jcog.opencog.swing.graph;
 
 import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
-import com.syncleus.dann.math.Vector;
 import edu.uci.ics.jung.graph.Hypergraph;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import javax.vecmath.Vector2f;
+import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.swing.GraphView;
-import jcog.opencog.swing.graph.GraphViewProcess;
-import jcog.opencog.swing.graph.SeHHyperassociativeMap;
 import jcog.spacegraph.shape.Rect;
 import jcog.spacegraph.shape.TextRect;
 
@@ -21,13 +24,15 @@ import jcog.spacegraph.shape.TextRect;
  *
  * @author seh
  */
-public class HyperassociativeLayoutProcess extends GraphViewProcess {
-    final int alignCycles = 1;
-    final int numDimensions = 2;
+public class FDLayoutProcess extends GraphViewProcess {
     private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
-    private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
 
-    public HyperassociativeLayoutProcess(GraphView gv) {
+    Map<Atom, Vector2f> coords = new HashMap();
+    double repulsion = 0.01;
+    double attraction = 0.01;
+    float rad = 10.0f;
+    
+    public FDLayoutProcess(GraphView gv) {
         super(gv);
         reset();
     }
@@ -106,61 +111,88 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
             graphView.addEdge(fe);
         }
         
-        ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, true, GraphView.executor) {
-
-            @Override
-            public float getEquilibriumDistance(Atom n) {
-                return graphView.param.getVertexEquilibriumDistance(n);
-            }
-
-            @Override
-            public float getMeanEquilibriumDistance() {
-                return graphView.param.getMeanEquilibriumDistance();
-            }
-        };
+//        ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, true, GraphView.executor) {
+//
+//            @Override
+//            public float getEquilibriumDistance(Atom n) {
+//                return graphView.param.getVertexEquilibriumDistance(n);
+//            }
+//
+//            @Override
+//            public float getMeanEquilibriumDistance() {
+//                return graphView.param.getMeanEquilibriumDistance();
+//            }
+//        };
         for (Atom a : graphView.atomRect.keySet()) {
             Rect r = graphView.atomRect.get(a);
             final float x = r.getCenter().x();
             final float y = r.getCenter().y();
             final float z = r.getCenter().z();
-            if (numDimensions >= 2) {
-                ham.getCoordinates().get(a).setCoordinate(x, 1);
-                ham.getCoordinates().get(a).setCoordinate(y, 2);
-            }
-            if (numDimensions >= 3) {
-                ham.getCoordinates().get(a).setCoordinate(z, 3);
-            }
+//            if (numDimensions >= 2) {
+//                ham.getCoordinates().get(a).setCoordinate(x, 1);
+//                ham.getCoordinates().get(a).setCoordinate(y, 2);
+//            }
+//            if (numDimensions >= 3) {
+//                ham.getCoordinates().get(a).setCoordinate(z, 3);
+//            }
             graphView.setTargetCenter(r, x, y, z);
         }
     }
 
+    public Vector2f getCoords(Atom a) {
+        Vector2f v = coords.get(a);
+        if (v == null) {
+            //TODO use random position within a given radius
+            v = new Vector2f(RandomNumber.getFloat(-rad, rad), RandomNumber.getFloat(-rad, rad));
+            coords.put(a, v);
+        }
+        return v;
+    }
+    
+    public Vector2f getForce(Atom a, Atom b, double factor) {
+        Vector2f aa = getCoords(a);
+        Vector2f bb = getCoords(b);
+        bb.sub(aa);
+        bb.scale((float)factor);
+        return bb;
+    }
+    
     @Override
     protected void update(GraphView g) {
-        if (ham == null) {
-            return;
+        //cleanup coords
+        List<Atom> toRemove = new LinkedList();
+        for (Atom a : digraph.getNodes()) {
+            if (!g.atomRect.containsKey(a))
+                toRemove.add(a);
         }
-        for (int i = 0; i < alignCycles; i++) {
-            ham.align();
+        for (Atom a : toRemove)
+            coords.remove(a);
+        
+        for (final Atom a : digraph.getNodes()) {
+            final Vector2f v = getCoords(a);
+            
+            final Vector2f force = new Vector2f();
+            for (final Atom b : coords.keySet()) {
+                if (a != b) {
+                    force.add(getForce(a, b, repulsion));
+                }
+            }
+//            for (final Atom b : digraph.getAdjacentNodes(a)) {
+//                force.add(getForce(a, b, attraction));                
+//            }
+            
+            //TODO handle velocity integration correctly
+            v.add(force);
         }
+        
         final float s = 0.2F;
         for (Entry<Atom, TextRect> i : g.atomRect.entrySet()) {
-            final Vector v = ham.getCoordinates().get(i.getKey());
+            final Vector2f v = getCoords(i.getKey());
             if (v == null) {
                 System.err.println(i + " not mapped by " + this);
             }
             TextRect tr = i.getValue();
-            if (v.getDimensions() == 2) {
-                float x = (float) v.getCoordinate(1) * s;
-                float y = (float) v.getCoordinate(2) * s;
-                //i.getValue().setCenter(x, y);
-                graphView.setTargetCenter(tr, x, y, 0);
-            } else if (v.getDimensions() == 3) {
-                float x = (float) v.getCoordinate(1) * s;
-                float y = (float) v.getCoordinate(2) * s;
-                float z = (float) v.getCoordinate(3) * s;
-                //i.getValue().setCenter(x, y, z);
-                graphView.setTargetCenter(tr, x, y, z);
-            }
+            graphView.setTargetCenter(tr, v.getX(), v.getY(), 0);
         }
     }
 

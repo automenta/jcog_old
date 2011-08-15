@@ -5,7 +5,6 @@
 package jcog.opencog.xml;
 
 import java.awt.Color;
-import jcog.opencog.util.AtomizeXML;
 import jcog.opencog.OCMind;
 import jcog.opencog.attention.AddRandomHebbianEdges;
 import jcog.opencog.attention.DecaySTI;
@@ -18,6 +17,7 @@ import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.ConsoleWindow.JavascriptConsoleWindow;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.graph.GraphStreaming;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -45,7 +45,8 @@ public class TestAtomizeXML {
     
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        new AtomizeXML(m, "/tmp/x.xml");
+        //new AtomizeXML(m, "/tmp/x.xml");
+        new GraphStreaming(m, "x_", "file:///tmp/x.json");
         
         m.addAgent(new LearnHebbian());        
         m.addAgent(new SpreadImportance());
