@@ -19,6 +19,7 @@ public class TrapezoidLine extends Spatial implements Drawable {
     float sourceWidth, endWidth;
     private Vec3f color = new Vec3f();
     //private final TextRect labelRect;
+    private float zOffset = 0;
 
     public TrapezoidLine(Rect aRect, Rect bRect, float sourceWidth, float endWidth) {
         this.aRect = aRect;
@@ -54,15 +55,10 @@ public class TrapezoidLine extends Spatial implements Drawable {
         if ((aRect == null) || (bRect == null))
             return;
         
-        gl.glEnable(GL2.GL_DEPTH_TEST);
 
         gl.glPushMatrix();
         transform(gl);
-
-        gl.glEnable(gl.GL_LINE_SMOOTH);
-
-        gl.glColor3f(color.x(), color.y(), color.z());
-        
+       
         gl.glBegin(gl.GL_TRIANGLES);
         {
             Vec2f direction = new Vec2f(bRect.center.x() - aRect.center.x(), bRect.center.y() - aRect.center.y());
@@ -73,14 +69,15 @@ public class TrapezoidLine extends Spatial implements Drawable {
             final float s1y = aRect.center.y()+direction.y() * sourceWidth;
             final float s2x = aRect.center.x()-direction.x() * sourceWidth;
             final float s2y = aRect.center.y()-direction.y() * sourceWidth;
-            float sz = aRect.center.z();
+            float sz = aRect.center.z() + zOffset;
 
             final float t1x = bRect.center.x()+direction.x() * endWidth;
             final float t1y = bRect.center.y()+direction.y() * endWidth;
             final float t2x = bRect.center.x()-direction.x() * endWidth;
             final float t2y = bRect.center.y()-direction.y() * endWidth;
-            float tz = bRect.center.z();
+            float tz = bRect.center.z() + zOffset;
 
+            gl.glColor3f(color.x(), color.y(), color.z());
             gl.glVertex3f(s1x, s1y, sz);
             gl.glVertex3f(s2x, s2y, sz);
             gl.glVertex3f(t2x, t2y, tz);
@@ -88,6 +85,7 @@ public class TrapezoidLine extends Spatial implements Drawable {
             gl.glVertex3f(t2x, t2y, tz);
             gl.glVertex3f(t1x, t1y, tz);
             gl.glVertex3f(s1x, s1y, sz);
+            
         }
         gl.glEnd();
         gl.glPopMatrix();
@@ -104,6 +102,10 @@ public class TrapezoidLine extends Spatial implements Drawable {
     
     public void setColor(float cr, float cg, float cb) {
         color.set(cr, cg, cb);
-    }   
+    }
+
+    public void setZOffset(float d) {
+        this.zOffset = d;
+    }
 
 }

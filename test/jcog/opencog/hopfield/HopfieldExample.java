@@ -16,7 +16,7 @@ import jcog.opencog.MindAgent;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -182,7 +182,7 @@ public class HopfieldExample extends OCMind {
         bitmapPanel.newWindow();
         
         new AttentionControlPanel(this, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView(this)), 800, 800, true);
+        new SwingWindow(new GraphPanel(new GraphView2D(this)), 800, 800, true);
 
         start(0.05);
     }

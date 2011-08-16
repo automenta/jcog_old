@@ -74,10 +74,14 @@ public class Surface extends SG {
     public void init(GLAutoDrawable g) {
         GL2 gl = g.getGL().getGL2();
 
-        //Blending
-        {
+            gl.glEnable(gl.GL_BLEND);
+
+            gl.glEnable(GL2.GL_DEPTH_TEST);
+
             gl.glEnable(gl.GL_DEPTH_TEST);
             gl.glDepthRange(0, 1);
+            gl.glDepthMask(true);
+            gl.glEnable(gl.GL_CULL_FACE);
 
             gl.glShadeModel(GL2.GL_SMOOTH);
             gl.glEnable(GL2.GL_DEPTH_TEST);
@@ -85,8 +89,23 @@ public class Surface extends SG {
             gl.glHint(GL2.GL_PERSPECTIVE_CORRECTION_HINT, GL2.GL_NICEST);
 
             gl.glEnable(GL2.GL_LINE_SMOOTH);
+            
+            
+//            float[] lightAmbient = {0.5f, 0.5f, 0.5f, 1.0f};
+//            float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+//            float[] lightPosition = {0.0f, 0.0f, 2.0f, 1.0f};
+//
+//
+//            gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_AMBIENT, lightAmbient, 0);   // Setup The Ambient Light
+//            gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_DIFFUSE, lightDiffuse, 0);   // Setup The Diffuse Light
+//            gl.glLightfv(GL2.GL_LIGHT1, GL2.GL_POSITION, lightPosition, 0); // Position The Light
+//            gl.glEnable(GL2.GL_LIGHT1);  // Enable Light One
+//            gl.glEnable(GL2.GL_LIGHTING);
 
-    }
+            gl.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);  // Full Brightness.  50% Alpha (new )
+
+            // Set The Blending Function For Translucency (new )
+            gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE); 
 
         //Lighting, see nehe.gamedev.net/data/lessons/lesson.asp?lesson=07
         {

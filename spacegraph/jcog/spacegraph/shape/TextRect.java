@@ -53,7 +53,7 @@ public class TextRect extends Rect {
 
         if (textRenderer == null) {
             textRenderer = new TextRenderer(new Font("Arial", Font.PLAIN, 72));
-            textRenderer.setSmoothing(false);
+            textRenderer.setSmoothing(true);
             textRenderer.setUseVertexArrays(useVertexArrays);
             //bounds = textRenderer.getBounds("Bottom");            
         }

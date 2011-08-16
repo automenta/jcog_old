@@ -16,7 +16,7 @@ import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.ConsoleWindow.JavascriptConsoleWindow;
 import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.opencog.swing.graph.GraphStreaming;
 import jcog.spacegraph.swing.SwingWindow;
 
@@ -59,7 +59,7 @@ public class TestAtomizeXML {
         
         //new MindJavascriptConsoleWindow(m);
         new AttentionControlPanel(m, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView(m)), 800, 800, true);
+        new SwingWindow(new GraphPanel(new GraphView2D(m)), 800, 800, true);
 
         m.start(0.05);
 

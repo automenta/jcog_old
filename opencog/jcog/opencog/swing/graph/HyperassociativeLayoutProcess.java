@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 import jcog.opencog.Atom;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.shape.Rect;
 import jcog.spacegraph.shape.TextRect;
 
@@ -21,14 +21,13 @@ import jcog.spacegraph.shape.TextRect;
  */
 public class HyperassociativeLayoutProcess extends GraphViewProcess {
     final int alignCycles = 1;
-    final int numDimensions = 3;
+    final int numDimensions = 2;
     private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
     private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom> ham;
     private Atom selected = null;
     
-    public HyperassociativeLayoutProcess(GraphView gv) {
-        super(gv);
-        reset();
+    public HyperassociativeLayoutProcess() {
+        super();
     }
 
     /**
@@ -110,6 +109,7 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
     @Override
     public void reset() {
         super.reset();
+        
         digraph = foldHypergraphEdges(graphView.atomRect.keySet(), new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(), mind.getAtomSpace().graph, true);
         Collection<FoldedEdge> diEdges = digraph.getEdges();
 
@@ -118,7 +118,7 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
             graphView.addEdge(fe);
         }
         
-        ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, true, GraphView.executor) {
+        ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, FoldedEdge>, Atom>(digraph, numDimensions, true, GraphView2D.executor) {
 
             @Override
             public float getEquilibriumDistance(Atom n) {
@@ -149,7 +149,7 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
     }
 
     @Override
-    protected void update(GraphView g) {
+    protected void update(GraphView2D g) {
         if (ham == null) {
             return;
         }
@@ -168,12 +168,12 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
             ham.align();
         }
         final float s = 0.2F;
-        for (Entry<Atom, TextRect> i : g.atomRect.entrySet()) {
+        for (Entry<Atom, Rect> i : g.atomRect.entrySet()) {
             final Vector v = ham.getCoordinates().get(i.getKey());
             if (v == null) {
                 System.err.println(i + " not mapped by " + this);
             }
-            TextRect tr = i.getValue();
+            Rect tr = i.getValue();
             if (v.getDimensions() == 2) {
                 float x = (float) v.getCoordinate(1) * s;
                 float y = (float) v.getCoordinate(2) * s;
@@ -190,8 +190,8 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
     }
 
     @Override
-    public boolean isReady() {
-        return accumulated > graphView.param.getLayoutUpdatePeriod();
+    public boolean isReady(GraphView2D g) {
+        return accumulated > g.param.getLayoutUpdatePeriod();
     }
     
 }

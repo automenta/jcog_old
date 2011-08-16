@@ -16,9 +16,8 @@ import java.util.Map.Entry;
 import javax.vecmath.Vector2f;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.shape.Rect;
-import jcog.spacegraph.shape.TextRect;
 
 /**
  *
@@ -32,8 +31,8 @@ public class FDLayoutProcess extends GraphViewProcess {
     double attraction = 0.01;
     float rad = 10.0f;
     
-    public FDLayoutProcess(GraphView gv) {
-        super(gv);
+    public FDLayoutProcess() {
+        super();
         reset();
     }
 
@@ -158,7 +157,7 @@ public class FDLayoutProcess extends GraphViewProcess {
     }
     
     @Override
-    protected void update(GraphView g) {
+    protected void update(GraphView2D g) {
         //cleanup coords
         List<Atom> toRemove = new LinkedList();
         for (Atom a : digraph.getNodes()) {
@@ -186,18 +185,18 @@ public class FDLayoutProcess extends GraphViewProcess {
         }
         
         final float s = 0.2F;
-        for (Entry<Atom, TextRect> i : g.atomRect.entrySet()) {
+        for (Entry<Atom, Rect> i : g.atomRect.entrySet()) {
             final Vector2f v = getCoords(i.getKey());
             if (v == null) {
                 System.err.println(i + " not mapped by " + this);
             }
-            TextRect tr = i.getValue();
+            Rect tr = i.getValue();
             graphView.setTargetCenter(tr, v.getX(), v.getY(), 0);
         }
     }
 
     @Override
-    public boolean isReady() {
+    public boolean isReady(GraphView2D graphView) {
         return accumulated > graphView.param.getLayoutUpdatePeriod();
     }
     

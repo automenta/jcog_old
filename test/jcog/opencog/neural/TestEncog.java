@@ -11,8 +11,10 @@ import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.swing.AttentionControlPanel;
+import jcog.opencog.swing.graph.BasicGraphView2DRenderer;
 import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
+import jcog.opencog.swing.graph.HyperassociativeLayoutProcess;
 import jcog.spacegraph.swing.SwingWindow;
 import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationSigmoid;
@@ -188,6 +190,30 @@ public class TestEncog {
         return (BasicNetwork) pattern.generate();
     }
 
+    public static double trainNetwork(final String what, final BasicNetwork network, final MLDataSet trainingSet) {
+        // train the neural network
+        CalculateScore score = new TrainingSetScore(trainingSet);
+        final MLTrain trainAlt = new NeuralSimulatedAnnealing(network, score, 10, 2, 100);
+
+        double learningRate = 0.000001 * 100;
+        
+        final MLTrain trainMain = new Backpropagation(network, trainingSet, learningRate, 0.0);
+
+        final StopTrainingStrategy stop = new StopTrainingStrategy();
+        trainMain.addStrategy(new Greedy());
+        trainMain.addStrategy(new HybridStrategy(trainAlt));
+        trainMain.addStrategy(stop);
+
+        int epoch = 0;
+        while (!stop.shouldStop()) {
+            trainMain.iteration();
+            System.out.println("Training " + what + ", Epoch #" + epoch
+                    + " Error:" + trainMain.getError());
+            epoch++;
+        }
+        return trainMain.getError();
+    }
+
     public static void main(final String args[]) {
 
         final TemporalXOR temp = new TemporalXOR();
@@ -231,7 +257,9 @@ public class TestEncog {
         mind.addAgent(new EncogAgent(0, network, trainMain));
 
         new AttentionControlPanel(mind, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView(mind)), 800, 800, true);
+        
+        GraphView2D gv = new GraphView2D(mind, new BasicGraphView2DRenderer(), new GraphView2D.SeHGraphViewModel1(mind), new HyperassociativeLayoutProcess());
+        new SwingWindow(new GraphPanel(gv), 800, 800, true);
 
         mind.start(0.04);
         
@@ -239,29 +267,7 @@ public class TestEncog {
         //Encog.getInstance().shutdown();
     }
 
-    public static double trainNetwork(final String what, final BasicNetwork network, final MLDataSet trainingSet) {
-        // train the neural network
-        CalculateScore score = new TrainingSetScore(trainingSet);
-        final MLTrain trainAlt = new NeuralSimulatedAnnealing(network, score, 10, 2, 100);
 
-        double learningRate = 0.000001 * 100;
-        
-        final MLTrain trainMain = new Backpropagation(network, trainingSet, learningRate, 0.0);
-
-        final StopTrainingStrategy stop = new StopTrainingStrategy();
-        trainMain.addStrategy(new Greedy());
-        trainMain.addStrategy(new HybridStrategy(trainAlt));
-        trainMain.addStrategy(stop);
-
-        int epoch = 0;
-        while (!stop.shouldStop()) {
-            trainMain.iteration();
-            System.out.println("Training " + what + ", Epoch #" + epoch
-                    + " Error:" + trainMain.getError());
-            epoch++;
-        }
-        return trainMain.getError();
-    }
 }
 //public static void main(String args[]) {
 //        // create the training set

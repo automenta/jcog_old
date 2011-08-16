@@ -102,16 +102,21 @@ public class Rect extends Spatial implements Drawable {
             final float w = 0.5f;
             final float h = 0.5f;
 
+//            gl.glEnable(GL2.GL_DEPTH_TEST);
+//            gl.glEnable(GL2.GL_CULL_FACE);
+
             // Six faces of cube
             // Top face
-            Vec4f bc = getBackgroundColor();
-            gl.glColor4f(bc.x(), bc.y(), bc.z(), bc.w());
+            final Vec4f bc = getBackgroundColor();
             gl.glBegin(GL2.GL_QUADS);
             {
                 //Front
-                //gl.glNormal3f(0, 0, 1); {
+                //gl.glNormal3f(0, 0, 1); 
+                gl.glColor3f(bc.x(), bc.y(), bc.z());   
+                
                 gl.glVertex3f(-w, -h, 0);
                 gl.glVertex3f(w, -h, 0);
+                gl.glColor3f(bc.x()/2.0f, bc.y()/2.0f, bc.z()/2.0f);   
                 gl.glVertex3f(w, h, 0);
                 gl.glVertex3f(-w, h, 0);
                 //}

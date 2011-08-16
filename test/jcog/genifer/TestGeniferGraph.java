@@ -13,7 +13,7 @@ import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.attention.SpreadImportance;
 import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.swing.SwingWindow;
 import org.armedbear.lisp.LispObject;
 import org.armedbear.lisp.StandardObject;
@@ -104,7 +104,7 @@ public class TestGeniferGraph {
         //mind.addAgent(new MessageTokenizer(0.5));
 
         new AttentionControlPanel(mind, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView(mind)), 800, 800, true);
+        new SwingWindow(new GraphPanel(new GraphView2D(mind)), 800, 800, true);
 
         mind.start(0.05);
         

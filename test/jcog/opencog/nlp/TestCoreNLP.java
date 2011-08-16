@@ -37,7 +37,7 @@ import javax.swing.SwingUtilities;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.OCMind;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -137,7 +137,7 @@ public class TestCoreNLP extends JPanel {
         
         
         JPanel w = new JPanel(new BorderLayout());
-        w.add(GraphView.newGraphPanel(mind), BorderLayout.CENTER);
+        w.add(GraphView2D.newGraphPanel(mind), BorderLayout.CENTER);
         //w.add(new JScrollPane(new JTextArea(outputText)), BorderLayout.SOUTH);        
         new SwingWindow(w, 800, 600, false);
     }

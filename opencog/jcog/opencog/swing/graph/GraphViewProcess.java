@@ -6,7 +6,7 @@ package jcog.opencog.swing.graph;
 
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.swing.GraphView;
+import jcog.opencog.swing.GraphView2D;
 
 /**
  *
@@ -14,16 +14,21 @@ import jcog.opencog.swing.GraphView;
  */
 public abstract class GraphViewProcess  {
     protected double accumulated = 0;
-    protected final OCMind mind;
-    protected final GraphView graphView;
+    protected OCMind mind;
+    protected GraphView2D graphView;
+    
 
-    public GraphViewProcess(GraphView gv) {
+    public GraphViewProcess() {
         super();
-        this.graphView = gv;
-        this.mind = gv.getMind();
     }
 
-    public void _update(GraphView g) {
+    
+    public void _update(GraphView2D g) {
+        if (this.graphView == null) {
+            this.graphView = g;
+            this.mind = g.getMind();
+        }
+
         accumulated = 0;
         update(g);
     }
@@ -31,9 +36,9 @@ public abstract class GraphViewProcess  {
     public void reset() {
     }
 
-    protected abstract void update(GraphView g);
+    protected abstract void update(GraphView2D g);
 
-    public abstract boolean isReady();
+    public abstract boolean isReady(GraphView2D g);
 
     public void accumulate(double dt) {
         accumulated += dt;
