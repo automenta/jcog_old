@@ -16,6 +16,7 @@ import jcog.opencog.OCMind;
 import jcog.opencog.util.AtomizeXML;
 
 /**
+ * Generates JSON GraphStreaming API support for visualization by Gephi
  * @see http://wiki.gephi.org/index.php/Specification_-_GSoC_Graph_Streaming_API
  * @author seh
  */
@@ -34,22 +35,7 @@ public class GraphStreamOutput {
     
     public static String getAddNodeString(String id, String label) {
         StringBuffer sb = new StringBuffer();      
-        
-        /*
-        {"an":{
-            "A":{"label":"Streaming Node A","size":2}
-            "B":{"label":"Streaming Node B","size":1}
-            "C":{"label":"Streaming Node C","size":1}
-            }
-        }
-       */
-        
-//        String p = "{\"an\":{";
-//        if (label!=null) {
-//            
-//        }
-//        p += "}};";
-        
+                
         int size = 1;
         
         String p = "";
@@ -66,13 +52,7 @@ public class GraphStreamOutput {
     public static String getAddEdgeString(OCMind mind, Atom edge, Atom source, Atom target) {
         StringBuffer sb = new StringBuffer();
         final String id = "e_" + edge.uuid.toString();
-                        
-//        String p = "{\"an\":{";
-//        if (label!=null) {
-//            
-//        }
-//        p += "}};";
-        
+           
         int size = 1;
         
         String label = mind.getName(edge);

@@ -31,16 +31,16 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     final static Logger logger = Logger.getLogger(MemoryAtomSpace.class);
     
     public final OrderedSetHypergraph<Atom, Atom> graph;
-    Map<Atom, Class<? extends AtomType>> atomToType;
-    Multimap<Class<? extends AtomType>, Atom> typesToAtom;
-    Map<Atom, String> names;
+    
+    private Map<Atom, Class<? extends AtomType>> atomToType;
+    private Multimap<Class<? extends AtomType>, Atom> typesToAtom;
+    private Map<Atom, String> names;
 
     public MemoryAtomSpace() {
         super();
         graph = new OrderedSetHypergraph<Atom, Atom>();
         typesToAtom = HashMultimap.create();
         atomToType = new HashMap();
-        //names = HashBiMap.create();
         names = new HashMap();
     }
     

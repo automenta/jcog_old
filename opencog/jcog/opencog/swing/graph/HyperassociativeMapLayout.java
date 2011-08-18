@@ -5,28 +5,28 @@
 package jcog.opencog.swing.graph;
 
 import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
+import com.syncleus.dann.graph.drawing.hyperassociativemap.HyperassociativeMap;
 import com.syncleus.dann.math.Vector;
-import edu.uci.ics.jung.graph.Hypergraph;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 import jcog.opencog.Atom;
 import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.shape.Rect;
-import jcog.spacegraph.shape.TextRect;
+import org.encog.util.ParamsHolder;
 
 /**
  *
  * @author seh
  */
-public class HyperassociativeLayoutProcess extends GraphViewProcess {
+public class HyperassociativeMapLayout extends GraphViewProcess {
     final int alignCycles = 1;
     final int numDimensions = 2;
     private MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> digraph;
-    private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, HyperedgeSegment>, Atom> ham;
+    //private SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, HyperedgeSegment>, Atom> ham;
+    private HyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, HyperedgeSegment>, Atom> ham;
     private Atom selected = null;
     
-    public HyperassociativeLayoutProcess() {
+    public HyperassociativeMapLayout() {
         super();
     }
 
@@ -36,8 +36,7 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
     }
     
     @Override
-    public void reset() {
-        super.reset();
+    public void reset(final GraphView2D graphView) {
         
         digraph = mind.foldHypergraphEdges(graphView.atomRect.keySet(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), true);
         Collection<HyperedgeSegment> diEdges = digraph.getEdges();
@@ -47,19 +46,25 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
             graphView.addEdge(fe);
         }
         
-        ham = new SeHHyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, HyperedgeSegment>, Atom>(digraph, numDimensions, true, GraphView2D.executor) {
+        ham = new HyperassociativeMap<com.syncleus.dann.graph.Graph<Atom, HyperedgeSegment>, Atom>(digraph, numDimensions, GraphView2D.executor) {
 
             @Override
-            public float getEquilibriumDistance(Atom n) {
-                return graphView.param.getVertexEquilibriumDistance(n);
+            public double getEquilibriumDistance() {
+                return graphView.param.getMeanEquilibriumDistance()*10.0;
             }
-
-            @Override
-            public float getMeanEquilibriumDistance() {
-                return graphView.param.getMeanEquilibriumDistance();
-            }
+//
+//            @Override
+//            public float getEquilibriumDistance(Atom n) {
+//                return graphView.param.getVertexEquilibriumDistance(n);
+//            }
+//
+//            @Override
+//            public float getMeanEquilibriumDistance() {
+//                return graphView.param.getMeanEquilibriumDistance();
+//            }
+            
         };
-        ham.setLearningRate(0.8);
+        //ham.setLearningRate(0.8);
         
         for (Atom a : graphView.atomRect.keySet()) {
             Rect r = graphView.atomRect.get(a);
@@ -107,13 +112,13 @@ public class HyperassociativeLayoutProcess extends GraphViewProcess {
                 float x = (float) v.getCoordinate(1) * s;
                 float y = (float) v.getCoordinate(2) * s;
                 //i.getValue().setCenter(x, y);
-                graphView.setTargetCenter(tr, x, y, 0);
+                g.setTargetCenter(tr, x, y, 0);
             } else if (v.getDimensions() == 3) {
                 float x = (float) v.getCoordinate(1) * s;
                 float y = (float) v.getCoordinate(2) * s;
                 float z = (float) v.getCoordinate(3) * s;
                 //i.getValue().setCenter(x, y, z);
-                graphView.setTargetCenter(tr, x, y, z);
+                g.setTargetCenter(tr, x, y, z);
             }
         }
     }

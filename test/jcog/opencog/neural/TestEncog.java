@@ -8,13 +8,15 @@ import java.util.HashMap;
 import java.util.Map;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
+import jcog.opencog.GraphSpace;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.graph.BasicGraphView2DRenderer;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView2D;
-import jcog.opencog.swing.graph.HyperassociativeLayoutProcess;
+import jcog.opencog.swing.graph.FDLayout;
+import jcog.opencog.swing.graph.GraphViewProcess;
 import jcog.spacegraph.swing.SwingWindow;
 import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationSigmoid;
@@ -184,8 +186,7 @@ public class TestEncog {
         FeedForwardPattern pattern = new FeedForwardPattern();
         pattern.setActivationFunction(new ActivationSigmoid());
         pattern.setInputNeurons(1);
-        pattern.addHiddenLayer(4);
-        pattern.addHiddenLayer(4);
+        pattern.addHiddenLayer(2);
         pattern.setOutputNeurons(1);
         return (BasicNetwork) pattern.generate();
     }
@@ -253,16 +254,10 @@ public class TestEncog {
 
 
         OCMind mind = new OCMind();
-
         mind.addAgent(new EncogAgent(0, network, trainMain));
-
-        new AttentionControlPanel(mind, 0.75).newWindow();          
-        
-        GraphView2D gv = new GraphView2D(mind, new BasicGraphView2DRenderer(), new GraphView2D.SeHGraphViewModel1(mind), new HyperassociativeLayoutProcess());
-        new SwingWindow(new GraphPanel(gv), 800, 800, true);
-
         mind.start(0.04);
-        
+
+        new GraphSpace(mind);
 
         //Encog.getInstance().shutdown();
     }

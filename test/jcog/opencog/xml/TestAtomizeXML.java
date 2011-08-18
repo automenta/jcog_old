@@ -5,6 +5,7 @@
 package jcog.opencog.xml;
 
 import java.awt.Color;
+import jcog.opencog.GraphSpace;
 import jcog.opencog.OCMind;
 import jcog.opencog.attention.AddRandomHebbianEdges;
 import jcog.opencog.attention.DecaySTI;
@@ -17,7 +18,7 @@ import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.ConsoleWindow.JavascriptConsoleWindow;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView2D;
-import jcog.opencog.swing.graph.GraphStreamInput;
+import jcog.opencog.util.AtomizeXML;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -45,8 +46,8 @@ public class TestAtomizeXML {
     
     public static void main(String[] args) {
         OCMind m = new OCMind();
-        //new AtomizeXML(m, "/tmp/x.xml");
-        new GraphStreamInput(m, "x_", "file:///tmp/x.json");
+        new AtomizeXML(m, "/tmp/x.xml");
+        //new GraphStreamInput(m, "x_", "file:///tmp/x.json");
         
         m.addAgent(new LearnHebbian());        
         m.addAgent(new SpreadImportance());
@@ -57,9 +58,7 @@ public class TestAtomizeXML {
         m.addAgent(new RandomStimulation(0.5, (short)200, 3));
         m.addAgent(new MessageTokenizer(0.5));
         
-        //new MindJavascriptConsoleWindow(m);
-        new AttentionControlPanel(m, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView2D(m)), 800, 800, true);
+        new GraphSpace(m);
 
         m.start(0.05);
 

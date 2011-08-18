@@ -304,9 +304,11 @@ public class GraphView2D extends Surface implements Drawable {
         add(new PointerLayer(this, 2));
 
         for (GraphViewProcess gvp : p) {
+            gvp.reset(this);
             processes.add(gvp);
         }
 
+        
         mind.addAgent(new MindAgent() {
 
             @Override
@@ -439,7 +441,7 @@ public class GraphView2D extends Surface implements Drawable {
 
         if ((added > 0) || (removed > 0)) {
             for (GraphViewProcess gvp : processes) {
-                gvp.reset();
+                gvp.reset(this);
             }
         }
 

@@ -51,6 +51,9 @@ public class TextRect extends Rect {
         if (isFilled())
             super.draw(gl);
 
+        if (text == null)
+            return;
+        
         if (textRenderer == null) {
             textRenderer = new TextRenderer(new Font("Arial", Font.PLAIN, 72));
             textRenderer.setSmoothing(true);

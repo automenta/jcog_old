@@ -15,7 +15,7 @@ import jcog.opencog.swing.GraphView2D;
 public abstract class GraphViewProcess  {
     protected double accumulated = 0;
     protected OCMind mind;
-    protected GraphView2D graphView;
+    //protected GraphView2D graphView;
     
 
     public GraphViewProcess() {
@@ -24,17 +24,16 @@ public abstract class GraphViewProcess  {
 
     
     public void _update(GraphView2D g) {
-        if (this.graphView == null) {
-            this.graphView = g;
+//        if (this.graphView == null) {
+//            this.graphView = g;
             this.mind = g.getMind();
-        }
+//        }
 
         accumulated = 0;
         update(g);
     }
 
-    public void reset() {
-    }
+    abstract public void reset(GraphView2D g);
 
     protected abstract void update(GraphView2D g);
 
