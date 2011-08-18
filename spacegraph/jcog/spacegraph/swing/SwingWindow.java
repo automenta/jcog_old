@@ -7,13 +7,13 @@ import javax.swing.JFrame;
 import javax.swing.UIManager;
 
 public class SwingWindow extends JFrame {
-    static {
-        try {             
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } 
-        catch (Exception e) {
-        }
-    }
+//    static {
+//        try {             
+//            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//        } 
+//        catch (Exception e) {
+//        }
+//    }
     
     public SwingWindow(JComponent j, int w, int h) {
         super();

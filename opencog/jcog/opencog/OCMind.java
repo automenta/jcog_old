@@ -1,34 +1,19 @@
 package jcog.opencog;
 
-import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
 import jcog.opencog.atom.ReadableAtomSpace;
 import jcog.opencog.atom.EditableAtomSpace;
 import jcog.opencog.atom.MemoryAtomSpace;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import edu.uci.ics.jung.graph.Hypergraph;
-import edu.uci.ics.jung.graph.util.Pair;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import jcog.opencog.atom.AttentionValue;
-import jcog.opencog.atom.SimpleTruthValue;
-import jcog.opencog.atom.TruthValue;
+import jcog.opencog.atom.AtomData;
 import jcog.opencog.attention.UpdateImportance;
-import jcog.opencog.swing.graph.HyperedgeSegment;
 import org.apache.commons.collections15.IteratorUtils;
 import org.apache.commons.collections15.Predicate;
 import org.apache.commons.collections15.iterators.FilterIterator;
@@ -37,19 +22,12 @@ import org.apache.log4j.Logger;
 /** Analogous to CogServer.
 An atomspace implementation that interfaces to other embedded atomspace implementations.
  */
-public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableAttention, EditableAttention */ {
+public class OCMind extends MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace /* ReadableAttention, EditableAttention */ {
 
     final static Logger logger = Logger.getLogger(OCMind.class);
     
-    private final MemoryAtomSpace atomspace; /// the default in-memory store
+    //private final List<ReadableAtomSpace> subspaces;
     
-    private final List<ReadableAtomSpace> subspaces;
-    
-    private Map<Atom, TruthValue> truth;
-    private Map<Atom, AttentionValue> attention;
-    
-    private NavigableMap<Atom, AttentionValue> attentionSortedBySTI;
-    private short minSTISeen = 0, maxSTISeen = 0;    
     
     private List<MindAgent> agents = new CopyOnWriteArrayList();
     private long lastCycle = 0, currentCycle = 0;
@@ -60,106 +38,20 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     boolean parallel = false;
 
     public OCMind() {
-        this(new MemoryAtomSpace());
-    }
-
-    public OCMind(MemoryAtomSpace a) {
         super();
-        this.atomspace = a;
-
-        subspaces = new LinkedList();
-
-        truth = new HashMap();
-        attention = new HashMap();
-                
-        updateAttentionSort();
-
     }
 
-    public TruthValue getTruth(Atom a) {
-        TruthValue t = truth.get(a);
-        if (t == null) {
-            t = newDefaultTruthValue(a);
-            truth.put(a, t);
-        }
-        return t;
-    }
-
-    public AttentionValue getAttention(Atom a) {
-        AttentionValue t = attention.get(a);
-        if (t == null) {
-            t = newDefaultAttentionValue(a);
-            attention.put(a, t);
-        }
-        return t;
-    }
-
-    public TruthValue newDefaultTruthValue(Atom a) {
-        return new SimpleTruthValue();
-    }
-
-    public AttentionValue newDefaultAttentionValue(Atom a) {
-        Class<? extends AtomType> type = atomspace.getType(a);
-        return new AttentionValue(true);
-    }
 
     @Override
     public boolean visitEdges(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
-        return atomspace.visitEdges(predicate, op);
+        return visitEdges(predicate, op);
     }
 
     @Override
     public boolean visitVertices(Predicate<Atom> predicate, Operation<ReadableAtomSpace, Atom> op) {
-        return atomspace.visitVertices(predicate, op);
+        return visitVertices(predicate, op);
     }
     
-    public Atom addEdge(Class<? extends AtomType> t, List<Atom> members) {
-        Atom[] ma = new Atom[members.size()];
-        members.toArray(ma);    
-        return addEdge(t, ma);
-    }
-
-    public Atom addEdge(Class<? extends AtomType> t, String name, Atom... members) {
-        Atom e = atomspace.addEdge(t, name, members);
-        if (e != null) {
-            //getAttention(e);
-        }
-        return e;
-    }
-
-    public Atom addEdge(Class<? extends AtomType> t, Atom... members) {
-        return addEdge(t, null, members);
-    }
-
-    @Override
-    public boolean addVertex(Class<? extends AtomType> type, Atom a, String name) {
-        if (atomspace.addVertex(type, a, name)) {
-            //getAttention(a);
-            return true;
-        }
-        return false;
-    }
-
-    public Atom addVertex(Class<? extends AtomType> type) {
-        final Atom a = new Atom();
-        if (addVertex(type, a, a.toString())) {
-            return a;
-        }
-        return null;
-    }
-
-    public Atom addVertex(Class<? extends AtomType> type, String name) {
-        final Atom a = new Atom();
-        if (addVertex(type, a, name)) {
-            return a;
-        }
-        return null;
-    }
-
-    @Override
-    public void clear() {
-        atomspace.clear();
-    }
 
 //	public FloatMap getActivation() {
 //		return activation;
@@ -169,13 +61,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 //		return importance;
 //	}
 //	
-    /** called by UpdateImportance -- indicates the min and max STI seen by update importance as it iterates across all atoms utilized by Agents */
-    public void setSTIRange(short minSTISeen, short maxSTISeen) {
-        this.minSTISeen = minSTISeen;
-        this.maxSTISeen = maxSTISeen;
-    }
 
-    public synchronized MindAgent addAgent(MindAgent m) {
+    public MindAgent addAgent(MindAgent m) {
         if (agents.contains(m)) {
             logger.error("Can not add duplicate MindAgent " + m + " to " + this);
             return m;
@@ -184,7 +71,7 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return m;
     }
 
-    public synchronized boolean removeAgent(MindAgent m) {
+    public boolean removeAgent(MindAgent m) {
         return agents.remove(m);
     }
 
@@ -192,48 +79,8 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return ((double) (currentCycle - lastCycle)) / 1.0e9;
     }
 
-    public synchronized void updateAttentionSort() {
-        //cleanup attention
-        List<Atom> toRemoveFromAttentionAndTruth = new LinkedList();
 
-        for (Atom a : attention.keySet()) {
-            if (!atomspace.hasAtom(a)) {
-                toRemoveFromAttentionAndTruth.add(a);
-            }
-        }
-
-        for (Atom a : toRemoveFromAttentionAndTruth) {
-            attention.remove(a);
-            truth.remove(a);
-        }
-
-
-        attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
-
-            @Override
-            public int compare(Atom a, Atom b) {
-                short sa = getSTI(a);
-                short sb = getSTI(b);
-
-                if (sa == sb) {
-                    return -1;
-                }
-                return (sa > sb) ? -1 : 1;
-            }
-        });
-        
-        attentionSortedBySTI.putAll(attention);
-        
-//        final Iterator<Atom> i = iterateAtoms();
-//        final AttentionValue zv = new AttentionValue(Short.MIN_VALUE);
-//        while (i.hasNext()) {
-//            Atom a = i.next();
-//            if (!attention.containsKey(a))
-//                attentionSortedBySTI.put(a, zv);
-//        }
-    }
-
-    public synchronized void cycle() {
+    public void cycle() {
         lastCycle = currentCycle;
         currentCycle = System.nanoTime();
 
@@ -267,17 +114,17 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
 
         //remove all pending removals
         for (final MindAgent ma : agents) {
-            for (Atom v : ma.getVerticesToRemove()) {
+            for (final Atom v : ma.getVerticesToRemove()) {
                 remove(v);
             }
-            for (Atom e : ma.getEdgesToRemove()) {
+            for (final Atom e : ma.getEdgesToRemove()) {
                 remove(e);
             }
             ma.getVerticesToRemove().clear();
             ma.getEdgesToRemove().clear();
         }
 
-        updateAttentionSort();
+        updateIndexes();
         
     }
 
@@ -286,112 +133,27 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return agents;
     }
 
-    public boolean isVertex(Atom a) {
-        return atomspace.isVertex(a);
-    }
-
-    public int getVertexCount() {
-        return atomspace.getVertices().size();
-    }
-
-    public int getEdgeCount() {
-        return atomspace.getEdges().size();
-    }
-
     public void printAtoms() {
         Iterator<Atom> i = iterateAtoms();
         while (i.hasNext()) {
             Atom a = i.next();
             System.out.println("  " + a.toString() + " : " + getType(a).getSimpleName() + " : " + getName(a) + " "
-                    + atomspace.getIncidentEdgeDegree(a) + "|" + atomspace.getIncidentVertexDegree(a));
+                    + getIncidentEdgeDegree(a) + "|" + getIncidentVertexDegree(a));
         }
     }
 
     public MindRunner start(double period) {
-        return new MindRunner(this, period);
+        return new MindRunner(this, period, true);
+    }
+    public MindRunner run(double period) {
+        return new MindRunner(this, period, false);
     }
 
     public boolean setName(Atom a, String newName) {
-        return atomspace.setName(a, newName);
+        return setName(a, newName);
     }
 
-    /**
-     * Creates a <code>Graph</code> which is an edge-folded version of <code>h</code>, where
-     * hyperedges are replaced by k-cliques in the output graph.
-     *
-     * <p>The vertices of the new graph are the same objects as the vertices of
-     * <code>h</code>, and <code>a</code>
-     * is connected to <code>b</code> in the new graph if the corresponding vertices
-     * in <code>h</code> are connected by a hyperedge.  Thus, each hyperedge with
-     * <i>k</i> vertices in <code>h</code> induces a <i>k</i>-clique in the new graph.</p>
-     *
-     * <p>The edges of the new graph are generated by the specified edge factory.</p>
-     *
-     * @param <V> vertex type
-     * @param <E> input edge type
-     * @param h hypergraph to be folded
-     * @param graph_factory factory used to generate the output graph
-     * @param edge_factory factory used to create the new edges
-     * @return a copy of the input graph where hyperedges are replaced by cliques
-     */
-    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> target, final boolean linkEdgeToMembers) {
-        final Hypergraph<Atom, Atom> h = getAtomSpace().graph;
-        
-        for (Atom v : vertices) {
-            target.add(v);
-        }
-        for (Atom e : h.getEdges()) {
-            boolean contained = true;
-            for (Atom iv : getIncidentVertices(e)) {
-                if (!vertices.contains(iv)) {
-                    contained = false;
-                    break;
-                }
-            }
-            if (!contained) {
-                continue;
-            }
-            ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
-            if (incident.size() == 0) {
-                target.add(e);
-                continue;
-            }
-            else if (incident.size() == 2) {
-                Atom a = incident.get(0);
-                Atom b = incident.get(1);
-                target.add(new HyperedgeSegment(a, b, e, ""));
-            }
-            else {
-                target.add(e);
-                if (linkEdgeToMembers) {
-                    for (int i = 0; i < incident.size(); i++) {
-                        Atom i1 = incident.get(i);
-                        if (i == 0) {
-                            target.add(new HyperedgeSegment(e, i1, e, "("));
-                        } else {
-                            target.add(new HyperedgeSegment(incident.get(i - 1), i1, e, ""));
-                        }
-                    }
-                } else {
-                    final String typeString = getType(e).toString();
-                    //Just link the edge to the first element
-                    for (int i = 0; i < incident.size(); i++) {
-                        if (i > 0) {
-                            target.add(new HyperedgeSegment(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
-                        } else {
-                            target.add(new HyperedgeSegment(e, incident.get(i), e, "(" + typeString));
-                        }
-                    }
-                }
-                
-            }
-        }
-        return target;
-    }
-    
-    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> foldHypergraphEdges() {
-        return foldHypergraphEdges(getVertices(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), true);
-    }
+
 
     public class AtomTypeArityPredicate implements org.apache.commons.collections15.Predicate<Atom> {
 
@@ -467,195 +229,12 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
         return new FilterIterator<Atom>(iterateEdges(), new AtomTypeArityPredicate(type, includeSubtypes, minArity, maxArity));
     }
 
-    @Override
-    public List<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
-        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
-        Collection<Atom> v = atomspace.getAtoms(type, includeSubtypes);
-        if (v != null) {
-            ib.addAll(v);
-            for (ReadableAtomSpace ra : subspaces) {
-                //TODO add parameter so that ra.getAtoms can use this (parent)'s type hierarchy
-                ib.addAll(ra.getAtoms(type, includeSubtypes));
-            }
-        }
-        return ib.build();
-    }
-
-    @Override
-    public Collection<Atom> getVertices() {
-        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
-        ib.addAll(atomspace.getVertices());
-        for (ReadableAtomSpace ra : subspaces) {
-            ib.addAll(ra.getVertices());
-        }
-        return ib.build();
-    }
-
-    @Override
-    public Collection<Atom> getEdges() {
-        Builder<Atom> ib = new ImmutableList.Builder<Atom>();
-        ib.addAll(atomspace.getEdges());
-        for (ReadableAtomSpace ra : subspaces) {
-            ib.addAll(ra.getEdges());
-        }
-        return ib.build();
-    }
-
-    @Override
-    public Atom getEdge(Class<? extends AtomType> type, Atom... members) {
-        Atom a = atomspace.getEdge(type, members);
-        if (a != null) {
-            return a;
-        }
-
-        for (ReadableAtomSpace ra : subspaces) {
-            Atom sa = ra.getEdge(type, members);
-            if (sa != null) {
-                return sa;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Class<? extends AtomType> getType(final Atom a) {
-        Class<? extends AtomType> t = atomspace.getType(a);
-        if (t != null) {
-            return t;
-        }
-        //TODO look in subgraphs
-        return null;
-    }
-
-    @Override
-    public String getName(final Atom a) {
-        String n = atomspace.getName(a);
-        if (n != null) {
-            return n;
-        }
-        return null;
-        //TODO look in subgraphs
-    }
-
-    @Override
-    public int getArity(final Atom e) {
-        return atomspace.getArity(e);
-        //TODO look in subgraphs
-    }
-
-    @Override
-    public boolean hasAtom(Atom a) {
-        return atomspace.hasAtom(a);
-        //TODO look in subgraphs
-    }
-
-    @Override
-    public Iterator<Atom> iterateAtoms() {
-        return atomspace.iterateAtoms();
-        //TODO look in subgraphs        
-    }
-
-    @Override
-    public Iterator<Atom> iterateVertices() {
-        return atomspace.iterateVertices();
-        //TODO look in subgraphs
-    }
-
-    @Override
-    public Iterator<Atom> iterateEdges() {
-        return atomspace.iterateEdges();
-        //TODO look in subgraphs
-    }
-
-    public void setVLTI(Atom a, int newVLTI) {
-        getAttention(a).setVLTI(newVLTI);
-    }
-
-    public short getSTI(Atom a) {
-        return getAttention(a).getSTI();
-    }
-
-    public short getLTI(Atom a) {
-        return getAttention(a).getLTI();
-    }
-
-    public double getNormalizedSTI(Atom a, double maxSTI, double minSTI) {
-        double sti = getSTI(a);
-
-        if (maxSTI != minSTI) {
-            return (sti - ((double) minSTI)) / (double) (maxSTI - minSTI);
-        } else {
-            return 0;
-        }
-    }
-
-    /** returns an atom's STI normalized to -1..+1 range */
-    public double getNormalizedSTI(Atom a) {
-        return getNormalizedSTI(a, maxSTISeen, minSTISeen);
-    }
-
-    public Pair<Short> getSTIRange(Collection<Atom> atoms) {
-        boolean first = true;
-
-        short minSTI = 0, maxSTI = 0;
-
-        for (Atom x : atoms) {
-            if (first) {
-                minSTI = maxSTI = getSTI(x);
-                first = false;
-            } else {
-                short s = getSTI(x);
-                if (s < minSTI) {
-                    minSTI = s;
-                }
-                if (s > maxSTI) {
-                    maxSTI = s;
-                }
-            }
-        }
-
-        return new Pair<Short>(minSTI, maxSTI);
-    }
-
-    @Override
-    public Collection<Atom> getIncidentEdges(Atom vertex) {
-        return atomspace.getIncidentEdges(vertex);
-        //TODO look in subgraphs
-    }
-
-    @Override
-    public Collection<Atom> getIncidentVertices(Atom edge) {
-        return atomspace.getIncidentVertices(edge);
-        //TODO look in subgraphs
-    }
-
-    public short getMaxSeenSTI() {
-        return maxSTISeen;
-    }
-
-    public short getMinSeenSTI() {
-        return minSTISeen;
-    }
 
     public double getSecondsSinceLastCycle() {
         final long current = System.nanoTime();
         return ((double) (current - currentCycle)) / 1.0e9;
     }
 
-    //TODO debug this
-    public int getOrderInIncidentEdge(Atom a, Atom edge) {
-        int i = 0;
-        if (getIncidentEdges(edge) == null) {
-            return -1;
-        }
-        for (Atom p : getIncidentEdges(edge)) {
-            if (p.equals(a)) {
-                return i;
-            }
-            i++;
-        }
-        return -1;
-    }
 
     public void printAtom(Atom a) {
         System.out.println("  " + a.toString() + ": " + getName(a) + " " + getType(a) + "\n");
@@ -679,15 +258,17 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
     }
 
     public List<Atom> getAtomsByName(String substring) {
-        List<Atom> a = new ArrayList();
+        List<Atom> a = new LinkedList();
 
-        for (Entry<Atom, String> e : atomspace.getNameIndex().entrySet()) {
-            if (e.getValue().contains(substring)) {
-                a.add(e.getKey());
-            }
+        Iterator<Atom> ia = iterateAtoms();
+        while (ia.hasNext()) {
+            Atom x = ia.next();
+            AtomData ad = getData(x);
+            if (ad.name.contains(substring))
+                a.add(x);
         }
 
-        return a;
+        return Collections.unmodifiableList(a);
     }
 
     public Iterator<Atom> iterateAtomsByDecreasingSTI() {
@@ -728,19 +309,4 @@ public class OCMind implements ReadableAtomSpace, EditableAtomSpace /* ReadableA
             }
     }
 
-    public boolean remove(Atom a) {
-        if (atomspace.remove(a)) {
-            return true;
-        }
-        return false;
-    }
-
-    public String getTypeName(final Atom a) {
-        return getType(a).getSimpleName();
-    }
-
-    public MemoryAtomSpace getAtomSpace() {
-        return atomspace;
-    }
-        
 }

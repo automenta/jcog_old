@@ -11,13 +11,6 @@ import jcog.opencog.AtomType;
 import jcog.opencog.GraphSpace;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.swing.AttentionControlPanel;
-import jcog.opencog.swing.graph.BasicGraphView2DRenderer;
-import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView2D;
-import jcog.opencog.swing.graph.FDLayout;
-import jcog.opencog.swing.graph.GraphViewProcess;
-import jcog.spacegraph.swing.SwingWindow;
 import org.encog.engine.network.activation.ActivationFunction;
 import org.encog.engine.network.activation.ActivationSigmoid;
 import org.encog.ml.BasicML;
@@ -255,9 +248,10 @@ public class TestEncog {
 
         OCMind mind = new OCMind();
         mind.addAgent(new EncogAgent(0, network, trainMain));
-        mind.start(0.04);
 
         new GraphSpace(mind);
+
+        mind.run(0.01);
 
         //Encog.getInstance().shutdown();
     }

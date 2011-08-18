@@ -4,7 +4,6 @@
  */
 package jcog.opencog;
 
-import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView2D;
 import jcog.opencog.swing.graph.BasicGraphView2DRenderer;
@@ -23,7 +22,7 @@ public class GraphSpace {
         
         //new MindJavascriptConsoleWindow(m);
 
-        new AttentionControlPanel(mind, 0.75).newWindow();          
+        //new AttentionControlPanel(mind, 0.75).newWindow();          
         
         GraphViewProcess layout = new HyperassociativeMapLayout();
         //GraphViewProcess layout = new FDLayout();

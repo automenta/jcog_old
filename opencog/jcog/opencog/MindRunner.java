@@ -46,9 +46,18 @@ public class MindRunner implements Runnable {
      * @param period 
      */
     public MindRunner(OCMind mind, double period) {
+        this(mind, period, false);
+    }
+    
+    public MindRunner(OCMind mind, double period, boolean newThread) {
         this(mind, period, 0, null);
-                        
-        restart();
+                  
+        if (newThread)
+            restart();       
+        else {
+            running = true;
+            run();
+        }
     }
 
     public double getPeriod() {

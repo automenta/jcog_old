@@ -162,6 +162,7 @@ public class Rect extends Spatial implements Drawable {
 //        double d = (px - cx) * (px - cx) + (py - cy) * (py - cy);
 //        return (d < radius * radius);
 //    }
+    @Override
     public void updateGeometry() {
         float ux = (float) (scale.x() * Math.cos(rotation.z())) / 2.0f;
         float uy = (float) (scale.x() * Math.sin(rotation.z())) / 2.0f;

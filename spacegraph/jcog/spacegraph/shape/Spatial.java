@@ -87,4 +87,5 @@ public class Spatial {
 
     }
 
+    public void updateGeometry() { }
 }

@@ -268,7 +268,7 @@ public class Surface extends SG {
         this.fps = newFPS;
     }
     
-    protected synchronized void handleTouch(Pointer p) {
+    protected void handleTouch(Pointer p) {
         Set<Touchable> touchingNow = new HashSet();
         final Vec2f v = new Vec2f(p.world.x(), p.world.y());
         synchronized (getSpace().getDrawables()) {

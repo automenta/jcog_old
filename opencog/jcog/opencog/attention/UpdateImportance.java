@@ -146,6 +146,9 @@ public class UpdateImportance {
 
         for (MindAgent agent : agents) {            
             for (Atom at : agent.getStimulated()) {
+                if (!mind.containsAtom(at))
+                    continue;
+                
                 updateAtomSTI(agents, at);
                 updateAtomLTI(agents, at);
 

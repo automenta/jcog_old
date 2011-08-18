@@ -2,10 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog;
+package jcog.opencog.atom;
 
 import java.util.List;
 import jcog.math.RandomNumber;
+import jcog.opencog.Atom;
+import jcog.opencog.OCMind;
 import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.util.RandomGraphGenerator;
 import junit.framework.TestCase;

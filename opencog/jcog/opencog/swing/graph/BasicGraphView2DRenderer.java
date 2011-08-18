@@ -7,6 +7,7 @@ package jcog.opencog.swing.graph;
 import com.sun.opengl.util.awt.TextRenderer;
 import java.awt.Color;
 import java.awt.Font;
+import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType.UnorderedLink;
 import jcog.opencog.OCMind;
@@ -27,6 +28,10 @@ public class BasicGraphView2DRenderer implements GraphView2DRenderer {
     public Rect newVertex(OCMind mind, Atom v) {
         final String name = mind.getName(v);
         Rect r = new TextRect(textRenderer, name);
+        
+        float rr = 10f;
+        r.getCenter().set(RandomNumber.getFloat(-rr, rr), RandomNumber.getFloat(-rr, rr), 0);
+        
         return r;
     }
 
@@ -35,10 +40,24 @@ public class BasicGraphView2DRenderer implements GraphView2DRenderer {
         final OCMind mind = gv.getMind();
         final GraphView2D.GraphViewModel param = gv.param;
         final float vertexScale = (float) param.getDouble("VertexScale");
-        //final float sti = (float)mind.getNormalizedSTI(vertex, maxSTI, minSTI);
+        
+        if (vertex == null) {
+            System.out.println("vertex = null");
+            System.exit(1);
+        }
+        if (!mind.containsAtom(vertex)) {
+            System.out.println("vertex not contained in mind " + vertex);
+            Thread.dumpStack();
+            System.exit(1);            
+        }
+        if (mind.getAttention(vertex) == null) {
+            System.out.println("vertex attention = null");
+            System.exit(1);            
+        }
+        
         final float sti = (float) mind.getNormalizedSTI(vertex);
         float sx = 0.1F + (float) (sti) * vertexScale;
-        gv.getTargetScale(r).set(sx, sx, 1.0F);
+        gv.setTargetScale(r, sx, sx, 1.0f);
         String n = mind.getName(vertex);
         if (n == null) {
             String type = mind.getTypeName(vertex);

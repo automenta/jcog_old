@@ -77,7 +77,7 @@ public class Forget extends MindAgent {
         //int tested = 0;
         while (ia.hasNext() && ((vertDifference > 0) || (edgeDifference > 0)) ) {
             Atom a = ia.next();
-            if (mind.isVertex(a)) {
+            if (mind.containsVertex(a)) {
                 if (vertDifference > 0) {
                     removeVertex(a);                
                     vertDifference--;                

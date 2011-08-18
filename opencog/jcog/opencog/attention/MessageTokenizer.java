@@ -4,9 +4,9 @@
  */
 package jcog.opencog.attention;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +47,7 @@ public class MessageTokenizer extends MindAgent {
     @Override
     protected void run(OCMind mind) {
         //TODO iterate by importance
-        List<Atom> ia = mind.getAtoms(AtomType.conceptNode, true);
+        Collection<Atom> ia = mind.getAtoms(AtomType.conceptNode, true);
         
         for (Atom a : ia) {
             if (messagesTokenized.contains(a))

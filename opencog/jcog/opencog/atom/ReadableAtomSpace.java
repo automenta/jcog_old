@@ -30,7 +30,7 @@ public interface ReadableAtomSpace {
     public Class<? extends AtomType> getType(Atom a);
     public String getName(Atom a);
     public int getArity(Atom e);
-    public boolean hasAtom(Atom a);
+    public boolean containsAtom(Atom a);
     
     public Iterator<Atom> iterateAtoms();
     public Iterator<Atom> iterateVertices();

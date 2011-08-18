@@ -19,7 +19,6 @@ import edu.uci.ics.jung.graph.util.EdgeType;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.log4j.Logger;
 
 /** implementation of JUNG's hypergraph that maintains ordering of the vertices pointed to by an edge(=link) */
 public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<V, H>, /*Graph<V,H>*/ Serializable {
@@ -121,11 +120,11 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
     }
 
     public Collection<H> getEdges() {
-        return edges.keySet();
+        return Collections.unmodifiableCollection(edges.keySet());
     }
 
     public Collection<V> getVertices() {
-        return vertices.keySet();
+        return Collections.unmodifiableCollection(vertices.keySet());
     }
 
     public int getEdgeCount() {
@@ -145,15 +144,21 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         for (H hyperedge : vertices.get(vertex)) {
             neighbors.addAll(edges.get(hyperedge));
         }
-        return neighbors;
+        return Collections.unmodifiableSet(neighbors);
     }
 
     public Collection<H> getIncidentEdges(V vertex) {
-        return vertices.get(vertex);
+        final Collection<H> lh = vertices.get(vertex);
+        if (lh == null)
+            return null;
+        return Collections.unmodifiableCollection(lh);
     }
 
     public List<V> getIncidentVertices(H edge) {
-        return edges.get(edge);
+        final List<V> lv = edges.get(edge);
+        if (lv == null)
+            return null;
+        return Collections.unmodifiableList(lv);
     }
 
     public H findEdge(V v1, V v2) {
@@ -174,8 +179,8 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
             return null;
         }
 
-        Collection<H> edges = new LinkedList<H>();
-        for (H h : getIncidentEdges(v1)) {
+        Collection<H> edges = new LinkedList();
+        for (final H h : getIncidentEdges(v1)) {
             if (isIncident(v2, h)) {
                 edges.add(h);
             }
@@ -183,10 +188,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return Collections.unmodifiableCollection(edges);
     }
 
-    public boolean addVertex(V vertex) {
-        if (vertex == null) {
-            throw new IllegalArgumentException("cannot add a null vertex");
-        }
+    public boolean addVertex(final V vertex) {
         if (containsVertex(vertex)) {
             return false;
         }
@@ -200,7 +202,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
             return false;
         }
 
-        List<H> toRemove = new ArrayList(getIncidentEdges(vertex));
+        final List<H> toRemove = new ArrayList(getIncidentEdges(vertex));
         for (final H edge : toRemove) {
             removeEdge(edge);
         }
@@ -209,46 +211,13 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return true;
     }
 
-    @Deprecated private boolean removeVertexOLD(final V vertex) {
-        if (!containsVertex(vertex)) {
-            return false;
-        }
-        
-        List<Runnable> toRemove = new LinkedList();
-        
-        for (final H hyperedge : vertices.get(vertex)) {
-            toRemove.add(new Runnable() {
-                @Override
-                public void run() {
-                    List<V> l = edges.get(hyperedge);
-                    int failure = 0, success = 0;
-                    try {
-                        l.remove(vertex);
-                        success++;
-                    }
-                    catch (UnsupportedOperationException e) {
-                        failure++;
-                    }
-                    
-                    if (failure > 0)
-                        Logger.getLogger(OrderedSetHypergraph.class).error(success + " / " + failure + ": ");                
-                }                
-            });
-        }
-        
-        for (Runnable r : toRemove)
-            r.run();
-        
-        vertices.remove(vertex);
-        return true;
-    }
 
-    public boolean removeEdge(H hyperedge) {
+    public boolean removeEdge(final H hyperedge) {
         if (!containsEdge(hyperedge)) {
             return false;
         }
-        for (V vertex : edges.get(hyperedge)) {
-            Set<H> l = vertices.get(vertex);
+        for (final V vertex : edges.get(hyperedge)) {
+            final Set<H> l = vertices.get(vertex);
             if (l!=null)
                 l.remove(hyperedge);
         }
@@ -256,7 +225,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return true;
     }
 
-    public boolean isNeighbor(V v1, V v2) {
+    public boolean isNeighbor(final V v1, final V v2) {
         if (!containsVertex(v1) || !containsVertex(v2)) {
             return false;
         }
@@ -264,7 +233,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         if (vertices.get(v2).isEmpty()) {
             return false;
         }
-        for (H hyperedge : vertices.get(v1)) {
+        for (final H hyperedge : vertices.get(v1)) {
             if (edges.get(hyperedge).contains(v2)) {
                 return true;
             }
@@ -272,7 +241,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return false;
     }
 
-    public boolean isIncident(V vertex, H edge) {
+    public boolean isIncident(final V vertex, final H edge) {
         if (!containsVertex(vertex) || !containsEdge(edge)) {
             return false;
         }
@@ -280,7 +249,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return vertices.get(vertex).contains(edge);
     }
 
-    public int degree(V vertex) {
+    public int degree(final V vertex) {
         if (!containsVertex(vertex)) {
             return 0;
         }
@@ -288,7 +257,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return vertices.get(vertex).size();
     }
 
-    public int getNeighborCount(V vertex) {
+    public int getNeighborCount(final V vertex) {
         if (!containsVertex(vertex)) {
             return 0;
         }
@@ -296,7 +265,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return getNeighbors(vertex).size();
     }
 
-    public int getIncidentCount(H edge) {
+    public int getIncidentCount(final H edge) {
         if (!containsEdge(edge)) {
             return 0;
         }
@@ -304,39 +273,39 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return edges.get(edge).size();
     }
 
-    public int getEdgeCount(EdgeType edge_type) {
-        if (edge_type == EdgeType.UNDIRECTED) {
+    public int getEdgeCount(final EdgeType edge_type) {
+        if (edge_type == EdgeType.DIRECTED) {
             return edges.size();
         }
         return 0;
     }
 
     public Collection<H> getEdges(EdgeType edge_type) {
-        if (edge_type == EdgeType.UNDIRECTED) {
-            return edges.keySet();
+        if (edge_type == EdgeType.DIRECTED) {
+            return Collections.unmodifiableSet(edges.keySet());
         }
         return null;
     }
 
     public EdgeType getDefaultEdgeType() {
-        return EdgeType.UNDIRECTED;
+        return EdgeType.DIRECTED;
     }
 
-    public Collection<H> getInEdges(V vertex) {
-        return getIncidentEdges(vertex);
-    }
+//    public Collection<H> getInEdges(V vertex) {
+//        return getIncidentEdges(vertex);
+//    }
+//
+//    public Collection<H> getOutEdges(V vertex) {
+//        return getIncidentEdges(vertex);
+//    }
 
-    public Collection<H> getOutEdges(V vertex) {
-        return getIncidentEdges(vertex);
-    }
-
-    public int inDegree(V vertex) {
-        return degree(vertex);
-    }
-
-    public int outDegree(V vertex) {
-        return degree(vertex);
-    }
+//    public int inDegree(V vertex) {
+//        return degree(vertex);
+//    }
+//
+//    public int outDegree(V vertex) {
+//        return degree(vertex);
+//    }
 
     public V getDest(H directed_edge) {
         return null;
@@ -346,7 +315,7 @@ public class OrderedSetHypergraph<V, H> implements Hypergraph<V, H>, MultiGraph<
         return null;
     }
 
-    public Collection<V> getPredecessors(V vertex) {
+    public Collection<V> getPredecessors(final V vertex) {
         return getNeighbors(vertex);
     }
 

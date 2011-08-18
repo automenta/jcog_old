@@ -4,14 +4,10 @@
  */
 package jcog.opencog.swing.graph;
 
-import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import javax.vecmath.Vector2f;
+import javax.vecmath.Vector3f;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.swing.GraphView2D;
@@ -22,7 +18,6 @@ import jcog.spacegraph.shape.Rect;
  * @author seh
  */
 public class FDLayout extends GraphViewProcess {
-    private MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> digraph;
 
     public class VertexBody {
         public final Vector2f position;
@@ -52,18 +47,10 @@ public class FDLayout extends GraphViewProcess {
     }
 
     @Override
-    public void reset(GraphView2D graphView) {
-        
-        digraph = graphView.getMind().foldHypergraphEdges();
-
-        graphView.edgeCurve.clear();
-        for (HyperedgeSegment fe : digraph.getEdges()) {
-            graphView.addEdge(fe);
-        }
-        
-        graphView.atomRect.clear();
-        for (Atom a : digraph.getNodes()) {
-            Rect r = graphView.addVertex(a);
+    public void refresh(GraphView2D graphView) {
+                
+        for (Atom a : graphView.getVisibleVertices()) {
+            Rect r = graphView.getVertexShape(a);
             
             final float x = r.getCenter().x();
             final float y = r.getCenter().y();
@@ -109,12 +96,12 @@ public class FDLayout extends GraphViewProcess {
 //        return bb;
 //    }    
 
-    protected void applyCoulombsLaw() {
+    protected void applyCoulombsLaw(GraphView2D g) {
         final Vector2f dd = new Vector2f();
         final Vector2f repulsive = new Vector2f();
         
-        for (final Atom a : digraph.getNodes()) {            
-            for (final Atom b : digraph.getNodes()) {
+        for (final Atom a : g.getVisibleVertices()) {            
+            for (final Atom b : g.getVisibleVertices()) {
                 if (a == b) continue;
                     
                 final Vector2f va = getPosition(a);
@@ -139,8 +126,8 @@ public class FDLayout extends GraphViewProcess {
         return idealLength;
     }
 
-    protected void applyHookesLaw() {
-        for (HyperedgeSegment s : digraph.getEdges()) {
+    protected void applyHookesLaw(GraphView2D g) {
+        for (HyperedgeSegment s : g.getVisibleEdges()) {
             final Atom a = s.getSourceNode();
             final Atom b = s.getDestinationNode();
             final Vector2f pa = getPosition(a);
@@ -161,8 +148,8 @@ public class FDLayout extends GraphViewProcess {
         }
     }
     
-    protected void updateVelocityAndPosition(double dt)  {
-        for (final Atom a : digraph.getNodes()) {            
+    protected void updateVelocityAndPosition(final GraphView2D gv, double dt)  {
+        for (final Atom a : gv.getVisibleVertices()) {            
             final Vector2f f = new Vector2f(getForce(a));
             f.scale((float)dt);
             
@@ -173,55 +160,39 @@ public class FDLayout extends GraphViewProcess {
             final Vector2f vt = new Vector2f(v);
             vt.scale((float)dt);
             
-            getPosition(a).add(vt);
+            final Vector2f pos = getPosition(a);
+            pos.add(vt);
             
+            gv.setTargetCenter(gv.getVertexShape(a), pos.x, pos.y, 0);
         }        
     }
 
-    protected void attractToCenter() {
-        for (final Atom a : digraph.getNodes()) {            
+    protected void attractToCenter(GraphView2D g) {
+        for (final Atom a : g.getVisibleVertices()) {            
             Vector2f direction = new Vector2f(getPosition(a));
             direction.scale(-1.0f * (float)this.repulsion / 50.0f);
             applyForce(a, direction, true);
         }
         
     }
+    
+    public void fdLayoutToShapes(final GraphView2D g) {
+        for (final Atom a : g.getVisibleVertices()) {
+            final Vector2f v = getPosition(a);
+            Rect tr = g.getVertexShape(a);
+            g.setTargetCenter(tr, v.getX(), v.getY(), 0);
+        }        
+    }
             
     
     @Override
-    protected void update(GraphView2D g) {
-
+    protected void update(final GraphView2D g) {       
+        applyCoulombsLaw(g);
+        applyHookesLaw(g);
+        attractToCenter(g);
+        updateVelocityAndPosition(g,dt);
         
-        //cleanup vertices
-        //List<Atom> toRemove = new LinkedList();
-//        for (Atom a : digraph.getNodes()) {
-//            if (!g.atomRect.containsKey(a))
-//                toRemove.add(a);
-//        }
-//        for (Atom a : toRemove) {
-//            bodies.remove(a);
-//            g.atomRect.remove(a);
-//        }
-        
-        applyCoulombsLaw();
-        applyHookesLaw();
-        attractToCenter();
-        updateVelocityAndPosition(dt);
-
-        //        // stop simulation when energy of the system goes below a threshold
-//        if (t.totalEnergy() < 0.1)
-//        {
-//                clearInterval(t.intervalId);
-//                t.intervalId = null;
-//                if (typeof(done) !== 'undefined') { done(); }
-//        }
-
-        
-        for (Atom a : digraph.getNodes()) {
-            final Vector2f v = getPosition(a);
-            Rect tr = g.addVertex(a);
-            g.setTargetCenter(tr, v.getX(), v.getY(), 0);
-        }
+        fdLayoutToShapes(g);
     }
 
     @Override

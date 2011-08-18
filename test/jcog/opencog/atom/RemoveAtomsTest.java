@@ -2,8 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog;
+package jcog.opencog.atom;
 
+import jcog.opencog.Atom;
+import jcog.opencog.AtomType;
+import jcog.opencog.OCMind;
 import junit.framework.TestCase;
 
 /**

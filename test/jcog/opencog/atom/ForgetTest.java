@@ -2,9 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog;
+package jcog.opencog.atom;
 
 import jcog.math.RandomNumber;
+import jcog.opencog.OCMind;
 import jcog.opencog.attention.Forget;
 import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.util.RandomGraphGenerator;
@@ -45,9 +46,6 @@ public class ForgetTest extends TestCase {
         };
         m.addAgent(rs);
         
-        m.cycle();
-        m.cycle();
-        
         printGraphSize(m);
         
         Forget f = new Forget(0, targetVertices, targetEdges);
@@ -63,6 +61,10 @@ public class ForgetTest extends TestCase {
         
         System.out.println("Forget complete in " + cyclesToFinish + " cycles");
         printGraphSize(m);
+        
+        assertTrue(cyclesToFinish == 1);
+        assertTrue(m.getVertexCount() <= targetVertices);
+        assertTrue(m.getEdgeCount() <= targetEdges);
     }
     
     public static void printMemory(String label) {

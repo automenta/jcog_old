@@ -7,17 +7,26 @@ package jcog.opencog.atom;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
+import edu.uci.ics.jung.graph.Hypergraph;
+import edu.uci.ics.jung.graph.util.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import jcog.atom.OrderedSetHypergraph;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.Operation;
+import jcog.opencog.swing.graph.HyperedgeSegment;
 import org.apache.commons.collections15.IteratorUtils;
 import org.apache.commons.collections15.Predicate;
 import org.apache.log4j.Logger;
@@ -30,143 +39,88 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
 
     final static Logger logger = Logger.getLogger(MemoryAtomSpace.class);
     
-    public final OrderedSetHypergraph<Atom, Atom> graph;
+    private final OrderedSetHypergraph<Atom, Atom> graph;
     
-    private Map<Atom, Class<? extends AtomType>> atomToType;
+    private final Map<Atom, AtomData> atomData;
     private Multimap<Class<? extends AtomType>, Atom> typesToAtom;
-    private Map<Atom, String> names;
+    protected NavigableMap<Atom, AttentionValue> attentionSortedBySTI;
+    private short minSTISeen = 0, maxSTISeen = 0;    
+    
+//    private Map<Atom, Class<? extends AtomType>> atomToType;
+//    private Map<Atom, String> names;
+//    private Map<Atom, TruthValue> truth;
+//    private Map<Atom, AttentionValue> attention;
+    
 
     public MemoryAtomSpace() {
         super();
         graph = new OrderedSetHypergraph<Atom, Atom>();
+        atomData = new HashMap();                
         typesToAtom = HashMultimap.create();
-        atomToType = new HashMap();
-        names = new HashMap();
+        
+        clear();
     }
-    
-    protected boolean indexAtom(Atom a, Class<? extends AtomType> type, String name) {
-        typesToAtom.put(type, a);        //TODO check if this preserves previously-added types
-        atomToType.put(a, type);
-        
-        String targetName = null;
-        if (name!=null) {
-            targetName = name;
-        }
-        
-        if (targetName!=null) {
-            names.put(a, targetName);  
-        }
-        else {
-            names.remove(a);
-        }
-        
-        return true;
-    }
-    
     
     @Override
-    public boolean addVertex(Class<? extends AtomType> type, Atom a, String name)  {
-        if (indexAtom(a, type, name)) {
-            graph.addVertex(a);
-            return true;        
-        }
-        return false;
+    public void clear() { 
+        graph.clear();
+        atomData.clear();
+        typesToAtom.clear();
+    
+        updateIndexes();
     }
     
     
+    public AtomData getData(final Atom a) {
+        return atomData.get(a);
+    }
     
-    protected void unindexAtom(Atom a) {
+    protected void indexAtom(final Atom a, final Class<? extends AtomType> type, final String name) {       
+        final AtomData ad = new AtomData(type, name, newDefaultTruthValue(a), newDefaultAttentionValue(a));
+        atomData.put(a, ad);
+        
+        typesToAtom.put(type, a);        //TODO check if this preserves previously-added types
+        
+    }
+    
+    protected void unindexAtom(final Atom a) {
         Class<? extends AtomType> t = getType(a);
         typesToAtom.remove(t, a);      //TODO check if this preserves previously-added types
-        atomToType.remove(a);        
-        names.remove(a);                
+        atomData.remove(a);
     }
     
-    protected boolean removeVertex(Atom a) {
-        if (!graph.containsVertex(a)) {
-            return false;
-        }
-     
-        unindexAtom(a);
-        
-        return graph.removeVertex(a);
+    public Atom addEdge(Class<? extends AtomType> t, List<Atom> members) {
+        Atom[] ma = new Atom[members.size()];
+        members.toArray(ma);    
+        return addEdge(t, ma);
     }
-    
-    protected boolean removeEdge(Atom e) {
-        if (!graph.containsEdge(e)) {
-            return false;
+
+    public Atom addEdge(Class<? extends AtomType> t, Atom... members) {
+        return addEdge(t, null, members);
+    }
+
+
+    public Atom addVertex(Class<? extends AtomType> type) {
+        final Atom a = new Atom();
+        if (addVertex(type, a, a.toString())) {
+            return a;
         }
-        
-        unindexAtom(e);
-        
-        return graph.removeEdge(e);
+        return null;
+    }
+
+    public Atom addVertex(Class<? extends AtomType> type, String name) {
+        final Atom a = new Atom();
+        if (addVertex(type, a, name)) {
+            return a;
+        }
+        return null;
     }
 
     @Override
-    public Collection<Atom> getIncidentEdges(Atom vertex) {
-        return graph.getIncidentEdges(vertex);
-    }
-    
-    @Override
-    public Collection<Atom> getIncidentVertices(Atom edge) {
-        return graph.getIncidentVertices(edge);
-    }
-    
-    public static boolean isEqual(Collection<Atom> a, Atom[] b) {
-        if (a.size()!=b.length)
-            return false;
-        
-        int i = 0;
-        for (Atom x : a) {
-            if (x != b[i++])
-                return false;
-        }
-        return true;
-    }
-    
-    @Override
-    public Atom getEdge(Class<? extends AtomType> type, Atom... members) {
-        if (members.length == 0)
-            return null;
-        
-        Collection<Atom> incidentEdges = getIncidentEdges(members[0]);
-        if (incidentEdges == null)
-            return null;
-        
-        for (Atom e : incidentEdges) {
-            if (getType(e).equals(type)) {
-                Collection<Atom> iv = getIncidentVertices(e);
-                if (isEqual(iv, members))
-                    return e;
-            }
-        }
-        
-        return null;
-    }
-        
-    
-    public Collection<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
-        if (!includeSubtypes) {
-            //TODO unmodifiable
-            return typesToAtom.get(type);
-        }
-        else {
-            List<Atom> la = new LinkedList();
-            for (Class<? extends AtomType> ca : typesToAtom.keySet()) {
-                if (type.isAssignableFrom(ca)) {
-                    la.addAll(typesToAtom.get(ca));
-                }
-            }
-            return la;
-        }
-    }
-    
-    public Class<? extends AtomType> getType(Atom a) {
-        return atomToType.get(a);
-    }
-    
-    public String getName(Atom a) {
-        return names.get(a);
+    public boolean addVertex(Class<? extends AtomType> type, Atom a, String name)  {
+        graph.addVertex(a);
+        indexAtom(a, type, name);
+        return true;        
     }
     
     @Override
@@ -211,20 +165,133 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         }
 
         Atom e = new Atom();
+
+        graph.addEdge(e, memberList);
+        
         indexAtom(e, t, name);
         
-        graph.addEdge(e, memberList);
         
         return e;        
     }
     
+//    protected boolean removeVertex(Atom a) {
+//        if (graph.containsVertex(a)) {
+//            unindexAtom(a);       
+//            graph.removeVertex(a);
+//            return true;        
+//        }
+//     
+//        return false;
+//    }
+//    
+//    protected boolean removeEdge(Atom e) {
+//        if (graph.containsEdge(e)) {
+//            unindexAtom(e);
+//            graph.removeEdge(e);
+//            return true;
+//        }
+//        
+//        return false;        
+//    }
+
+    public TruthValue getTruth(Atom a) {
+        return getData(a).truth;
+    }
+
+    public AttentionValue getAttention(Atom a) {
+        return getData(a).attention;
+    }
+
+    /** called by UpdateImportance -- indicates the min and max STI seen by update importance as it iterates across all atoms utilized by Agents */
+    public void setSTIRange(short minSTISeen, short maxSTISeen) {
+        this.minSTISeen = minSTISeen;
+        this.maxSTISeen = maxSTISeen;
+    }
+
+    public TruthValue newDefaultTruthValue(Atom a) {
+        return new SimpleTruthValue();
+    }
+
+    public AttentionValue newDefaultAttentionValue(Atom a) {
+        return new AttentionValue(true);
+    }
     
+    final static Collection<Atom> emptyAtomsList = Collections.unmodifiableCollection(new LinkedList());
     
-    public int getArity(Atom e) {        
+    @Override
+    public Collection<Atom> getIncidentEdges(final Atom vertex) {
+        Collection<Atom> gg = graph.getIncidentEdges(vertex);
+        return (gg!=null) ? Collections.unmodifiableCollection(gg): emptyAtomsList;
+    }
+    
+    @Override
+    public Collection<Atom> getIncidentVertices(final Atom edge) {
+        Collection<Atom> gg = graph.getIncidentVertices(edge);
+        return (gg!=null) ? Collections.unmodifiableCollection(graph.getIncidentVertices(edge)) : emptyAtomsList;
+    }
+    
+    public static boolean isEqual(final Collection<Atom> a, final Atom[] b) {
+        if (a.size()!=b.length)
+            return false;
+        
+        int i = 0;
+        for (Atom x : a) {
+            if (x != b[i++])
+                return false;
+        }
+        return true;
+    }
+    
+    @Override
+    public Atom getEdge(Class<? extends AtomType> type, Atom... members) {
+        if (members.length == 0)
+            return null;
+        
+        Collection<Atom> incidentEdges = getIncidentEdges(members[0]);
+        if (incidentEdges == null)
+            return null;
+        
+        for (Atom e : incidentEdges) {
+            if (getType(e).equals(type)) {
+                Collection<Atom> iv = getIncidentVertices(e);
+                if (isEqual(iv, members))
+                    return e;
+            }
+        }
+        
+        return null;
+    }
+        
+    
+    public Collection<Atom> getAtoms(Class<? extends AtomType> type, boolean includeSubtypes) {
+        if (!includeSubtypes) {
+            //TODO unmodifiable
+            return Collections.unmodifiableCollection(typesToAtom.get(type));
+        }
+        else {
+            List<Atom> la = new LinkedList();
+            for (Class<? extends AtomType> ca : typesToAtom.keySet()) {
+                if (type.isAssignableFrom(ca)) {
+                    la.addAll(typesToAtom.get(ca));
+                }
+            }
+            return Collections.unmodifiableCollection(la);
+        }
+    }
+    
+    public Class<? extends AtomType> getType(final Atom a) {
+        return getData(a).type;
+    }
+    
+    public String getName(final Atom a) {
+        return getData(a).name;
+    }           
+    
+    public int getArity(final Atom e) {        
         return graph.getIncidentCount(e);
     }
     
-    public boolean hasAtom(Atom a) {
+    public boolean containsAtom(final Atom a) {
         if (graph.containsVertex(a))
             return true;
         if (graph.containsEdge(a))
@@ -232,13 +299,11 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return false;
     }
     
-    public boolean isVertex(Atom a) {
-        return getArity(a) == 0;
+    public boolean containsVertex(Atom a) {
+        return graph.containsVertex(a);
     }
-    
-    @Override
-    public void clear() { 
-        logger.error("clear() not implemented yet");
+    public boolean containsEdge(Atom a) {
+        return graph.containsEdge(a);
     }
     
 
@@ -275,12 +340,12 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     
     @Override
     public Collection<Atom> getVertices() {
-        return graph.getVertices();
+        return Collections.unmodifiableCollection(graph.getVertices());
     }
     
     @Override
     public Collection<Atom> getEdges() {
-        return graph.getEdges();
+        return Collections.unmodifiableCollection(graph.getEdges());
     }
     
     public double getMeanEdgeArity() {
@@ -296,29 +361,54 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
         return sum / ((double)num);
     }
     
-    public Multimap<Class<? extends AtomType>, Atom> getTypeIndex() {
-        //TODO return unmodifiable
-        return typesToAtom;
-    }
-    
-    public Map<Atom, String> getNameIndex() {
-        //TODO return unmodifiable
-        return names;
-    }
     
     public Iterator<Atom> iterateAtoms() {
         return IteratorUtils.chainedIterator(iterateVertices(), iterateEdges());
     }
 
     /** removes either an edge or a vertex from the hypergraph.  if it is not a vertex, it tries to remove it as an edge. */
+    @Override
     public boolean remove(Atom a) {
-        if (!removeVertex(a)) {
-            if (!removeEdge(a))
-                return false;            
-        }
+//        if (!removeVertex(a)) {
+//            if (!removeEdge(a)) {
+//                return false;    
+//            }
+//        }
+        graph.removeVertex(a);
+        graph.removeEdge(a);
+        unindexAtom(a);
         return true;
     }
+
+
+    public int getVertexCount() {
+        return getVertices().size();
+    }
+
+    public int getEdgeCount() {
+        return getEdges().size();
+    }
+
+    //TODO debug this
+    public int getOrderInIncidentEdge(Atom a, Atom edge) {
+        int i = 0;
+        if (getIncidentEdges(edge) == null) {
+            return -1;
+        }
+        for (Atom p : getIncidentEdges(edge)) {
+            if (p.equals(a)) {
+                return i;
+            }
+            i++;
+        }
+        return -1;
+    }
     
+    public String getTypeName(final Atom a) {
+        return getType(a).getSimpleName();
+    }
+
+
     //public Atom removeEdge(String t, Atom... members) { }
     
 // 	AtomSpace (void)
@@ -448,12 +538,177 @@ public class MemoryAtomSpace implements ReadableAtomSpace, EditableAtomSpace {
     }
 
     public boolean setName(Atom a, String newName) {
-        if (hasAtom(a)) {
-            names.put(a, newName);
+        if (containsAtom(a)) {
+            getData(a).name = newName;
             return true;
         }
         
         return false;        
     }
+    
+    protected void updateIndexes() {
+        updateSTISort();
+    }
 
+    protected void updateSTISort() {
+        attentionSortedBySTI = new TreeMap<Atom, AttentionValue>(new Comparator<Atom>() {
+
+            @Override
+            public int compare(Atom a, Atom b) {
+                short sa = getSTI(a);
+                short sb = getSTI(b);
+
+                if (sa == sb) {
+                    return -1;
+                }
+                return (sa > sb) ? -1 : 1;
+            }
+        });
+        
+        for (final Entry<Atom, AtomData> ea : atomData.entrySet()) {
+            attentionSortedBySTI.put(ea.getKey(), ea.getValue().attention);            
+        }
+    }
+    
+    /** returns an atom's STI normalized to -1..+1 range */
+    public double getNormalizedSTI(Atom a) {
+        return getNormalizedSTI(a, maxSTISeen, minSTISeen);
+    }
+
+    public double getNormalizedSTI(Atom a, double maxSTI, double minSTI) {
+        double sti = getSTI(a);
+
+        if (maxSTI != minSTI) {
+            return (sti - ((double) minSTI)) / (double) (maxSTI - minSTI);
+        } else {
+            return 0;
+        }
+    }
+
+    public void setVLTI(Atom a, int newVLTI) {
+        getAttention(a).setVLTI(newVLTI);
+    }
+
+    public short getSTI(Atom a) {
+        return getAttention(a).getSTI();
+    }
+
+    public short getLTI(Atom a) {
+        return getAttention(a).getLTI();
+    }
+    
+    public Pair<Short> getSTIRange(Collection<Atom> atoms) {
+        boolean first = true;
+
+        short minSTI = 0, maxSTI = 0;
+
+        for (Atom x : atoms) {
+            if (first) {
+                minSTI = maxSTI = getSTI(x);
+                first = false;
+            } else {
+                short s = getSTI(x);
+                if (s < minSTI) {
+                    minSTI = s;
+                }
+                if (s > maxSTI) {
+                    maxSTI = s;
+                }
+            }
+        }
+
+        return new Pair<Short>(minSTI, maxSTI);
+    }
+   
+    public short getMaxSeenSTI() {
+        return maxSTISeen;
+    }
+
+    public short getMinSeenSTI() {
+        return minSTISeen;
+    }
+
+    public OrderedSetHypergraph<Atom, Atom> getHypergraph() {
+        return graph;
+    }
+
+    /**
+     * Creates a <code>Graph</code> which is an edge-folded version of <code>h</code>, where
+     * hyperedges are replaced by k-cliques in the output graph.
+     *
+     * <p>The vertices of the new graph are the same objects as the vertices of
+     * <code>h</code>, and <code>a</code>
+     * is connected to <code>b</code> in the new graph if the corresponding vertices
+     * in <code>h</code> are connected by a hyperedge.  Thus, each hyperedge with
+     * <i>k</i> vertices in <code>h</code> induces a <i>k</i>-clique in the new graph.</p>
+     *
+     * <p>The edges of the new graph are generated by the specified edge factory.</p>
+     *
+     * @param <V> vertex type
+     * @param <E> input edge type
+     * @param h hypergraph to be folded
+     * @param graph_factory factory used to generate the output graph
+     * @param edge_factory factory used to create the new edges
+     * @return a copy of the input graph where hyperedges are replaced by cliques
+     */
+    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> target, final boolean linkEdgeToMembers) {
+        final Hypergraph<Atom, Atom> h = getHypergraph();
+        
+        for (Atom v : vertices) {
+            target.add(v);
+        }
+        for (Atom e : h.getEdges()) {
+            boolean contained = true;
+            for (Atom iv : getIncidentVertices(e)) {
+                if (!vertices.contains(iv)) {
+                    contained = false;
+                    break;
+                }
+            }
+            if (!contained) {
+                continue;
+            }
+            ArrayList<Atom> incident = new ArrayList(h.getIncidentVertices(e));
+            if (incident.size() == 0) {
+                target.add(e);
+                continue;
+            }
+            else if (incident.size() == 2) {
+                Atom a = incident.get(0);
+                Atom b = incident.get(1);
+                target.add(new HyperedgeSegment(a, b, e, ""));
+            }
+            else {
+                target.add(e);
+                if (linkEdgeToMembers) {
+                    for (int i = 0; i < incident.size(); i++) {
+                        Atom i1 = incident.get(i);
+                        if (i == 0) {
+                            target.add(new HyperedgeSegment(e, i1, e, "("));
+                        } else {
+                            target.add(new HyperedgeSegment(incident.get(i - 1), i1, e, ""));
+                        }
+                    }
+                } else {
+                    final String typeString = getType(e).toString();
+                    //Just link the edge to the first element
+                    for (int i = 0; i < incident.size(); i++) {
+                        if (i > 0) {
+                            target.add(new HyperedgeSegment(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
+                        } else {
+                            target.add(new HyperedgeSegment(e, incident.get(i), e, "(" + typeString));
+                        }
+                    }
+                }
+                
+            }
+        }
+        return target;
+    }
+    
+    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> foldHypergraphEdges() {
+        return foldHypergraphEdges(getVertices(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), true);
+    }
+    
+    
 }

@@ -17,23 +17,21 @@ public abstract class GraphViewProcess  {
     protected OCMind mind;
     //protected GraphView2D graphView;
     
-
     public GraphViewProcess() {
         super();
     }
 
+    public OCMind getMind() {
+        return mind;
+    }   
     
-    public void _update(GraphView2D g) {
-//        if (this.graphView == null) {
-//            this.graphView = g;
-            this.mind = g.getMind();
-//        }
-
+    public void _update(final GraphView2D g) {
+        this.mind = g.getMind();
         accumulated = 0;
         update(g);
     }
 
-    abstract public void reset(GraphView2D g);
+    abstract public void refresh(GraphView2D g);
 
     protected abstract void update(GraphView2D g);
 

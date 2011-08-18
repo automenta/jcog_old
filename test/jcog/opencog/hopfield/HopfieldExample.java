@@ -178,9 +178,11 @@ public class HopfieldExample extends OCMind {
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
         
-        start(0.05);
         
         new GraphSpace(this);
+        
+        run(0.01);
+
     }
 
     public static void main(String[] args) {

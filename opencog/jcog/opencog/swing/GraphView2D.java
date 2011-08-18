@@ -4,10 +4,13 @@
  */
 package jcog.opencog.swing;
 
+import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
 import jcog.opencog.swing.graph.GraphView2DRenderer;
 import jcog.opencog.swing.graph.HyperedgeSegment;
 import jcog.opencog.swing.graph.GraphViewProcess;
 import edu.uci.ics.jung.graph.util.Pair;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -16,8 +19,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.media.opengl.GL2;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -26,7 +27,6 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JToggleButton;
-import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
@@ -49,21 +49,26 @@ import org.apache.commons.collections15.Predicate;
  */
 public class GraphView2D extends Surface implements Drawable {
 
-    final public static ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    public final ConcurrentHashMap<Atom, Rect> atomRect = new ConcurrentHashMap();
-    public final ConcurrentHashMap<HyperedgeSegment, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
-    //TODO
-    //TODO
-    // remove entries from these maps when an object disappears, or store them in the shape objects
-    //TODO
-    //TODO    
-    public final Map<Spatial, Vec3f> targetCenter = new ConcurrentHashMap();
-    public final Map<Spatial, Vec3f> targetScale = new ConcurrentHashMap();
-    private final OCMind mind;
+    private final OCMind mind;    
     public final GraphViewModel param;
+    private final GraphView2DRenderer renderer;
+
+    private MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> digraph;
+    
+    private final Map<Atom, Rect> vertexShape = new ConcurrentHashMap();
+    private final Map<HyperedgeSegment, TrapezoidLine> edgeShape = new ConcurrentHashMap();
+    private final Map<Spatial, Pair<Vec3f>> targetShape = new ConcurrentHashMap(); //1st=center. 2nd=scale
+
+    private final List<GraphViewProcess> processes = new LinkedList();
+        
     private long currentTime = 0;
     private long lastTime = 0;
+    
     private short minSTI, maxSTI;
+
+    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> getDiGraph() {
+        return digraph;
+    }
 
     public static interface GraphViewModel {
 
@@ -95,41 +100,19 @@ public class GraphView2D extends Surface implements Drawable {
         private final JPanel control = new JPanel();
         private final Predicate<Atom> includedAtoms;
         private final Map<String, Pair<Atom>> parameters = new HashMap();
-        //private final Atom parameterNode;
-        private final MindAgent ma;
+        Map<String, JSlider> sliders = new HashMap();
 
         public SeHGraphViewModel1(final OCMind mind) {
             super();
             this.mind = mind;
 
-            ma = new MindAgent(getGraphProcessPeriod()) {
-
-                @Override
-                protected void run(OCMind mind) {
-                    for (String s : parameters.keySet()) {
-                        Atom v = parameters.get(s).getSecond();
-                        mind.setName(v, Double.toString(getSliderValue(s)));
-
-                    }
-//                    if (mind.getSTI(parameterNode) > 0) {
-//                        addStimulus(parameterNode, (short) -DECREASE_STI);
-//                    }
-
-                }
-            };
-
-            mind.addAgent(ma);
-
-            //parameterNode = mind.addVertex(AtomType.conceptNode, this.toString());
-
             control.setLayout(new BoxLayout(control, BoxLayout.PAGE_AXIS));
             {
 //                JButton updateButton = new JButton("Update");
 //                updateButton.addActionListener(new ActionListener() {
-//
 //                    @Override
 //                    public void actionPerformed(ActionEvent e) {
-//                        //updateGraph();                        
+//                        refreshGraph(false);
 //                    }
 //                });
 //                control.add(updateButton);
@@ -179,7 +162,6 @@ public class GraphView2D extends Surface implements Drawable {
         public double fromSlider(int x) {
             return (double) x / ((double) integerScale);
         }
-        Map<String, JSlider> sliders = new HashMap();
 
         public JSlider addSlider(String methodSuffix, double initialValue, double min, double max) {
 
@@ -239,14 +221,10 @@ public class GraphView2D extends Surface implements Drawable {
             return getMeanEquilibriumDistance();
         }
 
-        @Override
-        public double getLayoutUpdatePeriod() {
-            return 0.07;
-        }
 
         @Override
         public float getInterpolationMomentum() {
-            return 0.8f;
+            return 0.9f;
         }
 
         @Override
@@ -264,6 +242,10 @@ public class GraphView2D extends Surface implements Drawable {
 
         @Override
         public double getGraphProcessPeriod() {
+            return 0.01;
+        }
+        @Override
+        public double getLayoutUpdatePeriod() {
             return 0.05;
         }
 
@@ -272,23 +254,7 @@ public class GraphView2D extends Surface implements Drawable {
             return includedAtoms;
         }
     }
-
-    public class GraphViewUpdate extends MindAgent {
-
-        public GraphViewUpdate() {
-            super(0);
-        }
-
-        @Override
-        protected void run(OCMind mind) {
-            if (getPeriod() > 0) {
-                updateGraph();
-            }
-        }
-    }
-    GraphViewUpdate graphViewUpdate;
-    
-    private final GraphView2DRenderer renderer;
+  
     
     public GraphView2D(OCMind mind, final GraphView2DRenderer renderer, final GraphViewModel param, GraphViewProcess... p) {
         super();
@@ -297,58 +263,44 @@ public class GraphView2D extends Surface implements Drawable {
         this.param = param;
         this.renderer = renderer;
 
-        //add(new GridRect(6, 6));
-
         add(this);
 
         add(new PointerLayer(this, 2));
 
         for (GraphViewProcess gvp : p) {
-            gvp.reset(this);
             processes.add(gvp);
         }
 
+        refreshGraph(true);
         
-        mind.addAgent(new MindAgent() {
+        mind.addAgent(new MindAgent(param.getGraphProcessPeriod()) {
 
             @Override
             protected void run(OCMind mind) {
-                for (GraphViewProcess p : processes) {
+                //timestamp("update: " + getPeriod());
+                for (final GraphViewProcess p : processes) {
                     if (p.isReady(GraphView2D.this)) {
                         p._update(GraphView2D.this);
                     } else {
                         p.accumulate(getDT());
                     }
-                    graphViewUpdate.setPeriod(param.getGraphUpdatePeriod());
                 }
+                updateRenderables();
             }
-        }).setPeriod(param.getGraphProcessPeriod());
+        });
 
-        graphViewUpdate = new GraphViewUpdate();
-        mind.addAgent(graphViewUpdate);
-
-
-//        final HyperassociativeLayoutProcess hlp = new HyperassociativeLayoutProcess(this);
-//        processes.add(hlp);
-//        mind.addAgent(new MindAgent(2.0) {
-//            @Override
-//            protected void run(OCMind mind) {
-//                if (mind.getVertexCount() > 0) {
-//                    Iterator<Atom> i = mind.iterateAtomsByDecreasingSTI();
-//                    if (i.hasNext()) {
-//                        Atom a = i.next();
-//                        hlp.setSelected(a);
-//                    }
-//                }
-//            }            
-//        });
-
-        //processes.add(new FDLayoutProcess(this));
+        //THIS IS TEMPORARY
+        mind.addAgent(new MindAgent(4.0) {
+            @Override
+            protected void run(OCMind mind) {
+                refreshGraph(false);
+            }            
+        });
     }
     
 
     public Rect addVertex(final Atom v) {
-        Rect r = atomRect.get(v);
+        Rect r = vertexShape.get(v);
         if (r == null) {
             String name = mind.getName(v);
             if (name == null) {
@@ -356,179 +308,201 @@ public class GraphView2D extends Surface implements Drawable {
             }
 
             r = renderer.newVertex(mind, v);
+                       
+            vertexShape.put(v, r);
             
-            float rr = 10f;
-            r.getCenter().set(RandomNumber.getFloat(-rr, rr), RandomNumber.getFloat(-rr, rr), 0);
-            atomRect.put(v, r);
+            targetShape.put(r, new Pair<Vec3f>(r.getCenter(), r.getScale()));
+        
+        }
+        else {
+            System.err.println("do not call addVertex for already added atoms like " + v);
         }
         return r;
     }
-
-    private void updateRect(Atom vertex, Rect r) {
-        renderer.updateVertex(this, vertex, r);
-    }
-    private void updateCurve(HyperedgeSegment e) {
-        if (edgeCurve.get(e)!=null)
-            renderer.updateEdge(this, e.parentEdge, edgeCurve.get(e));
-    }
-
-    protected Vec3f newInitialPosition(float r, float z) {
-//        final float z = 0.5f;
-//        float r = 4.0f;
-        return new Vec3f(RandomNumber.getFloat(-r, r), RandomNumber.getFloat(-r, r), z);
-    }
-
-    public void addEdge(final HyperedgeSegment e) {
+    
+    public TrapezoidLine addEdge(final HyperedgeSegment e) {
         final Atom s = e.getSourceNode();
         final Atom t = e.getDestinationNode();
-        TrapezoidLine c = edgeCurve.get(e);
+        TrapezoidLine c = edgeShape.get(e);
         if (c == null) {
-            c = renderer.newEdge(mind, e.parentEdge, s, t, atomRect.get(s), atomRect.get(t));
-            edgeCurve.put(e, c);
+            c = renderer.newEdge(mind, e.parentEdge, s, t, vertexShape.get(s), vertexShape.get(t));
+            edgeShape.put(e, c);
+        }
+        else {
+            System.err.println("do not call addEdge for already added edges like " + e);            
+        }
+        return c;
+    }
+
+    public void removeVertex(final Atom v) {
+        if (!vertexShape.containsKey(v)) {
+            System.err.println("do not call removeVertex for non-existent vertexes like " + v);
+            return;
+        }
+        targetShape.remove(vertexShape.get(v));
+        vertexShape.remove(v);
+    }
+    
+    public void removeEdge(final HyperedgeSegment e) {
+        final Atom v = e.parentEdge;
+        if (!edgeShape.containsKey(e)) {
+            System.err.println("do not call removeEdge for non-existent edges like " + e + " " + v);
+            return;
+        }
+        edgeShape.remove(e);
+    }
+
+    private void updateVertex(Atom vertex) {
+        if (mind.containsAtom(vertex))           
+            renderer.updateVertex(this, vertex, getVertexShape(vertex));
+        else {
+            //the atom has been removed since last refreshGraph
+        }
+    }
+    private void updateEdge(HyperedgeSegment e) {
+        if (mind.containsAtom(e.parentEdge)) {
+            renderer.updateEdge(this, e.parentEdge, getEdgeShape(e));
+        }
+        else {
+            //the atom has been removed since last refreshGraph
         }
     }
 
 
-//    protected void addEdge(Atom e) {
-//        addVertex(e);
-//        
-//        final List<Atom> iv = new ArrayList(mind.getIncidentVertices(e));
-//        if (iv.size() == 1) {
-//            addEdge(e, iv.get(0));
-//        }
-//        else {
-//            for (Atom i : iv) {
-//                addVertex(i);
-//                addEdge(e, i);
-//            }
-//        }
-//        
-//    }
-    protected void updateGraph() {
+    protected void refreshGraph(boolean forceRefreshs) {
 
         int remained = 0, removed = 0, added = 0;
 
         List<Atom> arank = IteratorUtils.toList(mind.iterateAtomsByDecreasingSTI(param.getIncludedAtoms()));
 
-        int n = Math.min(arank.size(), param.getMaxAtoms());
+        final int n = Math.min(arank.size(), param.getMaxAtoms());
 
-        List<Atom> highest = arank.subList(0, n);
+        final List<Atom> highest = arank.subList(0, n);
 
+        final Set<Atom> hm = new HashSet(highest); //use set for faster contains()
 
-        Set<Atom> hm = new HashSet(highest);
+        final List<Atom> verticesToRemove = new LinkedList();
+        final List<Atom> verticesToAdd = new LinkedList();
 
-        List<Atom> rectsToRemove = new LinkedList();
-
-        for (Atom v : atomRect.keySet()) {
+        for (final Atom v : vertexShape.keySet()) {
             if (!hm.contains(v)) {
-                rectsToRemove.add(v);
+                verticesToRemove.add(v);
                 removed++;
             } else {
                 remained++;
             }
         }
 
-        for (Atom v : hm) {
-            if (!atomRect.containsKey(v)) {
-                addVertex(v);
+        for (final Atom v : hm) {
+            if (!vertexShape.containsKey(v)) {
+                verticesToAdd.add(v);
                 added++;
             }
         }
-        for (Atom a : rectsToRemove) {
-            atomRect.remove(a);
+        for (final Atom a : verticesToRemove) {
+            removeVertex(a);
+        }
+        for (final Atom a : verticesToAdd) {
+            addVertex(a);
         }
 
-        //System.out.println("Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
+        //----------------
+        
+        digraph = mind.foldHypergraphEdges(vertexShape.keySet(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), true);
+        Collection<HyperedgeSegment> diEdges = digraph.getEdges();
 
+        final List<HyperedgeSegment> edgesToRemove = new LinkedList();
 
-        if ((added > 0) || (removed > 0)) {
-            for (GraphViewProcess gvp : processes) {
-                gvp.reset(this);
+        final List<HyperedgeSegment> edgesToAdd = new LinkedList();
+        
+        for (final HyperedgeSegment v : edgeShape.keySet()) {
+            if (!digraph.getEdges().contains(v)) {
+                edgesToRemove.add(v);
+                removed++;
+            } else {
+                remained++;
+            }            
+        }
+        for (final HyperedgeSegment v : diEdges) {
+            if (!getVisibleEdges().contains(v)) {
+                edgesToAdd.add(v);
+                added++;
             }
         }
+        
+        for (final HyperedgeSegment a : edgesToRemove) {
+            removeEdge(a);
+        }
+        for (final HyperedgeSegment a : edgesToAdd) {
+            addEdge(a);
+        }
 
-        //System.out.println("  Updated graph: " + n + " out of " + arank.size() + " total atoms; " + remained + ", " + removed + ", " + added);
+        if ((added > 0) || (removed > 0) || (forceRefreshs)) {
+            for (GraphViewProcess gvp : processes) {
+                gvp.refresh(this);
+            }
+        }
+        
+        //System.out.println((getVisibleVertices().size()) + " " + getDiGraph().getNodes().size() + " " + targetShape.size());
+        //System.out.println("  " + (getVisibleEdges().size()) + " " + getDiGraph().getEdges().size());
 
+        updateMinMaxSTI();        
     }
 
     public void setTargetCenter(Spatial s, float x, float y, float z) {
-        Vec3f v = targetCenter.get(s);
-        if (v == null) {
-            v = new Vec3f(x, y, z);
-            targetCenter.put(s, v);
-        } else {
-            v.set(x, y, z);
-        }
+        targetShape.get(s).getFirst().set(x, y, z);
     }
 
     public Vec3f getTargetScale(Spatial s) {
-        Vec3f v = targetScale.get(s);
-        if (v == null) {
-            v = new Vec3f(0, 0, 0);
-            targetScale.put(s, v);
-        }
-        return v;
+        return targetShape.get(s).getSecond();
     }
 
     public void setTargetScale(Spatial s, float x, float y, float z) {
-        Vec3f v = targetScale.get(s);
-        if (v == null) {
-            v = new Vec3f(x, y, z);
-            targetScale.put(s, v);
-        } else {
-            v.set(x, y, z);
-        }
+        targetShape.get(s).getSecond().set(x, y, z);
     }
 
     public OCMind getMind() {
         return mind;
     }
     
-    final List<GraphViewProcess> processes = new LinkedList();
 
-    protected void layoutGraph() {
-
-        for (Atom v : atomRect.keySet()) {
-            if (mind.hasAtom(v)) {
-                Rect r = atomRect.get(v);
-                if (r != null) {
-                    updateRect(v, r);
-                } else {
-                    System.out.println("failed to remove atom: " + v);
-                }
-            }
-            else {
-                //atomRect.remove(v);
-            }
+    protected void updateRenderables() {
+        for (final Atom v : getVisibleVertices()) {
+            updateVertex(v);
         }
-        for (HyperedgeSegment e : edgeCurve.keySet()) {
-            updateCurve(e);
-        }
-
+        for (final HyperedgeSegment e : getVisibleEdges()) {
+            updateEdge(e);
+        }        
+    }
+    
+    public static void timestamp(String msg) {
+        double t = ((double)System.nanoTime()) / 1.0e9;
+        System.out.println(t + ": " + msg);
+    }
+    protected void interpolate() {
+        final float momentum = param.getInterpolationMomentum();
 
         //interpolate
-        final float momentum = param.getInterpolationMomentum();
-        for (Entry<Spatial, Vec3f> e : targetCenter.entrySet()) {
+        for (final Entry<Spatial, Pair<Vec3f>> e : targetShape.entrySet()) {
             final Spatial s = e.getKey();
-            final Vec3f v = e.getValue();
-            s.getCenter().lerp(v, momentum);
-
-
-            final Vec3f vs = targetScale.get(s);
-            if (vs != null) {
-                s.getScale().lerp(vs, momentum);
-            }
+            
+            final Vec3f pos = e.getValue().getFirst();
+            final Vec3f vs = e.getValue().getSecond();
+            
+            s.getCenter().lerp(pos, momentum);
+            s.getScale().lerp(vs, momentum);
+            s.updateGeometry();
         }
     }
 
     protected void drawAtoms(GL2 gl) {        
-        for (Drawable d : atomRect.values()) {
+        for (final Drawable d : vertexShape.values()) {
             d.draw(gl);
         }
     }
 
     protected void drawEdges(GL2 gl) {
-        for (Drawable d : edgeCurve.values()) {
+        for (final Drawable d : edgeShape.values()) {
             d.draw(gl);
         }
     }
@@ -537,14 +511,16 @@ public class GraphView2D extends Surface implements Drawable {
         return (currentTime - lastTime) / 1.0e9;
     }
 
-    @Override
-    public void draw(GL2 gl) {
-        lastTime = currentTime;
-        currentTime = System.nanoTime();
-
-        boolean first = true;
-        
-        for (Atom a : atomRect.keySet()) {
+    public Collection<Atom> getVisibleVertices() {
+        return Collections.unmodifiableCollection(vertexShape.keySet());
+    }
+    public Collection<HyperedgeSegment> getVisibleEdges() {
+        return Collections.unmodifiableCollection(edgeShape.keySet());
+    }
+    
+    protected void updateMinMaxSTI() {
+        boolean first = true;        
+        for (final Atom a : getVisibleVertices()) {
             if (first) {
                 minSTI = maxSTI = mind.getSTI(a);
                 first = false;
@@ -557,12 +533,26 @@ public class GraphView2D extends Surface implements Drawable {
                     maxSTI = as;
                 }
             }
-        }
+        }        
+    }
+    
+    @Override
+    public void draw(GL2 gl) {
+        lastTime = currentTime;
+        currentTime = System.nanoTime();
 
-        layoutGraph();
+        interpolate();
         drawAtoms(gl);
         drawEdges(gl);
-
     }
+    
+    public Rect getVertexShape(final Atom a) {
+        return vertexShape.get(a);
+    }
+    
+    public TrapezoidLine getEdgeShape(final HyperedgeSegment a) {
+        return edgeShape.get(a);
+    }
+
 
 }

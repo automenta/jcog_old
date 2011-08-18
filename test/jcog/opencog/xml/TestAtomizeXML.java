@@ -14,12 +14,8 @@ import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.MessageTokenizer;
 import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.attention.SpreadImportance;
-import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.ConsoleWindow.JavascriptConsoleWindow;
-import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView2D;
 import jcog.opencog.util.AtomizeXML;
-import jcog.spacegraph.swing.SwingWindow;
 
 /**
  *
@@ -54,13 +50,15 @@ public class TestAtomizeXML {
         m.addAgent(new DecaySTI(0.5, (short)1));
         m.addAgent(new Forget(0.5, 20000, 40000));
         
-        m.addAgent(new AddRandomHebbianEdges(0.5, 64, 8, 4000, 5000));
+        m.addAgent(new AddRandomHebbianEdges(0.2, 64, 8, 4000, 5000));
         m.addAgent(new RandomStimulation(0.5, (short)200, 3));
         m.addAgent(new MessageTokenizer(0.5));
         
         new GraphSpace(m);
 
-        m.start(0.05);
-
+        
+        //m.start(0.05);
+        m.run(0.05);
+        
     }
 }
