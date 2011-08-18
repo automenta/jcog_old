@@ -11,11 +11,13 @@ import jcog.opencog.Atom;
  *
  * @author seh
  */
-public class FoldedEdge extends AbstractDirectedEdge<Atom> {
+public class HyperedgeSegment extends AbstractDirectedEdge<Atom> {
+    //TODO add support for multiple parallel edges from src to dest
+    
     public final String label;
     public final Atom parentEdge;
 
-    public FoldedEdge(final Atom src, final Atom dest, final Atom parentEdge, final String label) {
+    public HyperedgeSegment(final Atom src, final Atom dest, final Atom parentEdge, final String label) {
         super(src, dest);
         this.label = label;
         this.parentEdge = parentEdge;
@@ -23,9 +25,9 @@ public class FoldedEdge extends AbstractDirectedEdge<Atom> {
 
     @Override
     public String toString() {
-        return label;
+        return label;        
     }
-
+    
     @Override
     public int hashCode() {
         return parentEdge.hashCode() + getSourceNode().hashCode() + getDestinationNode().hashCode();
@@ -33,8 +35,8 @@ public class FoldedEdge extends AbstractDirectedEdge<Atom> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof FoldedEdge) {
-            FoldedEdge fe = (FoldedEdge) obj;
+        if (obj instanceof HyperedgeSegment) {
+            HyperedgeSegment fe = (HyperedgeSegment) obj;
             return (fe.parentEdge == parentEdge) && (fe.getSourceNode() == getSourceNode()) && (fe.getDestinationNode() == getDestinationNode());
         }
         return false;

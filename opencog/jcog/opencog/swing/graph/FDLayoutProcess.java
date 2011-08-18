@@ -24,7 +24,7 @@ import jcog.spacegraph.shape.Rect;
  * @author seh
  */
 public class FDLayoutProcess extends GraphViewProcess {
-    private MutableDirectedAdjacencyGraph<Atom, FoldedEdge> digraph;
+    private MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> digraph;
 
     Map<Atom, Vector2f> coords = new HashMap();
     double repulsion = 0.01;
@@ -55,7 +55,7 @@ public class FDLayoutProcess extends GraphViewProcess {
      * @param edge_factory factory used to create the new edges
      * @return a copy of the input graph where hyperedges are replaced by cliques
      */
-    public MutableDirectedAdjacencyGraph<Atom, FoldedEdge> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, FoldedEdge> target, final Hypergraph<Atom, Atom> h, boolean linkEdgeToMembers) {
+    public MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> foldHypergraphEdges(final Collection<Atom> vertices, final MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> target, final Hypergraph<Atom, Atom> h, boolean linkEdgeToMembers) {
         for (Atom v : vertices) {
             target.add(v);
         }
@@ -79,9 +79,9 @@ public class FDLayoutProcess extends GraphViewProcess {
                 for (int i = 0; i < incident.size(); i++) {
                     Atom i1 = incident.get(i);
                     if (i == 0) {
-                        target.add(new FoldedEdge(e, i1, e, "("));
+                        target.add(new HyperedgeSegment(e, i1, e, "("));
                     } else {
-                        target.add(new FoldedEdge(incident.get(i - 1), i1, e, ""));
+                        target.add(new HyperedgeSegment(incident.get(i - 1), i1, e, ""));
                     }
                 }
             } else {
@@ -89,9 +89,9 @@ public class FDLayoutProcess extends GraphViewProcess {
                 //Just link the edge to the first element
                 for (int i = 0; i < incident.size(); i++) {
                     if (i > 0) {
-                        target.add(new FoldedEdge(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
+                        target.add(new HyperedgeSegment(incident.get(i - 1), incident.get(i), e, Integer.toString(i)));
                     } else {
-                        target.add(new FoldedEdge(e, incident.get(i), e, "(" + typeString));
+                        target.add(new HyperedgeSegment(e, incident.get(i), e, "(" + typeString));
                     }
                 }
             }
@@ -102,11 +102,11 @@ public class FDLayoutProcess extends GraphViewProcess {
     @Override
     public void reset() {
         super.reset();
-        digraph = foldHypergraphEdges(graphView.atomRect.keySet(), new MutableDirectedAdjacencyGraph<Atom, FoldedEdge>(), mind.getAtomSpace().graph, true);
-        Collection<FoldedEdge> diEdges = digraph.getEdges();
+        digraph = foldHypergraphEdges(graphView.atomRect.keySet(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), mind.getAtomSpace().graph, true);
+        Collection<HyperedgeSegment> diEdges = digraph.getEdges();
 
         graphView.edgeCurve.clear();
-        for (FoldedEdge fe : diEdges) {
+        for (HyperedgeSegment fe : diEdges) {
             graphView.addEdge(fe);
         }
         

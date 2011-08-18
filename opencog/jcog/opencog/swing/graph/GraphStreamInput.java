@@ -17,7 +17,7 @@ import org.codehaus.jackson.JsonNode;
  * @see http://wiki.gephi.org/index.php/Specification_-_GSoC_Graph_Streaming_API
  * @author seh
  */
-public class GraphStreaming {
+public class GraphStreamInput {
     private final OCMind mind;
     private final String namePrefix;
 
@@ -51,6 +51,8 @@ public class GraphStreaming {
             else if (n.has("ce"))
                 g = g.ce;                
             
+            //TODO support batch operations
+            
             if (g!= g.other) {
                 JsonNode an = n.get(g.toString());
                 Iterator<String> ii = an.getFieldNames();
@@ -69,7 +71,7 @@ public class GraphStreaming {
 
     }
 
-    public GraphStreaming(OCMind mind, String namePrefix, String url) {
+    public GraphStreamInput(OCMind mind, String namePrefix, String url) {
         super();
         this.mind = mind;
         this.namePrefix = namePrefix;
@@ -106,11 +108,11 @@ public class GraphStreaming {
         boolean directed = getParameter(xn, "directed", "false").equals("true");
         
         final Class<? extends AtomType> edgeType = directed ? AtomType.orderedLink : AtomType.unorderedLink;
-        mind.addEdge(edgeType, namePrefix + id, getVertex(source), getVertex(target));
+        mind.addEdge(edgeType, namePrefix + label, getVertex(source), getVertex(target));
     }
     
     
     public static void main(String[] args) {
-        new GraphStreaming(new OCMind(), "amazon_", "http://www.di.unito.it/~panisson/amazon.json");
+        new GraphStreamInput(new OCMind(), "amazon_", "http://www.di.unito.it/~panisson/amazon.json");
     }
 }

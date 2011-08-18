@@ -72,7 +72,7 @@ public class BasicGraphView2DRenderer implements GraphView2DRenderer {
         final float edgeRatio = UnorderedLink.class.isAssignableFrom(mind.getType(edge)) ? 1.0F : 3.0F;
         float[] curveProfile = new float[]{w * edgeWidthScale, w * (edgeWidthScale / edgeRatio)};
         c.setWidths(curveProfile);
-        c.setZOffset(-0.5f);
+        c.setZOffset(-0.1f);
         
         final float v = 0.7F + 0.3F * (float) mind.getTruth(edge).getMean();
         String type = mind.getTypeName(edge);

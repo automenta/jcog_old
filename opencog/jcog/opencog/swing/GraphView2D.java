@@ -5,7 +5,7 @@
 package jcog.opencog.swing;
 
 import jcog.opencog.swing.graph.GraphView2DRenderer;
-import jcog.opencog.swing.graph.FoldedEdge;
+import jcog.opencog.swing.graph.HyperedgeSegment;
 import jcog.opencog.swing.graph.GraphViewProcess;
 import edu.uci.ics.jung.graph.util.Pair;
 import java.util.HashMap;
@@ -51,7 +51,7 @@ public class GraphView2D extends Surface implements Drawable {
 
     final public static ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     public final ConcurrentHashMap<Atom, Rect> atomRect = new ConcurrentHashMap();
-    public final ConcurrentHashMap<FoldedEdge, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
+    public final ConcurrentHashMap<HyperedgeSegment, TrapezoidLine> edgeCurve = new ConcurrentHashMap();
     //TODO
     //TODO
     // remove entries from these maps when an object disappears, or store them in the shape objects
@@ -364,7 +364,7 @@ public class GraphView2D extends Surface implements Drawable {
     private void updateRect(Atom vertex, Rect r) {
         renderer.updateVertex(this, vertex, r);
     }
-    private void updateCurve(FoldedEdge e) {
+    private void updateCurve(HyperedgeSegment e) {
         renderer.updateEdge(this, e.parentEdge, edgeCurve.get(e));
     }
 
@@ -374,7 +374,7 @@ public class GraphView2D extends Surface implements Drawable {
         return new Vec3f(RandomNumber.getFloat(-r, r), RandomNumber.getFloat(-r, r), z);
     }
 
-    public void addEdge(final FoldedEdge e) {
+    public void addEdge(final HyperedgeSegment e) {
         final Atom s = e.getSourceNode();
         final Atom t = e.getDestinationNode();
         TrapezoidLine c = edgeCurve.get(e);
@@ -497,7 +497,7 @@ public class GraphView2D extends Surface implements Drawable {
                 //atomRect.remove(v);
             }
         }
-        for (FoldedEdge e : edgeCurve.keySet()) {
+        for (HyperedgeSegment e : edgeCurve.keySet()) {
             updateCurve(e);
         }
 

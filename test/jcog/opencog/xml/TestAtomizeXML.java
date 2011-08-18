@@ -17,7 +17,7 @@ import jcog.opencog.swing.AttentionControlPanel;
 import jcog.opencog.swing.ConsoleWindow.JavascriptConsoleWindow;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView2D;
-import jcog.opencog.swing.graph.GraphStreaming;
+import jcog.opencog.swing.graph.GraphStreamInput;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -46,7 +46,7 @@ public class TestAtomizeXML {
     public static void main(String[] args) {
         OCMind m = new OCMind();
         //new AtomizeXML(m, "/tmp/x.xml");
-        new GraphStreaming(m, "x_", "file:///tmp/x.json");
+        new GraphStreamInput(m, "x_", "file:///tmp/x.json");
         
         m.addAgent(new LearnHebbian());        
         m.addAgent(new SpreadImportance());
