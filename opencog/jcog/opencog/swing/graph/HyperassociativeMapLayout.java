@@ -37,6 +37,8 @@ public class HyperassociativeMapLayout extends GraphViewProcess {
     
     @Override
     public void reset(final GraphView2D graphView) {
+        if (digraph == null)
+            return;
         
         digraph = mind.foldHypergraphEdges(graphView.atomRect.keySet(), new MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment>(), true);
         Collection<HyperedgeSegment> diEdges = digraph.getEdges();

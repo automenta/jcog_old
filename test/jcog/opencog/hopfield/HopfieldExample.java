@@ -4,20 +4,17 @@
  */
 package jcog.opencog.hopfield;
 
-import jcog.opencog.swing.AttentionControlPanel;
 import java.util.HashMap;
 import java.util.Map;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
+import jcog.opencog.GraphSpace;
 import jcog.opencog.util.AtomSpacePrinter;
 import jcog.opencog.OCMind;
 import jcog.opencog.MindAgent;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.SpreadImportance;
-import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView2D;
-import jcog.spacegraph.swing.SwingWindow;
 
 /**
  *
@@ -181,10 +178,9 @@ public class HopfieldExample extends OCMind {
         AtomArray2DPanel bitmapPanel = new AtomArray2DPanel(bitmap, this);
         bitmapPanel.newWindow();
         
-        new AttentionControlPanel(this, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView2D(this)), 800, 800, true);
-
         start(0.05);
+        
+        new GraphSpace(this);
     }
 
     public static void main(String[] args) {

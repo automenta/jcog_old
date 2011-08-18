@@ -39,11 +39,13 @@ public class FDLayout extends GraphViewProcess {
     
     Map<Atom, VertexBody> bodies = new HashMap();
     
-    double stiffness = 0.5;
-    double repulsion = 0.0;
+    double stiffness = 0;
+    double repulsion = 5.0;
     double damping = 0.1;
     float rad = 4.0f;
-    float idealLength = 0.01f;
+    float idealLength = 2f;
+
+    double dt = 0.1;
     
     public FDLayout() {
         super();
@@ -53,15 +55,16 @@ public class FDLayout extends GraphViewProcess {
     public void reset(GraphView2D graphView) {
         
         digraph = graphView.getMind().foldHypergraphEdges();
-        Collection<HyperedgeSegment> diEdges = digraph.getEdges();
 
         graphView.edgeCurve.clear();
-        for (HyperedgeSegment fe : diEdges) {
+        for (HyperedgeSegment fe : digraph.getEdges()) {
             graphView.addEdge(fe);
         }
         
-        for (Atom a : graphView.atomRect.keySet()) {
-            Rect r = graphView.atomRect.get(a);
+        graphView.atomRect.clear();
+        for (Atom a : digraph.getNodes()) {
+            Rect r = graphView.addVertex(a);
+            
             final float x = r.getCenter().x();
             final float y = r.getCenter().y();
             final float z = r.getCenter().z();
@@ -107,25 +110,26 @@ public class FDLayout extends GraphViewProcess {
 //    }    
 
     protected void applyCoulombsLaw() {
+        final Vector2f dd = new Vector2f();
+        final Vector2f repulsive = new Vector2f();
+        
         for (final Atom a : digraph.getNodes()) {            
             for (final Atom b : digraph.getNodes()) {
-                if (a != b) {
+                if (a == b) continue;
                     
-                    final Vector2f va = getPosition(a);
-                    final Vector2f vb = getPosition(b);
-                    
-                    final Vector2f dd = new Vector2f(va);
-                    dd.sub(vb);
-                    
-                    final double distance = dd.length() + 1.0;
-                    dd.normalize();
+                final Vector2f va = getPosition(a);
+                final Vector2f vb = getPosition(b);
 
-                    final Vector2f repulsive = new Vector2f(dd);
-                    repulsive.scale((float)(this.repulsion / (distance * distance * 0.5)) );
-                    
-                    applyForce(a, repulsive, true);
-                    applyForce(b, repulsive, false);
-                }
+                dd.sub(va, vb);
+
+                final double distance = dd.length() + 1.0;
+                dd.normalize();
+
+                repulsive.scale((float)(this.repulsion / (distance * distance * 0.5)), dd);
+
+                //System.out.println("coloumb: " + repulsive);
+                applyForce(a, repulsive, true);
+                applyForce(b, repulsive, false);
             }
         }
         
@@ -151,7 +155,7 @@ public class FDLayout extends GraphViewProcess {
             final Vector2f direction = d;
             
             d.scale((float)(stiffness * displacement * 0.5));
-            
+            //System.out.println("hook: " + d);
             applyForce(a, d, false);
             applyForce(b, d, true);
         }
@@ -188,19 +192,21 @@ public class FDLayout extends GraphViewProcess {
     protected void update(GraphView2D g) {
 
         
-        //cleanup coords
-        List<Atom> toRemove = new LinkedList();
-        for (Atom a : digraph.getNodes()) {
-            if (!g.atomRect.containsKey(a))
-                toRemove.add(a);
-        }
-        for (Atom a : toRemove)
-            bodies.remove(a);
+        //cleanup vertices
+        //List<Atom> toRemove = new LinkedList();
+//        for (Atom a : digraph.getNodes()) {
+//            if (!g.atomRect.containsKey(a))
+//                toRemove.add(a);
+//        }
+//        for (Atom a : toRemove) {
+//            bodies.remove(a);
+//            g.atomRect.remove(a);
+//        }
         
         applyCoulombsLaw();
         applyHookesLaw();
         attractToCenter();
-        updateVelocityAndPosition(0.05);
+        updateVelocityAndPosition(dt);
 
         //        // stop simulation when energy of the system goes below a threshold
 //        if (t.totalEnergy() < 0.1)
@@ -211,12 +217,9 @@ public class FDLayout extends GraphViewProcess {
 //        }
 
         
-        for (Entry<Atom, Rect> i : g.atomRect.entrySet()) {
-            final Vector2f v = getPosition(i.getKey());
-//            if (v == null) {
-//                System.err.println(i + " not mapped by " + this);
-//            }
-            Rect tr = i.getValue();
+        for (Atom a : digraph.getNodes()) {
+            final Vector2f v = getPosition(a);
+            Rect tr = g.addVertex(a);
             g.setTargetCenter(tr, v.getX(), v.getY(), 0);
         }
     }

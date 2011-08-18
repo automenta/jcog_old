@@ -347,7 +347,7 @@ public class GraphView2D extends Surface implements Drawable {
     }
     
 
-    protected void addVertex(final Atom v) {
+    public Rect addVertex(final Atom v) {
         Rect r = atomRect.get(v);
         if (r == null) {
             String name = mind.getName(v);
@@ -361,13 +361,15 @@ public class GraphView2D extends Surface implements Drawable {
             r.getCenter().set(RandomNumber.getFloat(-rr, rr), RandomNumber.getFloat(-rr, rr), 0);
             atomRect.put(v, r);
         }
+        return r;
     }
 
     private void updateRect(Atom vertex, Rect r) {
         renderer.updateVertex(this, vertex, r);
     }
     private void updateCurve(HyperedgeSegment e) {
-        renderer.updateEdge(this, e.parentEdge, edgeCurve.get(e));
+        if (edgeCurve.get(e)!=null)
+            renderer.updateEdge(this, e.parentEdge, edgeCurve.get(e));
     }
 
     protected Vec3f newInitialPosition(float r, float z) {
@@ -519,7 +521,7 @@ public class GraphView2D extends Surface implements Drawable {
         }
     }
 
-    protected void drawAtoms(GL2 gl) {
+    protected void drawAtoms(GL2 gl) {        
         for (Drawable d : atomRect.values()) {
             d.draw(gl);
         }
