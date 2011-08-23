@@ -11,6 +11,7 @@ package jcog.math;
  */
 public class RandomNumber {
 
+    /** inclusive, so be careful with the max parameter */
     public static int getInt(int min, int max) {
         return min + ((int)Math.round(Math.random() * (max-min)));
     }

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog.swing.graph;
+package jcog.opencog.util;
 
 import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
 import java.io.File;
@@ -13,6 +13,7 @@ import java.io.PrintStream;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.OCMind;
+import jcog.opencog.swing.graph.HyperedgeSegment;
 import jcog.opencog.util.AtomizeXML;
 
 /**

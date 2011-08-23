@@ -35,8 +35,6 @@ public class LearnHebbian extends MindAgent {
         while (i.hasNext()) {
             Atom e = i.next();
 
-            if (mind.getArity(e)!=2)
-                continue;
             // for each hebbian link, find targets, work out conjunction and convert
             // that into truthvalue change. the change should be based on existing TV.
             
