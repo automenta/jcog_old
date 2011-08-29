@@ -34,11 +34,11 @@ public class FDLayout extends GraphViewProcess {
     
     Map<Atom, VertexBody> bodies = new HashMap();
     
-    double stiffness = 0;
-    double repulsion = 5.0;
-    double damping = 0.1;
-    float rad = 4.0f;
-    float idealLength = 2f;
+    double stiffness = 5.5;
+    double repulsion = 0.3;
+    double damping = 0.7;
+    float seedRadius = 2.0f;
+    float idealLength = 0.05f;
 
     double dt = 0.1;
     
@@ -63,7 +63,7 @@ public class FDLayout extends GraphViewProcess {
         VertexBody v = bodies.get(a);
         if (v == null) {
             //TODO use random position within a given radius
-            v = new VertexBody(new Vector2f(RandomNumber.getFloat(-rad, rad), RandomNumber.getFloat(-rad, rad)), new Vector2f(), new Vector2f());
+            v = new VertexBody(new Vector2f(RandomNumber.getFloat(-seedRadius, seedRadius), RandomNumber.getFloat(-seedRadius, seedRadius)), new Vector2f(), new Vector2f());
             bodies.put(a, v);
         }
         return v;
@@ -127,7 +127,7 @@ public class FDLayout extends GraphViewProcess {
     }
 
     protected void applyHookesLaw(GraphView2D g) {
-        for (HyperedgeSegment s : g.getVisibleEdges()) {
+        for (final HyperedgeSegment s : g.getVisibleEdges()) {
             final Atom a = s.getSourceNode();
             final Atom b = s.getDestinationNode();
             final Vector2f pa = getPosition(a);
@@ -139,7 +139,6 @@ public class FDLayout extends GraphViewProcess {
             double displacement = getIdealLength(s) - d.length();
             
             d.normalize();
-            final Vector2f direction = d;
             
             d.scale((float)(stiffness * displacement * 0.5));
             //System.out.println("hook: " + d);
@@ -150,8 +149,11 @@ public class FDLayout extends GraphViewProcess {
     
     protected void updateVelocityAndPosition(final GraphView2D gv, double dt)  {
         for (final Atom a : gv.getVisibleVertices()) {            
-            final Vector2f f = new Vector2f(getForce(a));
-            f.scale((float)dt);
+            final Vector2f ff = getForce(a);
+            ff.scale((float)damping);
+
+            final Vector2f f = new Vector2f(ff);
+            f.scale((float)(dt*dt));
             
             final Vector2f v = getVelocity(a);
             v.add(f);

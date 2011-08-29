@@ -242,7 +242,7 @@ public class GraphView2D extends Surface implements Drawable {
 
         @Override
         public double getGraphProcessPeriod() {
-            return 0.01;
+            return 0.005;
         }
         @Override
         public double getLayoutUpdatePeriod() {
@@ -273,10 +273,22 @@ public class GraphView2D extends Surface implements Drawable {
 
         refreshGraph(true);
         
+        //THIS IS TEMPORARY
+        final MindAgent updater = mind.addAgent(new MindAgent(param.getGraphUpdatePeriod()) {
+            @Override
+            protected void run(OCMind mind) {
+                if (getPeriod() > 0)
+                    refreshGraph(false);
+                setPeriod(param.getGraphUpdatePeriod());
+            }            
+        });
+
         mind.addAgent(new MindAgent(param.getGraphProcessPeriod()) {
 
             @Override
             protected void run(OCMind mind) {
+                updater.setPeriod(param.getGraphUpdatePeriod());
+                        
                 //timestamp("update: " + getPeriod());
                 for (final GraphViewProcess p : processes) {
                     if (p.isReady(GraphView2D.this)) {
@@ -289,13 +301,6 @@ public class GraphView2D extends Surface implements Drawable {
             }
         });
 
-        //THIS IS TEMPORARY
-        mind.addAgent(new MindAgent(4.0) {
-            @Override
-            protected void run(OCMind mind) {
-                refreshGraph(false);
-            }            
-        });
     }
     
 

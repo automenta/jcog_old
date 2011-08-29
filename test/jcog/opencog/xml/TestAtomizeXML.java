@@ -58,7 +58,7 @@ public class TestAtomizeXML {
 
         
         //m.start(0.05);
-        m.run(0.05);
+        m.run(0.0);
         
     }
 }

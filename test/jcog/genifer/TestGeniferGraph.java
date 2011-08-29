@@ -7,14 +7,11 @@ package jcog.genifer;
 import jcog.opencog.atom.MapToAtom;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
+import jcog.opencog.GraphSpace;
 import jcog.opencog.OCMind;
 import jcog.opencog.attention.LearnHebbian;
 import jcog.opencog.attention.RandomStimulation;
 import jcog.opencog.attention.SpreadImportance;
-import jcog.opencog.swing.AttentionControlPanel;
-import jcog.opencog.swing.GraphPanel;
-import jcog.opencog.swing.GraphView2D;
-import jcog.spacegraph.swing.SwingWindow;
 import org.armedbear.lisp.LispObject;
 import org.armedbear.lisp.StandardObject;
 
@@ -103,8 +100,7 @@ public class TestGeniferGraph {
         mind.addAgent(new RandomStimulation(0.5, (short)200, 3));
         //mind.addAgent(new MessageTokenizer(0.5));
 
-        new AttentionControlPanel(mind, 0.75).newWindow();          
-        new SwingWindow(new GraphPanel(new GraphView2D(mind)), 800, 800, true);
+        new GraphSpace(mind);
 
         mind.start(0.05);
         
