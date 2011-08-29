@@ -4,16 +4,16 @@
  */
 package jcog.critterding;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import jcog.critterding.Synapse.MotorSynapse;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
+import jcog.opencog.GraphSpace;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.util.GraphStreamOutput;
+import jcog.opencog.attention.DecaySTI;
 
 /**
  *
@@ -26,6 +26,7 @@ public class DemoCritterdingNeuron {
         boolean needsRefresh;
         
         Map<AbstractNeuron, Atom> neuronAtom = new HashMap();
+        Map<Synapse, Atom> synapseEdge = new HashMap();
 
         public AsyncNeuronAgent(Brain b, double period) {
             super(period);
@@ -63,13 +64,18 @@ public class DemoCritterdingNeuron {
             }
             
             //add interneuron connections
-            for (InterNeuron in : brain.getNeuron()) {
-                for (Synapse s : in.getSynapses()) {
-                    mind.addEdge(AtomType.orderedLink, neuronAtom.get(s.inputNeuron), neuronAtom.get(in));
-                }  
-                if (in.motor!=null) {
-                    mind.addEdge(AtomType.orderedLink, neuronAtom.get(in), neuronAtom.get(in.motor));
-                }
+//            for (InterNeuron in : brain.getNeuron()) {
+//                for (Synapse s : in.getSynapses()) {
+//                    mind.addEdge(AtomType.orderedLink, neuronAtom.get(s.inputNeuron), neuronAtom.get(in));
+//                }  
+//                if (in.motor!=null) {
+//                    mind.addEdge(AtomType.orderedLink, neuronAtom.get(in), neuronAtom.get(in.motor));
+//                }
+//            }
+            synapseEdge.clear();
+            for (Synapse s : brain.getEdges()) {
+                Atom e = mind.addEdge(AtomType.orderedLink, neuronAtom.get(s.getSourceNode()), neuronAtom.get(s.getDestinationNode()));
+                synapseEdge.put(s, e);
             }
 
         }
@@ -80,18 +86,32 @@ public class DemoCritterdingNeuron {
                 refresh(mind);
                 needsRefresh = false;
             }
+
+            
+            double momentum = 0.9;
             for (SenseNeuron sn : brain.getSense()) {
-                sn.senseInput+= RandomNumber.getDouble(-1.0, 1.0) * 0.3;
+                //sn.senseInput+= RandomNumber.getDouble(-1.0, 1.0) * 0.9;
+                sn.senseInput = sn.senseInput * momentum + (1.0 - momentum) * RandomNumber.getDouble(-1.0, 1.0);
             }
+
+            brain.forward();
             
             for (AbstractNeuron an : neuronAtom.keySet()) {
                 Atom a = neuronAtom.get(an);
                 
-                double scaleFactor = 10.0;
+                double scaleFactor = 50.0;
                 addStimulus(a, (short)(an.getOutput()*scaleFactor));
             }
             
-            brain.forward();
+            for (Synapse s : synapseEdge.keySet()) {
+                Atom e = synapseEdge.get(s);
+                if (!(s instanceof MotorSynapse)) {
+                    mind.getTruth(e).setMean(0.5 * s.weight);
+                }
+                else
+                    mind.getTruth(e).setMean(1.0);
+            }
+            
         }
         
     }
@@ -99,29 +119,29 @@ public class DemoCritterdingNeuron {
     public DemoCritterdingNeuron() {
         super();
         
-        int inputs = 16;
+        int inputs = 8;
         int outputs = 16;
-        int numNeurons = 256;
+        int numNeurons = 64;
         int minSynapsesPerNeuron = 1;
-        int maxSynapsesPerNeuron = 8;
+        int maxSynapsesPerNeuron = 3;
         
         Brain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
-        BrainGraph bg = new BrainGraph(b);
-        System.out.println(bg.getNodes());
-        System.out.println(bg.getEdges());
+        System.out.println(b.getNodes().size());
+        System.out.println(b.getEdges().size());
         
         OCMind m = new OCMind();
         m.addAgent(new AsyncNeuronAgent(b, 0));
+        m.addAgent(new DecaySTI(0, (short)50));
         
-//        new GraphSpace(m);
-        //m.run(0.01);
+        new GraphSpace(m);
+        m.run(0.01);
         
-        m.cycle();
-        try {
-            new GraphStreamOutput(m, "/tmp/x.json");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+//        m.cycle();
+//        try {
+//            new GraphStreamOutput(m, "/tmp/x.json");
+//        } catch (Exception ex) {
+//            ex.printStackTrace();
+//        }
     }
     
     

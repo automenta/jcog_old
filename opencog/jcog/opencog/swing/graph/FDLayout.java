@@ -35,8 +35,8 @@ public class FDLayout extends GraphViewProcess {
     Map<Atom, VertexBody> bodies = new HashMap();
     
     double stiffness = 5.5;
-    double repulsion = 0.3;
-    double damping = 0.7;
+    double repulsion = 0.1;
+    double damping = 0.3;
     float seedRadius = 2.0f;
     float idealLength = 0.05f;
 

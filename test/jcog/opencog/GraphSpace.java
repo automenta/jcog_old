@@ -7,8 +7,8 @@ package jcog.opencog;
 import jcog.opencog.swing.GraphPanel;
 import jcog.opencog.swing.GraphView2D;
 import jcog.opencog.swing.graph.BasicGraphView2DRenderer;
-import jcog.opencog.swing.graph.FDLayout;
 import jcog.opencog.swing.graph.GraphViewProcess;
+import jcog.opencog.swing.graph.HyperassociativeMapLayout;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -24,8 +24,8 @@ public class GraphSpace {
 
         //new AttentionControlPanel(mind, 0.75).newWindow();          
         
-        //GraphViewProcess layout = new HyperassociativeMapLayout();
-        GraphViewProcess layout = new FDLayout();
+        GraphViewProcess layout = new HyperassociativeMapLayout();
+        //GraphViewProcess layout = new FDLayout();
         
         GraphView2D gv = new GraphView2D(mind, new BasicGraphView2DRenderer(), new GraphView2D.SeHGraphViewModel1(mind), layout);
         new SwingWindow(new GraphPanel(gv), 800, 800, true);

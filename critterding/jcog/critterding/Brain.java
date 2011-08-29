@@ -4,14 +4,19 @@
  */
 package jcog.critterding;
 
+import com.google.common.base.Predicate;
+import com.google.common.collect.Sets;
+import com.syncleus.dann.graph.MutableAdjacencyGraph;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import jcog.critterding.Synapse.MotorSynapse;
 import jcog.math.RandomNumber;
 
 /**
  * java port of critterding's BRAINZ system
  */
-public class Brain {
+public class Brain extends MutableAdjacencyGraph<AbstractNeuron, Synapse> {
     // input / output accessor/mutators
 
     List<SenseNeuron> sense = new ArrayList();
@@ -41,8 +46,6 @@ public class Brain {
     double percentMutation;    //    // brain architecture mutation factor @ mutation time (%)
 //    // INFO
 //    // total neuron & connection keepers
-    int totalNeurons;
-    int totalSynapses;
 //    // after every time instance, this will contain how many neurons where fired in that instant (energy usage help)
     int neuronsFired;
     int motorneuronsFired;
@@ -78,10 +81,10 @@ public class Brain {
 
         percentChancePlasticNeuron = 0.50;
 
-        minPlasticityStrengthen = 100;
-        maxPlasticityStrengthen = 1000;
-        minPlasticityWeaken = 1000;
-        maxPlasticityWeaken = 10000;
+        minPlasticityStrengthen = 10;
+        maxPlasticityStrengthen = 100;
+        minPlasticityWeaken = 10;
+        maxPlasticityWeaken = 100;
 
         percentChanceSensorySynapse = 0.50;
 
@@ -108,6 +111,17 @@ public class Brain {
         }
     }
 
+    public Collection<Synapse> getIncomingSynapses(final InterNeuron n) {
+
+        return Sets.filter(getAdjacentEdges(n), new Predicate<Synapse>() {
+
+            @Override
+            public boolean apply(Synapse t) {
+                return t.getDestinationNode() == n;
+            }
+        });
+    }
+
     public void forward() {
         // reset fired neurons counter
         neuronsFired = 0;
@@ -119,9 +133,9 @@ public class Brain {
 //        for (SenseNeuron n : sense) {
 //            n.receiver.potential = n.output;
 //        }
-        
+
         for (InterNeuron n : neuron) {
-            n.forward();
+            n.forward(getIncomingSynapses(n));
 
             // if neuron fires
             if (n.nextOutput != 0) {
@@ -207,15 +221,15 @@ public class Brain {
     }
 
     public MotorNeuron getRandomMotorNeuron() {
-        return motor.get((int) RandomNumber.getInt(0, motor.size()-1));
+        return motor.get((int) RandomNumber.getInt(0, motor.size() - 1));
     }
 
     public InterNeuron getRandomInterNeuron() {
-        return neuron.get((int) RandomNumber.getInt(0, neuron.size()-1));
+        return neuron.get((int) RandomNumber.getInt(0, neuron.size() - 1));
     }
 
     public SenseNeuron getRandomSenseNeuron() {
-        return sense.get((int) RandomNumber.getInt(0, sense.size()-1));
+        return sense.get((int) RandomNumber.getInt(0, sense.size() - 1));
     }
 
     // build time functions
@@ -223,11 +237,7 @@ public class Brain {
         // new architectural neuron
         NeuronBuilder an = new NeuronBuilder();
 
-        // is it inhibitory ?
-        if (Math.random() <= percentChanceInhibitoryNeuron) {
-            an.isInhibitory = true;
-        } // if not, is it motor ?
-        else if (Math.random() <= percentChanceMotorNeuron) {
+        if (Math.random() <= percentChanceMotorNeuron) {
             MotorNeuron mn = getRandomMotorNeuron();
 
             // check if motor already used
@@ -243,6 +253,9 @@ public class Brain {
                 an.motor = mn;
             }
         }
+        else if (Math.random() <= percentChanceInhibitoryNeuron) {
+            an.isInhibitory = true;
+        } 
 
         // does it have synaptic plasticity ?
         if (Math.random() <= percentChancePlasticNeuron) {
@@ -276,38 +289,19 @@ public class Brain {
     }
 
     public SynapseBuilder newRandomSynapseBuilder(NeuronBuilder bn) {
-        // new architectural synapse
-        SynapseBuilder as = new SynapseBuilder();
-
-        // is it connected to a sensor neuron ?
-        // < 2 because if only 1 archneuron, it can't connect to other one
-        if (Math.random() <= percentChanceSensorySynapse || neuronBuilders.size() < 2) {
-            as.isSensorNeuron = true;
-
-            // sensor neuron id synapse is connected to
-            as.senseNeuron = getRandomSenseNeuron();
-        } // if not determine inter neuron id
-        else {
-            // as in real life, neurons can connect to themselves
-            //as.neuron = getRandomInterNeuron(); //randgen->Instance()->get( 0, ArchNeurons.size()-1 );
-            as.senseNeuron = null;
-        }
-
+        final float weight;
 
         // synaptic weight
         if (bn.hasConsistentSynapses) {
-            if (bn.hasInhibitorySynapses) {
-                as.weight = -1.0f;
-            } else {
-                as.weight = 1.0f;
-            }
+            weight = (bn.hasInhibitorySynapses) ? -1.0f : 1.0f;
         } else {
-            if (Math.random() <= percentChanceInhibitorySynapses) {
-                as.weight = -1.0f;
-            } else {
-                as.weight = 1.0f;
-            }
+            weight = (Math.random() <= percentChanceInhibitorySynapses) ? -1.0f : 1.0f;
         }
+
+        // new architectural synapse
+        //  is it connected to a sensor neuron ?
+        //  < 2 because if only 1 archneuron, it can't connect to other one
+        SynapseBuilder as = new SynapseBuilder(weight, (Math.random() <= percentChanceSensorySynapse || neuronBuilders.size() < 2));
 
         bn.synapseBuilders.add(as);
 
@@ -317,12 +311,14 @@ public class Brain {
     public MotorNeuron newOutput(/*bool* var, unsigned int id*/) {
         MotorNeuron m = new MotorNeuron();
         motor.add(m);
+        add(m);
         return m;
     }
 
     public SenseNeuron newInput() {
         SenseNeuron s = new SenseNeuron();
         sense.add(s);
+        add(s);
         return s;
     }
 
@@ -385,14 +381,11 @@ public class Brain {
         //sense.clear();
         //motor.clear();
 
-        // we know the amount of neurons already, reset totalsynapses for the count later
-        totalNeurons = neuronBuilders.size();
-        totalSynapses = 0;
-
-
         // create all runtime neurons
         for (NeuronBuilder nb : neuronBuilders) {
-            neuron.add(nb.newNeuron(maxSynapses));
+            final InterNeuron n = nb.newNeuron(maxSynapses);
+            neuron.add(n);
+            add(n);
         }
 
         // create their synapses & link them to their inputneurons
@@ -400,6 +393,7 @@ public class Brain {
 
             for (SynapseBuilder sb : n.synapseBuilders) {
                 AbstractNeuron i;
+
                 if (sb.isSensorNeuron) {
                     // sensor neuron id synapse is connected to
                     i = getRandomSenseNeuron();
@@ -408,13 +402,15 @@ public class Brain {
                     // as in real life, neurons can connect to themselves
                     i = getRandomInterNeuron();
                 }
-                
-                n.newSynapse(i, n.dendridicBranches, sb.weight);
+
+
+                newSynapse(i, n, sb.weight);
 
             }
 
-            // count connections
-            totalSynapses += n.synapses.size();
+            if (n.motor!=null) {
+                newMotorSynapse(n, n.motor);
+            }
         }
 
 //			//cerr << "total neurons: " << totalNeurons << "total synapses: " << totalSynapses << endl;
@@ -433,13 +429,13 @@ public class Brain {
     }
 
     public int getTotalNeurons() {
-        return totalNeurons;
+        return getNodes().size();
     }
 
     public int getTotalSynapses() {
-        return totalSynapses;
+        return getEdges().size();
     }
-    
+
 //		// load save architecture (serialize)
 //			void			setArch(string* content);
 //			string*			getArch();
@@ -448,4 +444,22 @@ public class Brain {
 //    // functions
 //    void copyFrom(const   Brainz& otherBrain);
 //			void			mergeFrom(const Brainz& otherBrain1, const Brainz& otherBrain2);
+    private Synapse newSynapse(AbstractNeuron from, InterNeuron to, float weight) {
+        /**
+        [18:53] <bobke> so this function is called at wireArch
+        [18:55] <bobke> first argument is a pointer to the output of the neuron he synapse will connect to
+        [18:55] <bobke> (the phenotype neuron)
+        [18:55] <bobke> on which branch and with what weight
+        [18:56] <bobke> it'll create a synapse in the neuroninter
+        [18:56] <bobke> which has as an input argument 1
+         */
+        final Synapse s = new Synapse(from, to, weight);
+        add(s);
+        return s;
+    }
+
+    private void newMotorSynapse(InterNeuron from, MotorNeuron to) {
+        add(new MotorSynapse(from, to));
+    }
+
 }

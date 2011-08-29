@@ -1,6 +1,6 @@
 package jcog.critterding;
 
-import java.util.LinkedList;
+import java.util.Collection;
 import java.util.List;
 
 public class InterNeuron extends MotorNeuron {
@@ -9,15 +9,14 @@ public class InterNeuron extends MotorNeuron {
     int maxSynapses;
     boolean isInhibitory;
     double firingThreshold;
-    double dendridicBranches;
     MotorNeuron motor;
-    List<Synapse> synapses = new LinkedList();
+    //List<Synapse> synapses = new LinkedList();
     double potential;
     double potentialDecay;
     boolean isPlastic;
     double plasticityStrengthen;
     double plasticityWeaken;
-    double maxWeight = 5.0f;
+    double maxWeight = 1.0f;
     List<SynapseBuilder> synapseBuilders;
 
     public InterNeuron() {
@@ -41,7 +40,7 @@ public class InterNeuron extends MotorNeuron {
         motor = null;
     }
 
-    public void forward() {        
+    public void forward(final Collection<Synapse> synapses) {        
 
         // potential decay
         potential *= potentialDecay;
@@ -54,34 +53,21 @@ public class InterNeuron extends MotorNeuron {
                 s.weight *= plasticityWeaken;
             }
 
-            potential += s.weight * s.dendriteBranch * s.getInput();
+            potential += s.weight * s.getInput();
         }
         
 //        if ((potential!=0) || (output!=0))
 //            System.out.println(this + " pot=" + potential + ", out=" + output + " " + isInhibitory + " " + firingThreshold);
 
         if (isInhibitory) {
-            forwardInhibitory();
+            forwardInhibitory(synapses);
         } else {
-            forwardExhibitory();
+            forwardExhibitory(synapses);
         }
         
     }
 
-    /**
-    [18:53] <bobke> so this function is called at wireArch
-    [18:55] <bobke> first argument is a pointer to the output of the neuron he synapse will connect to
-    [18:55] <bobke> (the phenotype neuron)
-    [18:55] <bobke> on which branch and with what weight
-    [18:56] <bobke> it'll create a synapse in the neuroninter
-    [18:56] <bobke> which has as an input argument 1
-     */
-    public void newSynapse(AbstractNeuron incoming, double dendriteBranch, float synapticWeight) {
-        Synapse s = new Synapse(incoming, dendriteBranch, synapticWeight);
-        synapses.add(s);
-    }
-
-    protected void forwardInhibitory() {
+    protected void forwardInhibitory(final Collection<Synapse> synapses) {
         // do we spike/fire
         if (potential <= -1.0f * firingThreshold) {
             // reset neural potential
@@ -115,7 +101,7 @@ public class InterNeuron extends MotorNeuron {
         }
     }
 
-    protected void forwardExhibitory() {
+    protected void forwardExhibitory(final Collection<Synapse> synapses) {
         // do we spike/fire
         if (potential >= firingThreshold) {
             // reset neural potential
@@ -150,9 +136,8 @@ public class InterNeuron extends MotorNeuron {
         }
     }
 
-    private void clampWeight(Synapse s) {
-        s.weight = Math.min(s.weight, maxWeight);
-        s.weight = Math.max(s.weight, -maxWeight);
+    private void clampWeight(final Synapse s) {
+        s.weight = Math.max(Math.min(s.weight, maxWeight), -maxWeight);
     }
 
 
@@ -164,12 +149,6 @@ public class InterNeuron extends MotorNeuron {
     public double getOutput() {
         return output;
     }
-
-    public List<Synapse> getSynapses() {
-        return synapses;
-    }
-
-
 
 
 }
