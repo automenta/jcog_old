@@ -179,13 +179,12 @@ public class HopfieldExample extends OCMind {
         bitmapPanel.newWindow();
         
         
-        new GraphSpace(this);
-        
-        run(0.01);
 
     }
 
     public static void main(String[] args) {
-        new HopfieldExample(6, 6, 0);
+        HopfieldExample he = new HopfieldExample(6, 6, 0);
+        new GraphSpace(he);        
+        he.run(0.01);
     }
 }
