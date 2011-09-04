@@ -56,7 +56,7 @@ public class BrainMutator {
 
     }
 
-    public Brain mutate(Brain b, int runs) {
+    public CritterdingBrain mutate(CritterdingBrain b, int runs) {
 //		// have to do count cuz wireArch not done yet
 //		totalNeurons		= ArchNeurons.size();
 //		totalSynapses		= 0;

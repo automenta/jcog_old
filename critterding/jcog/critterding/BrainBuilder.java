@@ -19,8 +19,8 @@ public class BrainBuilder {
         this.outputs = outputs;
     }
 
-    public Brain newBrain(int numNeurons, int minSynapsesPerNeuron, int maxSynapsesPerNeuron) {
-        Brain b = new Brain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
+    public CritterdingBrain newBrain(int numNeurons, int minSynapsesPerNeuron, int maxSynapsesPerNeuron) {
+        CritterdingBrain b = new CritterdingBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
 
         for (int i = 0; i < inputs; i++)
             b.newInput();

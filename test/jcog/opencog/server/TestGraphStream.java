@@ -4,29 +4,12 @@
  */
 package jcog.opencog.server;
 
-import com.syncleus.dann.graph.MutableDirectedAdjacencyGraph;
-import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import jcog.opencog.Atom;
+import jcog.critterding.CritterdingBrain;
+import jcog.critterding.BrainBuilder;
+import jcog.critterding.DemoCritterdingNeuron.AsyncNeuronAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.hopfield.HopfieldExample;
-import jcog.opencog.swing.graph.HyperedgeSegment;
-import org.apache.commons.collections15.IteratorUtils;
-import org.restlet.Server;
-import org.restlet.data.Protocol;
-import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
-import org.restlet.resource.ServerResource;
+import jcog.opencog.attention.AddRandomHebbianEdges;
+import jcog.opencog.attention.LearnHebbian;
 
 /**
  *
@@ -34,29 +17,29 @@ import org.restlet.resource.ServerResource;
  */
 public class TestGraphStream {
 
-    public static OCMind mind;
-
     public static void main(String[] args) {
         try {
             int inputs = 32;
-            int outputs = 32;
-            int numNeurons = 128;
-            int minSynapsesPerNeuron = 1;
-            int maxSynapsesPerNeuron = 4;
+            int outputs = 16;
+            int numNeurons = 64;
+            int minSynapsesPerNeuron = 2;
+            int maxSynapsesPerNeuron = 8;
 
 
-            //mind = new OCMind();
+            OCMind mind = new OCMind();
 
-//            Brain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
-//            System.out.println(b.getNodes().size());
-//            System.out.println(b.getEdges().size());
-//
-//            mind.addAgent(new AsyncNeuronAgent(b, 0));
+            CritterdingBrain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
+            System.out.println(b.getNodes().size());
+            System.out.println(b.getEdges().size());
+
+            mind.addAgent(new AsyncNeuronAgent(b, 0));
+            mind.addAgent(new LearnHebbian());
+            mind.addAgent(new AddRandomHebbianEdges(0.5, 2, 2, 256, 512));
 
 
-            mind = new HopfieldExample(8, 8, 0);
-
-            mind.cycle();
+            //mind = new HopfieldExample(8, 8, 0);
+            
+//            new TestCoreNLP(mind);
 
             new GraphStream(mind);
 

@@ -37,7 +37,6 @@ import javax.swing.SwingUtilities;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.OCMind;
-import jcog.opencog.swing.GraphView2D;
 import jcog.spacegraph.swing.SwingWindow;
 
 /**
@@ -46,10 +45,13 @@ import jcog.spacegraph.swing.SwingWindow;
  */
 public class TestCoreNLP extends JPanel {
     private StanfordCoreNLP pipeline;
+    private final OCMind mind;
     
-    public TestCoreNLP() {
+    public TestCoreNLP(OCMind mind) {
         super(new BorderLayout());
     
+        this.mind = mind;
+        
         initNLP();
         
         final JTextArea text = new JTextArea("");
@@ -73,6 +75,13 @@ public class TestCoreNLP extends JPanel {
             }            
         });
         add(b, BorderLayout.SOUTH);
+        
+        JPanel w = new JPanel(new BorderLayout());
+//        w.add(GraphView2D.newGraphPanel(mind), BorderLayout.CENTER);
+        w.add(this, BorderLayout.CENTER);
+        //w.add(new JScrollPane(new JTextArea(outputText)), BorderLayout.SOUTH);        
+        new SwingWindow(w, 800, 600, false);
+
     }
 
     protected void initNLP() {
@@ -87,7 +96,6 @@ public class TestCoreNLP extends JPanel {
     }
     
     public void graph(final String text) {
-        OCMind mind = new OCMind();
         
         String outputText = "";
         
@@ -136,14 +144,10 @@ public class TestCoreNLP extends JPanel {
             outputText += graph.toString();        
         
         
-        JPanel w = new JPanel(new BorderLayout());
-        w.add(GraphView2D.newGraphPanel(mind), BorderLayout.CENTER);
-        //w.add(new JScrollPane(new JTextArea(outputText)), BorderLayout.SOUTH);        
-        new SwingWindow(w, 800, 600, false);
     }
     
     public static void main(String[] args) {
-        new SwingWindow(new TestCoreNLP(), 700, 300, true);
+//        new SwingWindow(new TestCoreNLP(), 700, 300, true);
     }
 
     public static void understand(OCMind mind, List<CoreLabel> tokens, SemanticGraph semantics) {

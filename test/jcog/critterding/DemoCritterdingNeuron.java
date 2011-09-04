@@ -22,13 +22,13 @@ import jcog.opencog.attention.DecaySTI;
 public class DemoCritterdingNeuron {
 
     public static class AsyncNeuronAgent extends MindAgent {
-        private final Brain brain;
+        private final CritterdingBrain brain;
         boolean needsRefresh;
         
         Map<AbstractNeuron, Atom> neuronAtom = new HashMap();
         Map<Synapse, Atom> synapseEdge = new HashMap();
 
-        public AsyncNeuronAgent(Brain b, double period) {
+        public AsyncNeuronAgent(CritterdingBrain b, double period) {
             super(period);
             this.brain = b;
             needsRefresh = true;
@@ -88,10 +88,9 @@ public class DemoCritterdingNeuron {
             }
 
             
-            double momentum = 0.9;
+            double momentum = 0.5;
             for (SenseNeuron sn : brain.getSense()) {
-                //sn.senseInput+= RandomNumber.getDouble(-1.0, 1.0) * 0.9;
-                sn.senseInput = sn.senseInput * momentum + (1.0 - momentum) * RandomNumber.getDouble(-1.0, 1.0);
+                sn.senseInput = sn.senseInput * momentum + (1.0 - momentum) * RandomNumber.getDouble(-1.0, 1.0) * 0.5;
             }
 
             brain.forward();
@@ -125,7 +124,7 @@ public class DemoCritterdingNeuron {
         int minSynapsesPerNeuron = 1;
         int maxSynapsesPerNeuron = 3;
         
-        Brain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
+        CritterdingBrain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
         System.out.println(b.getNodes().size());
         System.out.println(b.getEdges().size());
         

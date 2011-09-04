@@ -31,17 +31,47 @@ import org.apache.commons.collections15.IteratorUtils;
  * @author seh
  */
 public class GraphStreamSession implements Runnable {
+    
+    public static class VertexState {
+        
+        private double size = 1.0;
+        //color, etc..
+        
+        private boolean changed = true;
+
+        public double getSize() {
+            return size;
+        }
+
+        public void setSize(double size) {
+            if (size!=this.size) {
+                this.size = size; 
+                changed = true;
+            }
+        }
+        
+        public void clearUpdates() {
+            changed = false;
+        }
+
+        private boolean isChanged() {
+            return changed;
+        }
+                
+    }
+    
     public final PipedOutputRepresentation representation;
     private PipedOutputStream output;
     private final OCMind mind;
     int maxAtoms = 4096;
-    private final Map<Atom, Object> vertexShape = new HashMap();
+    private final Map<Atom, VertexState> vertexShape = new HashMap();
     private final Map<HyperedgeSegment, Object> edgeShape = new HashMap();
     private MutableDirectedAdjacencyGraph<Atom, HyperedgeSegment> digraph;
     private List<Atom> verticesToAdd = new LinkedList();
     private List<Atom> verticesToRemove = new LinkedList();
     private List<HyperedgeSegment> edgesToAdd = new LinkedList();
     private List<HyperedgeSegment> edgesToRemove = new LinkedList();
+    private long periodMS = 50;
 
     public GraphStreamSession(OCMind mind) {
         final PipedInputStream pi = new PipedInputStream();
@@ -49,12 +79,17 @@ public class GraphStreamSession implements Runnable {
         this.representation = new PipedOutputRepresentation(pi);
         try {
             output = new PipedOutputStream(pi);
-            new Thread(this).start();
         } catch (IOException ex) {
             ex.printStackTrace();
+            output = null;
         }
     }
 
+    public void start() {
+        if (output != null)
+            new Thread(this).start();
+    }
+    
     public Object addVertex(final Atom v) {
         Object r = vertexShape.get(v);
         if (r == null) {
@@ -62,7 +97,7 @@ public class GraphStreamSession implements Runnable {
             if (name == null) {
                 name = "";
             }
-            vertexShape.put(v, new Object());
+            vertexShape.put(v, new VertexState());
             verticesToAdd.add(v);
         }
         return r;
@@ -94,6 +129,9 @@ public class GraphStreamSession implements Runnable {
 
     public Collection<HyperedgeSegment> getVisibleEdges() {
         return Collections.unmodifiableCollection(edgeShape.keySet());
+    }
+    public Collection<Atom> getVisibleVertices() {
+        return Collections.unmodifiableCollection(vertexShape.keySet());
     }
 
     protected void update() {
@@ -158,26 +196,51 @@ public class GraphStreamSession implements Runnable {
         int n = 0;
         while (true) {
             try {
+                mind.cycle();
+
                 update();
+                
                 if (!verticesToAdd.isEmpty()) {
                     for (Atom a : verticesToAdd) {
-                        String id = a.uuid.toString();
+                        final String id = a.uuid.toString();
                         String name = mind.getName(a);
+                        if (name == null)
+                            name = mind.getTypeName(a);
+                        
                         write("{\"an\":{\"" + id + "\":{\"label\":\"" + name + "\"}}}");
                     }
                     verticesToAdd.clear();
                 }
                 if (!edgesToAdd.isEmpty()) {
                     for (HyperedgeSegment a : edgesToAdd) {
-                        Atom aa = a.getSourceNode();
-                        Atom bb = a.getDestinationNode();
-                        String id = a.parentEdge.uuid.toString();
-                        String aaI = aa.uuid.toString();
-                        String bbI = bb.uuid.toString();
-                        write("{\"ae\":{\"" + id + "\":{\"source\":\"" + aaI + "\",\"target\":\"" + bbI + "\",\"directed\":true,\"weight\":2}}}");
+                        String name = mind.getName(a.parentEdge);
+                        if (name == null)
+                            name = mind.getTypeName(a.parentEdge);
+                        
+                        final Atom aa = a.getSourceNode();
+                        final Atom bb = a.getDestinationNode();
+                        final String id = a.parentEdge.uuid.toString();
+                        final String aaI = aa.uuid.toString();
+                        final String bbI = bb.uuid.toString();
+                        write("{\"ae\":{\"" + id + "\":{\"source\":\"" + aaI + "\",\"target\":\"" + bbI + "\",\"label\":\"" + name + "\",\"directed\":true,\"weight\":2}}}");
                     }
                     edgesToAdd.clear();
                 }
+                
+                for (final Atom a : getVisibleVertices()) {
+                    final VertexState v = vertexShape.get(a);
+                    
+                    final double f = mind.getNormalizedSTI(a) * 10.0;
+                    v.setSize(f*f);
+                    
+                    if (v.isChanged()) {
+                        final String id = a.uuid.toString();
+                        write("{\"cn\":{\"" + id + "\":{\"size\":" + ((int)(v.getSize())) + "}}}");
+                        v.clearUpdates();
+                    }
+                    
+                }
+                
                 /*
                 {"an":{"A":{"label":"Streaming Node A","size":2}}} // add node A
                 {"an":{"B":{"label":"Streaming Node B","size":1}}} // add node B
@@ -197,11 +260,15 @@ public class GraphStreamSession implements Runnable {
                 break;
             }
             try {
-                Thread.sleep(1500);
+                Thread.sleep(periodMS);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
         }
+    }
+    
+    public void setPeriod(double seconds) {
+        this.periodMS = (long)((seconds)*1000.0);
     }
     
 }

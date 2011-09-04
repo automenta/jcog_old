@@ -15,8 +15,9 @@ import jcog.math.RandomNumber;
 
 /**
  * java port of critterding's BRAINZ system
+ * TODO make this inherit AbstractLocalBrain
  */
-public class Brain extends MutableAdjacencyGraph<AbstractNeuron, Synapse> {
+public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Synapse> {
     // input / output accessor/mutators
 
     List<SenseNeuron> sense = new ArrayList();
@@ -51,7 +52,7 @@ public class Brain extends MutableAdjacencyGraph<AbstractNeuron, Synapse> {
     int motorneuronsFired;
     private final int numNeurons;
 
-    public Brain(int neurons, int minSynapses, int maxSynapses) {
+    public CritterdingBrain(int neurons, int minSynapses, int maxSynapses) {
         super();
 
         // build time defaults
