@@ -1,6 +1,8 @@
 package jcog.critterding;
 
-public class SenseNeuron implements AbstractNeuron {
+import com.syncleus.dann.neural.InputNeuron;
+
+public class SenseNeuron implements CritterdingNeuron, InputNeuron {
     
     public double senseInput;
 
@@ -13,6 +15,13 @@ public class SenseNeuron implements AbstractNeuron {
         return senseInput;
     }
 
+    @Override
+    public void tick() {
+    }
 
-    
+    @Override
+    public double getInput() {
+        return senseInput;
+    }
+      
 }

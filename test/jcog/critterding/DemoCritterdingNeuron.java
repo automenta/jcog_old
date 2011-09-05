@@ -4,9 +4,9 @@
  */
 package jcog.critterding;
 
+import com.syncleus.dann.neural.SimpleSynapse;
 import java.util.HashMap;
 import java.util.Map;
-import jcog.critterding.Synapse.MotorSynapse;
 import jcog.math.RandomNumber;
 import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
@@ -25,8 +25,8 @@ public class DemoCritterdingNeuron {
         private final CritterdingBrain brain;
         boolean needsRefresh;
         
-        Map<AbstractNeuron, Atom> neuronAtom = new HashMap();
-        Map<Synapse, Atom> synapseEdge = new HashMap();
+        Map<CritterdingNeuron, Atom> neuronAtom = new HashMap();
+        Map<SimpleSynapse<CritterdingNeuron>, Atom> synapseEdge = new HashMap();
 
         public AsyncNeuronAgent(CritterdingBrain b, double period) {
             super(period);
@@ -73,7 +73,7 @@ public class DemoCritterdingNeuron {
 //                }
 //            }
             synapseEdge.clear();
-            for (Synapse s : brain.getEdges()) {
+            for (SimpleSynapse<CritterdingNeuron> s : brain.getEdges()) {
                 Atom e = mind.addEdge(AtomType.orderedLink, neuronAtom.get(s.getSourceNode()), neuronAtom.get(s.getDestinationNode()));
                 synapseEdge.put(s, e);
             }
@@ -95,20 +95,20 @@ public class DemoCritterdingNeuron {
 
             brain.forward();
             
-            for (AbstractNeuron an : neuronAtom.keySet()) {
+            for (CritterdingNeuron an : neuronAtom.keySet()) {
                 Atom a = neuronAtom.get(an);
                 
                 double scaleFactor = 50.0;
                 addStimulus(a, (short)(an.getOutput()*scaleFactor));
             }
             
-            for (Synapse s : synapseEdge.keySet()) {
+            for (SimpleSynapse<CritterdingNeuron> s : synapseEdge.keySet()) {
                 Atom e = synapseEdge.get(s);
-                if (!(s instanceof MotorSynapse)) {
-                    mind.getTruth(e).setMean(0.5 * s.weight);
-                }
-                else
-                    mind.getTruth(e).setMean(1.0);
+                mind.getTruth(e).setMean(0.5 * s.getWeight());
+//                if (!(s instanceof MotorSynapse)) {
+//                }
+//                else
+//                    mind.getTruth(e).setMean(1.0);
             }
             
         }
@@ -124,7 +124,7 @@ public class DemoCritterdingNeuron {
         int minSynapsesPerNeuron = 1;
         int maxSynapsesPerNeuron = 3;
         
-        CritterdingBrain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
+        CritterdingBrain b = new CritterdingBrain(inputs, outputs, numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
         System.out.println(b.getNodes().size());
         System.out.println(b.getEdges().size());
         

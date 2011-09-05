@@ -5,7 +5,6 @@
 package jcog.opencog.server;
 
 import jcog.critterding.CritterdingBrain;
-import jcog.critterding.BrainBuilder;
 import jcog.critterding.DemoCritterdingNeuron.AsyncNeuronAgent;
 import jcog.opencog.OCMind;
 import jcog.opencog.attention.AddRandomHebbianEdges;
@@ -21,20 +20,20 @@ public class TestGraphStream {
         try {
             int inputs = 32;
             int outputs = 16;
-            int numNeurons = 64;
-            int minSynapsesPerNeuron = 2;
+            int numNeurons = 128;
+            int minSynapsesPerNeuron = 4;
             int maxSynapsesPerNeuron = 8;
 
 
             OCMind mind = new OCMind();
 
-            CritterdingBrain b = new BrainBuilder(inputs, outputs).newBrain(numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
+            CritterdingBrain b = new CritterdingBrain(inputs, outputs, numNeurons, minSynapsesPerNeuron, maxSynapsesPerNeuron);
             System.out.println(b.getNodes().size());
             System.out.println(b.getEdges().size());
 
             mind.addAgent(new AsyncNeuronAgent(b, 0));
             mind.addAgent(new LearnHebbian());
-            mind.addAgent(new AddRandomHebbianEdges(0.5, 2, 2, 256, 512));
+            mind.addAgent(new AddRandomHebbianEdges(0.5, 3, 2, 256, 512));
 
 
             //mind = new HopfieldExample(8, 8, 0);

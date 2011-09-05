@@ -1,5 +1,6 @@
 package jcog.critterding;
 
+import com.syncleus.dann.neural.SimpleSynapse;
 import java.util.Collection;
 import java.util.List;
 
@@ -40,20 +41,20 @@ public class InterNeuron extends MotorNeuron {
         motor = null;
     }
 
-    public void forward(final Collection<Synapse> synapses) {        
+    public void forward(final Collection<SimpleSynapse<CritterdingNeuron>> synapses) {        
 
         // potential decay
         potential *= potentialDecay;
 
         // make every connection do it's influence on the neuron's total potential
         
-        for (Synapse s : synapses) {
+        for (SimpleSynapse<CritterdingNeuron> s : synapses) {
             // lower synaptic weights
             if (isPlastic) {
-                s.weight *= plasticityWeaken;
+                s.setWeight(s.getWeight() * plasticityStrengthen);
             }
 
-            potential += s.weight * s.getInput();
+            potential += s.getWeight() * s.getInput();
         }
         
 //        if ((potential!=0) || (output!=0))
@@ -67,7 +68,7 @@ public class InterNeuron extends MotorNeuron {
         
     }
 
-    protected void forwardInhibitory(final Collection<Synapse> synapses) {
+    protected void forwardInhibitory(final Collection<SimpleSynapse<CritterdingNeuron>> synapses) {
         // do we spike/fire
         if (potential <= -1.0f * firingThreshold) {
             // reset neural potential
@@ -78,12 +79,13 @@ public class InterNeuron extends MotorNeuron {
 
             // PLASTICITY: if neuron & synapse fire together, the synapse strenghtens
             if (isPlastic) {
-                for (Synapse s : synapses) {
+                for (SimpleSynapse<CritterdingNeuron> s : synapses) {
                     double o = s.getInput();
                     // if synapse fired, strenghten the weight
-                    if ((o < 0.0f && s.weight > 0.0f) || (o > 0.0f && s.weight < 0.0f)) {
+                    final double w = s.getWeight();
+                    if ((o < 0.0f && w > 0.0f) || (o > 0.0f && w < 0.0f)) {
                         // 						cerr << endl << "Inhibitory firing" << endl << "synref: " << *Synapses[i].ref << endl << "pre weight:  " << Synapses[i].weight << endl;
-                        s.weight *= plasticityStrengthen;
+                        s.setWeight(w * plasticityStrengthen);
                         // 						cerr << "post weight: " << Synapses[i].weight << endl;
                     }
 
@@ -101,7 +103,7 @@ public class InterNeuron extends MotorNeuron {
         }
     }
 
-    protected void forwardExhibitory(final Collection<Synapse> synapses) {
+    protected void forwardExhibitory(final Collection<SimpleSynapse<CritterdingNeuron>> synapses) {
         // do we spike/fire
         if (potential >= firingThreshold) {
             // reset neural potential
@@ -112,13 +114,15 @@ public class InterNeuron extends MotorNeuron {
 
             // PLASTICITY: if neuron & synapse fire together, the synapse strenghtens
             if (isPlastic) {
-                for (Synapse s : synapses) {
+                for (SimpleSynapse<CritterdingNeuron> s : synapses) {
                     double o = s.getInput();
 
+                    final double w = s.getWeight();
+
                     // if synapse fired, strenghten the weight
-                    if ((o > 0.0f && s.weight > 0.0f) || (o < 0.0f && s.weight < 0.0f)) {
+                    if ((o > 0.0f && w > 0.0f) || (o < 0.0f && w < 0.0f)) {
                         // 						cerr << endl << "Excititory firing" << endl << "synref: " << *Synapses[i].ref << endl << "pre weight:  " << Synapses[i].weight << endl;
-                        s.weight *= plasticityStrengthen;
+                        s.setWeight(w * plasticityStrengthen);
                         // 						cerr << "post weight: " << Synapses[i].weight << endl;
                         }
 
@@ -136,8 +140,8 @@ public class InterNeuron extends MotorNeuron {
         }
     }
 
-    private void clampWeight(final Synapse s) {
-        s.weight = Math.max(Math.min(s.weight, maxWeight), -maxWeight);
+    private void clampWeight(final SimpleSynapse<CritterdingNeuron> s) {
+        s.setWeight(Math.max(Math.min(s.getWeight(), maxWeight), -maxWeight));
     }
 
 

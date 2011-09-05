@@ -5,11 +5,13 @@
 
 package jcog.critterding;
 
+import com.syncleus.dann.neural.Neuron;
+
 /**
  *
  * @author seh
  */
-public interface AbstractNeuron {
+public interface CritterdingNeuron extends Neuron {
 
     public double getOutput();
     

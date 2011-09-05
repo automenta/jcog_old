@@ -6,28 +6,23 @@ package jcog.critterding;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Sets;
-import com.syncleus.dann.graph.MutableAdjacencyGraph;
+import com.syncleus.dann.neural.AbstractLocalBrain;
+import com.syncleus.dann.neural.SimpleSynapse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import jcog.critterding.Synapse.MotorSynapse;
 import jcog.math.RandomNumber;
 
 /**
  * java port of critterding's BRAINZ system
- * TODO make this inherit AbstractLocalBrain
  */
-public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Synapse> {
-    // input / output accessor/mutators
+public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuron, CritterdingNeuron, SimpleSynapse<CritterdingNeuron>>  {
 
     List<SenseNeuron> sense = new ArrayList();
     List<MotorNeuron> motor = new ArrayList();
     List<InterNeuron> neuron = new ArrayList();
     List<NeuronBuilder> neuronBuilders = new ArrayList();
-//    // BUILD TIME
-//    int minNeuronsAtBuildtime;  //    // min/max neurons at build time
-//    int maxNeuronsAtBuildtime;  //    // min/max neurons at build time
-//    int maxNeurons;     //    // absolute max neurons (mutation bound)
+    
     double percentChanceInhibitoryNeuron;      // percent chance that when adding a new random neuron, it's inhibitory
     double percentChanceConsistentSynapses;    // synaptic consistancy, meaning all synapses of a neuron will be OR I OR E:  if set to 0, neurons will have mixed I and E synapses
     double percentChanceInhibitorySynapses;    //    // percent chance that when adding a new random neuron, it has inhibitory synapses
@@ -40,17 +35,32 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
     double minFiringThreshold; //    // min/max firing threshold
     double maxFiringThreshold; //    // min/max firing threshold
     double percentChanceSensorySynapse;    //    // percent chance that a new synapse is connected to a sensor neuron
-//    int minSynapsesAtBuildtime; //    // min/max synapses at build time
-//    int maxSynapsesAtBuildtime; //    // min/max synapses at build time
+
     int minSynapses;    //    // absolute min/max synapses (mutation/plastic bounding)
     int maxSynapses;    //    // absolute min/max synapses (mutation/plastic bounding)
     double percentMutation;    //    // brain architecture mutation factor @ mutation time (%)
+
 //    // INFO
 //    // total neuron & connection keepers
 //    // after every time instance, this will contain how many neurons where fired in that instant (energy usage help)
     int neuronsFired;
     int motorneuronsFired;
     private final int numNeurons;
+
+    public CritterdingBrain(int numInputs, int numOutputs, int neurons, int minSynapses, int maxSynapses) {
+        this(neurons, minSynapses, maxSynapses);
+
+        for (int i = 0; i < numInputs; i++)
+            newInput();
+
+        for (int i = 0; i < numOutputs; i++)
+            newOutput();
+
+        //TODO move buildArch and all parameters it uses to this, out of Brain
+        buildArch();
+        wireArch();
+        
+    }
 
     public CritterdingBrain(int neurons, int minSynapses, int maxSynapses) {
         super();
@@ -112,12 +122,12 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
         }
     }
 
-    public Collection<Synapse> getIncomingSynapses(final InterNeuron n) {
+    public Collection<SimpleSynapse<CritterdingNeuron>> getIncomingSynapses(final InterNeuron n) {
 
-        return Sets.filter(getAdjacentEdges(n), new Predicate<Synapse>() {
+        return Sets.filter(getAdjacentEdges(n), new Predicate<SimpleSynapse<CritterdingNeuron>>() {
 
             @Override
-            public boolean apply(Synapse t) {
+            public boolean apply(SimpleSynapse<CritterdingNeuron> t) {
                 return t.getDestinationNode() == n;
             }
         });
@@ -393,7 +403,7 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
         for (InterNeuron n : neuron) {
 
             for (SynapseBuilder sb : n.synapseBuilders) {
-                AbstractNeuron i;
+                CritterdingNeuron i;
 
                 if (sb.isSensorNeuron) {
                     // sensor neuron id synapse is connected to
@@ -410,7 +420,7 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
             }
 
             if (n.motor!=null) {
-                newMotorSynapse(n, n.motor);
+                newSynapse(n, n.motor, 1.0);
             }
         }
 
@@ -445,7 +455,7 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
 //    // functions
 //    void copyFrom(const   Brainz& otherBrain);
 //			void			mergeFrom(const Brainz& otherBrain1, const Brainz& otherBrain2);
-    private Synapse newSynapse(AbstractNeuron from, InterNeuron to, float weight) {
+    private SimpleSynapse<CritterdingNeuron> newSynapse(CritterdingNeuron from, CritterdingNeuron to, double weight) {
         /**
         [18:53] <bobke> so this function is called at wireArch
         [18:55] <bobke> first argument is a pointer to the output of the neuron he synapse will connect to
@@ -454,13 +464,13 @@ public class CritterdingBrain extends MutableAdjacencyGraph<AbstractNeuron, Syna
         [18:56] <bobke> it'll create a synapse in the neuroninter
         [18:56] <bobke> which has as an input argument 1
          */
-        final Synapse s = new Synapse(from, to, weight);
+        final SimpleSynapse<CritterdingNeuron> s = new SimpleSynapse<CritterdingNeuron>(from, to, weight);
         add(s);
         return s;
     }
 
-    private void newMotorSynapse(InterNeuron from, MotorNeuron to) {
-        add(new MotorSynapse(from, to));
-    }
+//    private void newMotorSynapse(InterNeuron from, MotorNeuron to) {
+//        add(new MotorSynapse(from, to));
+//    }
 
 }
