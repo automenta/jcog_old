@@ -49,6 +49,8 @@ public class InterNeuron extends MotorNeuron {
         // make every connection do it's influence on the neuron's total potential
         
         for (SimpleSynapse<CritterdingNeuron> s : synapses) {
+            s.setInput(s.getSourceNode().getOutput());
+            
             // lower synaptic weights
             if (isPlastic) {
                 s.setWeight(s.getWeight() * plasticityStrengthen);

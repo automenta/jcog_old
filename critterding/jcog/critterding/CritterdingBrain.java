@@ -10,7 +10,10 @@ import com.syncleus.dann.neural.AbstractLocalBrain;
 import com.syncleus.dann.neural.SimpleSynapse;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import jcog.math.RandomNumber;
 
 /**
@@ -170,13 +173,13 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
     }
 
 
-    MotorNeuron motor(int i) {
-        return motor.get(i);
-    }
-
-    SenseNeuron sense(int i) {
-        return sense.get(i);
-    }
+//    MotorNeuron motor(int i) {
+//        return motor.get(i);
+//    }
+//
+//    SenseNeuron sense(int i) {
+//        return sense.get(i);
+//    }
 
     public int getNumInputs() {
         return sense.size();
@@ -186,6 +189,13 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
         return motor.size();
     }
 
+    @Override
+    public Set<MotorNeuron> getOutputNeurons() {
+        //TODO this is a bit of a hack
+        return Collections.unmodifiableSet(new HashSet(motor));
+    }
+
+    
     public MotorNeuron getRandomMotorNeuron() {
         return motor.get((int) RandomNumber.getInt(0, motor.size() - 1));
     }

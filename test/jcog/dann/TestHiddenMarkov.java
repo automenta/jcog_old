@@ -42,6 +42,7 @@ public class TestHiddenMarkov {
         private final JTextArea outputArea;
         private Map<String, Integer> knownCount;
         private Set<String> known;
+        
         //int maxKnown = 10;
         //int order = 2;
         //double orderWeights[] = { 1, 0.5, 0.25, 0.15, 0.05, 0.01 };
@@ -136,14 +137,22 @@ public class TestHiddenMarkov {
 
         }
 
+        public String getSymbol(final String x) {
+            for (final String s : known) {
+                if (s.equals(x))
+                    return s;
+            }
+            return null;
+        }
+        
         public List<String> getSequence(List<String> tokens) {
-            String input = inputArea.getText();
-            List<String> s = new LinkedList();
+            final String input = inputArea.getText();
+            final List<String> s = new LinkedList();
 
-            StringTokenizer st = new StringTokenizer(input, " ,.!?;-()[]{}/:@\n", true);
-            for (String w : tokens) {
+            final StringTokenizer st = new StringTokenizer(input, " ,.!?;-()[]{}/:@\n", true);
+            for (final String w : tokens) {
                 if (isKnown(w)) {
-                    s.add(w);
+                    s.add(getSymbol(w));
                 }
             }
 
