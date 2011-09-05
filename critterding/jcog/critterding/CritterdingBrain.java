@@ -169,51 +169,6 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
         }
     }
 
-    public void forwardUntilAnswer() {
-//        //		neuronsFired = 0;
-//
-//		// clear Motor Outputs
-//		for ( unsigned int i=0; i < numberOfOutputs; i++ )
-//			Outputs[i].output = false;
-//
-//		// clear Neurons
-//		for ( unsigned int i=0; i < totalNeurons; i++ )
-//		{
-//			Neurons[i].output = 0;
-//			Neurons[i].potential = 0.0f;
-//		}
-//
-//		unsigned int counter = 0;
-//		bool motorFired = false;
-//
-//		while ( counter < 1000 && !motorFired )
-//		{
-//			for ( unsigned int i=0; i < totalNeurons; i++ )
-//			{
-//				NeuronInterz* n = &Neurons[i];
-//
-//				n->process();
-//
-//				// if neuron fires
-//				if ( n->waitoutput != 0 )
-//				{
-//					neuronsFired++;
-//
-//					// motor neuron check & exec
-//					if ( n->isMotor )
-//					{
-//						motorFired = true;
-//						*Outputs[n->motorFunc].output = true;
-//						//cerr << "neuron " << i << " fired, motor is " << Neurons[i]->MotorFunc << " total now " << Outputs[Neurons[i]->MotorFunc]->output << endl;
-//					}
-//				}
-//			}
-//			// commit outputs at the end
-//			for ( unsigned int i=0; i < totalNeurons; i++ ) Neurons[i].output = Neurons[i].waitoutput;
-//
-//			counter++;
-//		}
-    }
 
     MotorNeuron motor(int i) {
         return motor.get(i);
@@ -333,34 +288,6 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
         return s;
     }
 
-    public void removeObsoleteMotorsAndSensors() {
-//		for ( int i = 0; i < (int)ArchNeurons.size(); i++ )
-//		{
-//			ArchNeuronz* an = &ArchNeurons[i];
-//			// disable motor neurons
-//			if ( an->isMotor )
-//			{
-//				if ( findMotorNeuron( an->motorID ) == -1 )
-//				{
-//					an->isMotor = false;
-//				}
-//			}
-//
-//			// disable sensor inputs
-//			for ( int j = 0; j < (int)an->ArchSynapses.size(); j++ )
-//			{
-//				ArchSynapse* as = &an->ArchSynapses[j];
-//				if ( as->isSensorNeuron )
-//				{
-//					if ( findSensorNeuron( as->neuronID ) == -1 )
-//					{
-//						an->ArchSynapses.erase( an->ArchSynapses.begin()+j );
-//						j--;
-//					}
-//				}
-//			}
-//		}
-    }
 
     public void buildArch() {
         // clear architecture by removing all architectural neurons
@@ -447,6 +374,13 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
         return getEdges().size();
     }
 
+    private SimpleSynapse<CritterdingNeuron> newSynapse(CritterdingNeuron from, CritterdingNeuron to, double weight) {
+        final SimpleSynapse<CritterdingNeuron> s = new SimpleSynapse<CritterdingNeuron>(from, to, weight);
+        add(s);
+        return s;
+    }
+
+
 //		// load save architecture (serialize)
 //			void			setArch(string* content);
 //			string*			getArch();
@@ -455,22 +389,83 @@ public class CritterdingBrain extends AbstractLocalBrain<SenseNeuron, MotorNeuro
 //    // functions
 //    void copyFrom(const   Brainz& otherBrain);
 //			void			mergeFrom(const Brainz& otherBrain1, const Brainz& otherBrain2);
-    private SimpleSynapse<CritterdingNeuron> newSynapse(CritterdingNeuron from, CritterdingNeuron to, double weight) {
-        /**
-        [18:53] <bobke> so this function is called at wireArch
-        [18:55] <bobke> first argument is a pointer to the output of the neuron he synapse will connect to
-        [18:55] <bobke> (the phenotype neuron)
-        [18:55] <bobke> on which branch and with what weight
-        [18:56] <bobke> it'll create a synapse in the neuroninter
-        [18:56] <bobke> which has as an input argument 1
-         */
-        final SimpleSynapse<CritterdingNeuron> s = new SimpleSynapse<CritterdingNeuron>(from, to, weight);
-        add(s);
-        return s;
-    }
 
 //    private void newMotorSynapse(InterNeuron from, MotorNeuron to) {
 //        add(new MotorSynapse(from, to));
 //    }
 
+//    public void forwardUntilAnswer() {
+//        //		neuronsFired = 0;
+//
+//		// clear Motor Outputs
+//		for ( unsigned int i=0; i < numberOfOutputs; i++ )
+//			Outputs[i].output = false;
+//
+//		// clear Neurons
+//		for ( unsigned int i=0; i < totalNeurons; i++ )
+//		{
+//			Neurons[i].output = 0;
+//			Neurons[i].potential = 0.0f;
+//		}
+//
+//		unsigned int counter = 0;
+//		bool motorFired = false;
+//
+//		while ( counter < 1000 && !motorFired )
+//		{
+//			for ( unsigned int i=0; i < totalNeurons; i++ )
+//			{
+//				NeuronInterz* n = &Neurons[i];
+//
+//				n->process();
+//
+//				// if neuron fires
+//				if ( n->waitoutput != 0 )
+//				{
+//					neuronsFired++;
+//
+//					// motor neuron check & exec
+//					if ( n->isMotor )
+//					{
+//						motorFired = true;
+//						*Outputs[n->motorFunc].output = true;
+//						//cerr << "neuron " << i << " fired, motor is " << Neurons[i]->MotorFunc << " total now " << Outputs[Neurons[i]->MotorFunc]->output << endl;
+//					}
+//				}
+//			}
+//			// commit outputs at the end
+//			for ( unsigned int i=0; i < totalNeurons; i++ ) Neurons[i].output = Neurons[i].waitoutput;
+//
+//			counter++;
+//		}
+//    }
+    
+//    public void removeObsoleteMotorsAndSensors() {
+//		for ( int i = 0; i < (int)ArchNeurons.size(); i++ )
+//		{
+//			ArchNeuronz* an = &ArchNeurons[i];
+//			// disable motor neurons
+//			if ( an->isMotor )
+//			{
+//				if ( findMotorNeuron( an->motorID ) == -1 )
+//				{
+//					an->isMotor = false;
+//				}
+//			}
+//
+//			// disable sensor inputs
+//			for ( int j = 0; j < (int)an->ArchSynapses.size(); j++ )
+//			{
+//				ArchSynapse* as = &an->ArchSynapses[j];
+//				if ( as->isSensorNeuron )
+//				{
+//					if ( findSensorNeuron( as->neuronID ) == -1 )
+//					{
+//						an->ArchSynapses.erase( an->ArchSynapses.begin()+j );
+//						j--;
+//					}
+//				}
+//			}
+//		}
+//    }
 }
