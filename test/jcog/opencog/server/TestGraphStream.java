@@ -4,6 +4,7 @@
  */
 package jcog.opencog.server;
 
+import jcog.graphstream.GraphStream;
 import jcog.critterding.CritterdingBrain;
 import jcog.critterding.DemoCritterdingNeuron.AsyncNeuronAgent;
 import jcog.opencog.OCMind;
@@ -18,11 +19,11 @@ public class TestGraphStream {
 
     public static void main(String[] args) {
         try {
-            int inputs = 32;
+            int inputs = 64;
             int outputs = 16;
-            int numNeurons = 128;
-            int minSynapsesPerNeuron = 4;
-            int maxSynapsesPerNeuron = 8;
+            int numNeurons = 256;
+            int minSynapsesPerNeuron = 2;
+            int maxSynapsesPerNeuron = 6;
 
 
             OCMind mind = new OCMind();
@@ -33,14 +34,14 @@ public class TestGraphStream {
 
             mind.addAgent(new AsyncNeuronAgent(b, 0));
             mind.addAgent(new LearnHebbian());
-            mind.addAgent(new AddRandomHebbianEdges(0.5, 3, 2, 256, 512));
+            mind.addAgent(new AddRandomHebbianEdges(0.5, 3, 2, 16, 32));
 
 
             //mind = new HopfieldExample(8, 8, 0);
             
 //            new TestCoreNLP(mind);
 
-            new GraphStream(mind);
+            new GraphStream(mind, 8182);
 
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -6,6 +6,9 @@
 package jcog.opencog;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -13,11 +16,11 @@ import java.util.UUID;
  * @author seh
  */
 public class Atom implements Serializable, Comparable<Atom> {
+    public final static List<Atom> emptyAtomsList = Collections.unmodifiableList(new LinkedList());
 
     public static String newIDString() {
         return UUID.randomUUID().toString();
     }
-
     
     public final UUID uuid;
 
@@ -54,6 +57,14 @@ public class Atom implements Serializable, Comparable<Atom> {
     public String toString() {
         return uuid.toString();
     }
-    
+
+    public int getDegree() {
+        return 0;
+    }
+
+    public List<Atom> getNodes() {
+        return emptyAtomsList;
+    }
+
     
 }

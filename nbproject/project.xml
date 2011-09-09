@@ -5,6 +5,7 @@
         <data xmlns="http://www.netbeans.org/ns/j2se-project/3">
             <name>jcog</name>
             <source-roots>
+                <root id="src.input.dir"/>
                 <root id="src.critterding.dir"/>
                 <root id="src.nars.dir"/>
                 <root id="src.spacegraph.dir"/>

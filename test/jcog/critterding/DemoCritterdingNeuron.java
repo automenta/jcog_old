@@ -148,9 +148,9 @@ public class DemoCritterdingNeuron {
             // create the chart...
 
             chart = ChartFactory.createLineChart(
-                    "Line Chart Demo 1", // chart title
-                    "Type", // domain axis label
-                    "Value", // range axis label
+                    "", // chart title
+                    "Time", // domain axis label
+                    "Output", // range axis label
                     dataset, // data
                     PlotOrientation.VERTICAL, // orientation
                     true, // include legend

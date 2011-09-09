@@ -22,9 +22,9 @@ public interface ReadableAtomSpace {
     public Atom getEdge(Class<? extends AtomType> type, Atom... members);
 
     public Collection<Atom> getVertices();    
-    public Collection<Atom> getEdges();
+    public Collection<? extends Atom> getEdges();
         
-    public Collection<Atom> getIncidentEdges(Atom vertex);
+    public Collection<? extends Atom> getIncidentEdges(Atom vertex);
     public Collection<Atom> getIncidentVertices(Atom edge);
 
     public Class<? extends AtomType> getType(Atom a);
@@ -34,7 +34,7 @@ public interface ReadableAtomSpace {
     
     public Iterator<Atom> iterateAtoms();
     public Iterator<Atom> iterateVertices();
-    public Iterator<Atom> iterateEdges();
+    public Iterator<? extends Atom> iterateEdges();
 
 
     /**

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog.server;
+package jcog.graphstream;
 
 import jcog.opencog.OCMind;
 import org.restlet.Context;
@@ -22,7 +22,7 @@ public class GraphStream {
     private final OCMind mind;
     private GraphStreamSession session;
 
-    public GraphStream(final OCMind mind) throws Exception {
+    public GraphStream(final OCMind mind, int port) throws Exception {
         this.mind = mind;
         
         /*
@@ -45,7 +45,7 @@ public class GraphStream {
             
         };
 
-        Server s = new Server(Protocol.HTTP, 8182, f);           
+        Server s = new Server(Protocol.HTTP, port, f);           
                 
         s.start();
     }

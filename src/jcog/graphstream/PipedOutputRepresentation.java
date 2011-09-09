@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog.server;
+package jcog.graphstream;
 
 import java.io.IOException;
 import java.io.OutputStream;

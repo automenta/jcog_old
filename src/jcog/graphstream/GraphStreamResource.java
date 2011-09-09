@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package jcog.opencog.server;
+package jcog.graphstream;
 
 import jcog.opencog.OCMind;
 import org.restlet.representation.Representation;
