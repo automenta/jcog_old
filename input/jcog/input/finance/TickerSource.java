@@ -75,34 +75,6 @@ public class TickerSource  {
         oos.writeObject(pageCache);
         oos.close();        
     }
-    
-    public enum MarketDataType {
-
-        /**
-         * The market open for the day.
-         */
-        OPEN,
-        /**
-         * The market close for the day.
-         */
-        CLOSE,
-        /**
-         * The volume for the day.
-         */
-        VOLUME,
-        /**
-         * The adjusted close. Adjusted for splits and dividends.
-         */
-        ADJUSTED_CLOSE,
-        /**
-         * The high for the day.
-         */
-        HIGH,
-        /**
-         * The low for the day.
-         */
-        LOW
-    }
 
     /**
      * This method builds a URL to load data from Yahoo Finance for a neural
@@ -180,13 +152,13 @@ public class TickerSource  {
                     final double volume = csv.getDouble("volume");
 
                     final TickerPoint data = new TickerPoint(date, tickerSymbol);
-                    data.setData(MarketDataType.ADJUSTED_CLOSE, adjClose);
-                    data.setData(MarketDataType.OPEN, open);
-                    data.setData(MarketDataType.CLOSE, close);
-                    data.setData(MarketDataType.HIGH, high);
-                    data.setData(MarketDataType.LOW, low);
-                    data.setData(MarketDataType.OPEN, open);
-                    data.setData(MarketDataType.VOLUME, volume);
+                    data.setData(MarketIndicator.ADJUSTED_CLOSE, adjClose);
+                    data.setData(MarketIndicator.OPEN, open);
+                    data.setData(MarketIndicator.CLOSE, close);
+                    data.setData(MarketIndicator.HIGH, high);
+                    data.setData(MarketIndicator.LOW, low);
+                    data.setData(MarketIndicator.OPEN, open);
+                    data.setData(MarketIndicator.VOLUME, volume);
                     
                     result.data.add(data);
                 }

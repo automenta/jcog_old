@@ -29,7 +29,7 @@ public class TickerPoint implements Comparable<TickerPoint>, Serializable {
     /**
      * The data that was collection for the sample date.
      */
-    private final Map<TickerSource.MarketDataType, Double> data;
+    private final Map<MarketIndicator, Double> data;
 
     @Override
     public String toString() {
@@ -52,7 +52,7 @@ public class TickerPoint implements Comparable<TickerPoint>, Serializable {
     public TickerPoint(final Date when, final String tickerSymbol) {
         this.when = when;
         this.tickerSymbol = tickerSymbol;
-        this.data = new HashMap<TickerSource.MarketDataType, Double>();
+        this.data = new HashMap<MarketIndicator, Double>();
     }
 
     /**
@@ -69,7 +69,7 @@ public class TickerPoint implements Comparable<TickerPoint>, Serializable {
      *            The type of data needed.
      * @return The market data for the specified date and of the specified type.
      */
-    public double getData(final TickerSource.MarketDataType type) {
+    public double getData(final MarketIndicator type) {
         return this.data.get(type);
     }
 
@@ -95,7 +95,7 @@ public class TickerPoint implements Comparable<TickerPoint>, Serializable {
      * @param data
      *            The value of the data being set.
      */
-    public void setData(final TickerSource.MarketDataType type, final double data) {
+    public void setData(final MarketIndicator type, final double data) {
         this.data.put(type, data);
     }
     

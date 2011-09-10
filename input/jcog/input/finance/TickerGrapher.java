@@ -78,6 +78,8 @@ public class TickerGrapher {
     }
     
     public Atom getEntityType(CalaisEntity ent) {
+        //TODO use a separate CalaisEntityType.class
+        
         final String i = "eType:" + ent.type;
         Atom a = tagAtoms.get(i);
         if (a == null) { 

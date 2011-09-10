@@ -4,11 +4,13 @@
  */
 package jcog.input.finance;
 
+import java.util.Iterator;
 import jcog.input.calais.CalaisTag;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TreeSet;
 import jcog.input.calais.CalaisEntity;
 import jcog.input.calais.CalaisTopic;
 import jcog.opencog.AtomType;
@@ -23,7 +25,7 @@ public class Ticker implements Serializable, AtomType {
     public final Date from;
     public final Date to;
     
-    public final List<TickerPoint> data = new ArrayList(); //performance hidstory
+    public final TreeSet<TickerPoint> data = new TreeSet(); //performance hidstory
     public final List<NewsItem> news = new ArrayList();
     
     public final List<CalaisTag> tags = new ArrayList();    
@@ -34,6 +36,21 @@ public class Ticker implements Serializable, AtomType {
         this.symbol = symbol;
         this.from = from;
         this.to = to;
+    }
+
+    public double getMaxChange(MarketIndicator marketIndicator) {
+        Iterator<TickerPoint> i = data.descendingIterator();
+        double maxChange = 0;
+        TickerPoint last = null;
+        while (i.hasNext()) {
+            TickerPoint tp = i.next();
+            if (last!=null) {
+                double d = Math.abs(tp.getData(marketIndicator) - last.getData(marketIndicator));
+                if (d > maxChange) maxChange = d;
+            }
+            last = tp;
+        }
+        return maxChange;
     }
     
 }
