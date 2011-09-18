@@ -18,15 +18,20 @@ import jcog.opencog.OCMind;
  *
  * @author seh
  */
-public class TickerGrapher {
+public class TickerGraphing {
     
-    Map<Ticker, Atom> tickerAtoms = new HashMap();
-    Map<String, Atom> tagAtoms = new HashMap();
-    private final OCMind mind;
+    public final Map<String, CalaisTag> tags = new HashMap();
+    public final Map<String, CalaisTopic> topics = new HashMap();
     
-    public TickerGrapher(OCMind mind, List<Ticker> tickers) {
+    public final Map<Ticker, Atom> tickerAtoms = new HashMap();
+    public final Map<String, Atom> tagAtoms = new HashMap();
+    public final OCMind mind;
+    public final List<Ticker> tickers;
+    
+    public TickerGraphing(OCMind mind, List<Ticker> tickers) {
         super();
         
+        this.tickers = tickers;
         this.mind = mind;
         
         for (final Ticker t : tickers) {
@@ -51,10 +56,11 @@ public class TickerGrapher {
     }
     
     public Atom getTag(CalaisTag tag) {
-        Atom a = tagAtoms.get(tag.id);
+        Atom a = tagAtoms.get("tag:" + tag.name);
         if (a == null) {
             a = mind.addVertex(CalaisTag.class, tag.name);
-            tagAtoms.put(tag.id, a);
+            tagAtoms.put("tag:" + tag.name, a);
+            tags.put(tag.name, tag);
         }
         return a;
     }
@@ -64,6 +70,7 @@ public class TickerGrapher {
         if (a == null) {
             a = mind.addVertex(CalaisTopic.class, top.name);
             tagAtoms.put(top.id, a);
+            topics.put(top.name, top);
         }
         return a;
     }

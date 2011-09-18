@@ -4,6 +4,7 @@
  */
 package jcog.dann;
 
+import com.syncleus.dann.math.statistics.MarkovChain;
 import com.syncleus.dann.math.statistics.SimpleMarkovChain;
 import com.syncleus.dann.math.statistics.SimpleMarkovChainEvidence;
 import java.awt.BorderLayout;
@@ -19,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -173,7 +175,7 @@ public class TestHiddenMarkov {
         }
 
         protected void run(int maxSymbols, int order) {
-            SimpleMarkovChainEvidence<String> sme = new SimpleMarkovChainEvidence<String>(true, order);
+            SparseMarkovChainEvidence<String> sme = new SparseMarkovChainEvidence<String>(true, order);
 
             knownCount = new HashMap();
 
@@ -241,7 +243,8 @@ public class TestHiddenMarkov {
                 long markovStart = System.nanoTime();
 
                 //TODO the cast will be unnecessary when MarkovChain supports weighted transition generation
-                SimpleMarkovChain<String> mc = (SimpleMarkovChain) sme.getMarkovChain();
+                
+                MarkovChain<String> mc = sme.getMarkovChain();
                 double markovChainGenerationTime = (System.nanoTime() - markovStart) / 1e9;
                 System.out.println("Markov Chain: " + markovChainGenerationTime);
 
@@ -249,7 +252,7 @@ public class TestHiddenMarkov {
                 System.out.println("#" + mc.getStates().size());
 
                 for (int i = 0; i < 700; i++) {
-                    String nextSymbol = mc.generateTransition();
+                    String nextSymbol = mc.generateTransition(false);
 
 
                     if (nextSymbol.equals(" ")) {
@@ -292,6 +295,7 @@ public class TestHiddenMarkov {
 
                 } catch (Exception ex) {
                     System.err.println(ex);
+                    ex.printStackTrace();
 
 
                 }

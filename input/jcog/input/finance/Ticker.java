@@ -21,11 +21,11 @@ import jcog.opencog.AtomType;
  */
 public class Ticker implements Serializable, AtomType {
     
-    public final String symbol;
+    public String symbol;
     public final Date from;
     public final Date to;
     
-    public final TreeSet<TickerPoint> data = new TreeSet(); //performance hidstory
+    public final TreeSet<TickerPoint> data = new TreeSet(); //performance hisstory
     public final List<NewsItem> news = new ArrayList();
     
     public final List<CalaisTag> tags = new ArrayList();    
@@ -51,6 +51,41 @@ public class Ticker implements Serializable, AtomType {
             last = tp;
         }
         return maxChange;
+    }
+
+    public CalaisTag getTag(String name) {
+        for (CalaisTag ct : tags) {
+            if (ct.name.equals(name))
+                return ct;
+        }
+        return null;
+    }
+
+    public CalaisTopic getTopic(String id) {
+        for (CalaisTopic ct : topics) {
+            if (ct.id.equals(id))
+                return ct;
+        }
+        return null;
+    }
+
+    public double getMin(MarketIndicator marketIndicator) {
+        double min = data.first().getData(marketIndicator);
+        for (TickerPoint tp : data) {
+            double v = tp.getData(marketIndicator);
+            if (v < min)
+                min = v;
+        }
+        return min;
+    }
+    public double getMax(MarketIndicator marketIndicator) {
+        double max = data.first().getData(marketIndicator);
+        for (TickerPoint tp : data) {
+            double v = tp.getData(marketIndicator);
+            if (v > max)
+                max = v;
+        }
+        return max;
     }
     
 }

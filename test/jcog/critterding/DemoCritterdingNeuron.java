@@ -20,7 +20,6 @@ import jcog.opencog.Atom;
 import jcog.opencog.AtomType;
 import jcog.opencog.MindAgent;
 import jcog.opencog.OCMind;
-import jcog.opencog.attention.DecaySTI;
 import jcog.spacegraph.swing.SwingWindow;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;

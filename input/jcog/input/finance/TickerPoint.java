@@ -72,6 +72,9 @@ public class TickerPoint implements Comparable<TickerPoint>, Serializable {
     public double getData(final MarketIndicator type) {
         return this.data.get(type);
     }
+    public double getNormalizedData(final MarketIndicator type, double min, double max) {
+        return (this.data.get(type) - min) / (max - min);
+    }
 
     /**
      * @return The ticker symbol this sample is assocated with.
